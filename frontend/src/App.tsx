@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import RootLayout from "./layout/RootLayout";
 import Settings from "./pages/settings/Settings";
+import Rides from "./pages/Rides";
 
 /**
  * The Routes are all declared here
@@ -24,6 +25,7 @@ function App() {
         >
           <Route path="/" element={<Home />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/rides" element={<Rides/>} />
         </Route>
 
         <Route path="/register" element={<Register />} />

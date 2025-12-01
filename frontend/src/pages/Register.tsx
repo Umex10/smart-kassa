@@ -373,9 +373,8 @@ function Register() {
           </CardContent>
           <CardFooter className="flex-col gap-2">
             <Button
-              variant="default"
               type="submit"
-              className="w-full"
+              className="w-full bg-black text-white dark:bg-white dark:text-black"
               disabled={formUnvalid}
             >
               {r.buttons.register}

@@ -47,7 +47,7 @@ function Home() {
   const user = useSelector((state: RootState) => state.user);
 
   return (
-    <div className="w-full flex flex-col justify-center items-center gap-4 mb-20 md:mb-4">
+    <div className="w-full flex flex-col justify-center items-center gap-4">
       {/* HEADER */}
       <Tabs defaultValue="today" className="w-full flex flex-col">
         {/* ABOVE TEXT LEFT + TABS LIST RIGHT) */}

@@ -38,7 +38,7 @@ export default function RootLayout() {
   return (
     <SidebarProvider open={active} onOpenChange={setActive}>
       <div
-        className="flex flex-col lg:flex-row gap-4 w-full min-h-screen md:pt-4
+        className="flex flex-col lg:flex-row gap-4 w-full min-h-screen pb-20 md:pb-4
       bg-gray-400/20"
         style={{
           paddingTop: "env(safe-area-insert-top)",

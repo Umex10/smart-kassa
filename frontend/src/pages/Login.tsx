@@ -195,7 +195,7 @@ function Login() {
           <CardFooter className="flex-col gap-2">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-black text-white dark:bg-white dark:text-black"
               variant="default"
               disabled={formUnvalid}
             >

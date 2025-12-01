@@ -7,11 +7,19 @@ import { resizeKeyboard } from "@/hooks/keyboardResizer";
 
 interface PasswordInputsProps {
   PasswordContainer: PasswordContainer[];
+  classname?: string;
 }
 
-const PasswordInputs = ({ PasswordContainer }: PasswordInputsProps) => {
+const PasswordInputs = ({
+  PasswordContainer,
+  classname,
+}: PasswordInputsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div
+      className={
+        !classname ? "grid grid-cols-1 md:grid-cols-2 gap-6" : classname
+      }
+    >
       {PasswordContainer.map((value, index) => (
         <div key={index}>
           <Label htmlFor="password">{value.label}</Label>

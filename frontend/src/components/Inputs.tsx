@@ -6,12 +6,16 @@ import { resizeKeyboard } from "@/hooks/keyboardResizer";
 
 interface NameInputsProps {
   Containers: Container[];
+  classname?: string;
 }
 
-const NameInputs = ({ Containers }: NameInputsProps) => {
-
+const NameInputs = ({ Containers, classname }: NameInputsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div
+      className={
+        !classname ? "grid grid-cols-1 md:grid-cols-2 gap-6" : classname
+      }
+    >
       {Containers.map((value, index) => (
         <div key={index}>
           <Label htmlFor={value.id}>{value.label}</Label>

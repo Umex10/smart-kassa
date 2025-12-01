@@ -21,6 +21,14 @@ export interface showError {
 }
 
 /**
+ * To handle if user clicked in input field and focuses it
+ */
+export interface LoginShowError {
+  EmailFocused: boolean;
+  PasswordFocused: boolean;
+}
+
+/**
  * Used to Map through Values to Create User Input Fields, Labels and Validation Messages etc.
  * @example const nameContainer: Container =
     {

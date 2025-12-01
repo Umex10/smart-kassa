@@ -85,7 +85,7 @@ const Balance = ({ entry, duration }: BalanceData) => {
                 data={chartData}
                 startAngle={0}
                 endAngle={360}
-                innerRadius="40%"
+                innerRadius="30%"
                 outerRadius="80%"
               >
                 <RadialBar

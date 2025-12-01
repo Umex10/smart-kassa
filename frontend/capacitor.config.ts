@@ -5,8 +5,9 @@ const config: CapacitorConfig = {
   appId: "org.Zynqly",
   appName: "Zynqly",
   webDir: "dist",
+  //delete on production
   server: {
-    url: "http://192.168.0.167:5173/",
+    url: "http://10.240.48.83:5173/",
     cleartext: true,
   },
   plugins: {

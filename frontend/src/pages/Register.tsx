@@ -339,7 +339,12 @@ function Register() {
   ];
 
   return (
-    <main className="py-7 min-w-screen min-h-screen flex justify-center items-center bg-zinc-200 dark:bg-black overflow-y-auto scrollbar-hide">
+    <main
+      className="py-7 min-w-screen min-h-screen flex justify-center items-center bg-zinc-200 dark:bg-black overflow-y-auto scrollbar-hide"
+      style={{
+        paddingTop: "env(safe-area-insert-top)",
+      }}
+    >
       <Card className="w-11/12 max-w-sm md:max-w-xl my-5 dark:bg-zinc-900 pt-4">
         <img
           src="Logo.png"

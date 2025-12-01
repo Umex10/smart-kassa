@@ -1,4 +1,3 @@
-import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -9,16 +8,8 @@ import {
   CardContent,
   CardFooter,
 } from "../components/ui/card";
-import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { useState } from "react";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../components/ui/input-group";
-import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeClosed } from "lucide-react";
 import {
   useInvalidEmail,
   useInvalidPassword,
@@ -31,25 +22,26 @@ import { useWarningToast } from "../hooks/useToast";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../redux/store";
 import { login } from "@/utils/auth";
+import type {
+  Container,
+  LoginShowError,
+  PasswordContainer,
+} from "../../constants/Compontents";
+import Inputs from "@/components/Inputs";
+import PasswordInputs from "@/components/PasswordInputs";
 
 /**
- * To handle if user clicked in input field and focuses it
- */
-interface showError {
-  EmailFocused: boolean;
-  PasswordFocused: boolean;
-}
-
-/**
- * The Sign Up page, where users Sign Up
- * @returns Register Page where Users can Sign Up
+ * The Login page, where users sign in
+ * @returns Login Page where Users can Sign In
+ * @author Umejr Džinović
+ * @author Casper Zielinski
  */
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   // to show the user how to input valid data and in which input field
-  const [showHint, setShowHint] = useState<showError>({
+  const [showHint, setShowHint] = useState<LoginShowError>({
     EmailFocused: false,
     PasswordFocused: false,
   });
@@ -98,10 +90,66 @@ function Login() {
   //Form Validator, so the username is not empty, the email is not unvalid and the password is min. 6 chars long, one Special char and one Digit
   const formUnvalid = invalidemail || !invalidPassword.passwordminimum6Chars;
 
+  const emailContainer: Container[] = [
+    {
+      className:
+        (invalidemail && showHint.EmailFocused && "border-2 border-red-500") ||
+        "",
+      id: "email",
+      label: l.labels.email,
+      onBlurListener: () =>
+        setShowHint((prev) => ({ ...prev, EmailFocused: true })),
+      onChangeListener: setEmail,
+      onFocusListener: () =>
+        setShowHint((prev) => ({ ...prev, EmailFocused: false })),
+      placeholder: l.placeholders.email,
+      type: "email",
+      validation: invalidemail && showHint.EmailFocused,
+      validationMessage: v.email.invalid,
+      value: email,
+    },
+  ];
+
+  const passwordContainer: PasswordContainer[] = [
+    {
+      className:
+        (!invalidPassword.passwordminimum6Chars &&
+          showHint.PasswordFocused &&
+          "border-2 border-red-500") ||
+        "",
+      id: "password",
+      label: "", // Empty label since we render it manually with forgot password link
+      onBlurListener: () =>
+        setShowHint((prev) => ({
+          ...prev,
+          PasswordFocused: true,
+        })),
+      onChangeListener: setPassword,
+      setShowPassword: setShowPassword,
+      showPassword: showPassword,
+      placeholder: l.placeholders.password,
+      title: "Über 6 Zeichen mit einer Zahl und einem Zeichen",
+      type: showPassword ? "text" : "password",
+      validation: [
+        !invalidPassword.passwordminimum6Chars && showHint.PasswordFocused,
+      ],
+      validationMessage: [v.password.tooShort],
+      value: password,
+    },
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleLogin();
+  };
+
   return (
     <main
       className="min-w-screen min-h-screen flex justify-center items-center bg-zinc-200
      dark:bg-black overflow-y-auto scrollbar-hide"
+      style={{
+        paddingTop: "env(safe-area-insert-top)",
+      }}
     >
       <Card className="w-11/12 max-w-sm my-5 dark:bg-zinc-900 pt-4">
         <img
@@ -115,55 +163,21 @@ function Login() {
           <CardTitle>{l.heading.title}</CardTitle>
           <CardDescription>{l.heading.subtitle}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form>
+        <form onSubmit={handleSubmit}>
+          <CardContent>
+            {/* Main Container */}
             <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">{l.labels.email}</Label>
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder={l.placeholders.email}
-                  required
-                  value={email}
-                  className={
-                    (invalidemail &&
-                      showHint.EmailFocused &&
-                      "border-2 border-red-500") ||
-                    ""
-                  }
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={() =>
-                    setShowHint((prev) => ({
-                      ...prev,
-                      EmailFocused: true,
-                    }))
-                  }
-                  onFocus={() =>
-                    setShowHint((prev) => ({
-                      ...prev,
-                      EmailFocused: false,
-                    }))
-                  }
-                />
-                <AnimatePresence>
-                  {invalidemail && showHint.EmailFocused && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                      className="text-red-500 text-sm"
-                    >
-                      {v.email.invalid}
-                      {v.email.invalid}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">{l.labels.password}</Label>
+              {/* Email Container */}
+              <Inputs Containers={emailContainer} classname="  " />
+              {/* Password Container - with forgot password link */}
+              <div>
+                <div className="flex items-center mb-2">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {l.labels.password}
+                  </label>
                   <a
                     href="#"
                     className="ml-auto inline-block text-sm text-muted-foreground font-extrabold underline hover:text-violet-400"
@@ -171,89 +185,38 @@ function Login() {
                     {l.links.forgotPassword}
                   </a>
                 </div>
-                <InputGroup
-                  className={
-                    (!invalidPassword.passwordminimum6Chars &&
-                      showHint.PasswordFocused &&
-                      "border-2 border-red-500") ||
-                    ""
-                  }
-                >
-                  <InputGroupInput
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    title="Über 6 Zeichen mit einer Zahl und einem Zeichen"
-                    placeholder={l.placeholders.password}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() =>
-                      setShowHint((prev) => ({
-                        ...prev,
-                        PasswordFocused: true,
-                      }))
-                    }
-                  />
-
-                  <InputGroupAddon align="inline-end">
-                    <div
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      data-testid="password-toggle"
-                      className="cursor-pointer"
-                    >
-                      {showPassword ? (
-                        <EyeClosed width={19} />
-                      ) : (
-                        <Eye width={19} className="text-zinc-700" />
-                      )}
-                    </div>
-                  </InputGroupAddon>
-                </InputGroup>
-                <AnimatePresence>
-                  {!invalidPassword.passwordminimum6Chars &&
-                    showHint.PasswordFocused && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="text-red-500 text-sm"
-                      >
-                        {v.password.tooShort}
-                      </motion.p>
-                    )}
-                </AnimatePresence>
+                <PasswordInputs
+                  PasswordContainer={passwordContainer}
+                  classname=" "
+                />
               </div>
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button
-            type="submit"
-            className="w-full"
-            variant="default"
-            onClick={() => {
-              handleLogin();
-            }}
-            disabled={formUnvalid}
-          >
-            {l.buttons.login}
-          </Button>
-          <Button variant="outline" className="w-full">
-            {l.buttons.google}
-          </Button>
-          <div className="w-full flex justify-center mt-2 text-center">
-            <div className="text-sm text-muted-foreground">
-              <p>{l.footer.text}</p>
-              <Link
-                to="/register"
-                className="font-extrabold underline hover:text-violet-400"
-              >
-                {l.footer.link}
-              </Link>
+          </CardContent>
+          <CardFooter className="flex-col gap-2">
+            <Button
+              type="submit"
+              className="w-full"
+              variant="default"
+              disabled={formUnvalid}
+            >
+              {l.buttons.login}
+            </Button>
+            <Button type="button" variant="outline" className="w-full">
+              {l.buttons.google}
+            </Button>
+            <div className="w-full flex justify-center mt-2 text-center">
+              <div className="text-sm text-muted-foreground">
+                <p>{l.footer.text}</p>
+                <Link
+                  to="/register"
+                  className="font-extrabold underline hover:text-violet-400"
+                >
+                  {l.footer.link}
+                </Link>
+              </div>
             </div>
-          </div>
-        </CardFooter>
+          </CardFooter>
+        </form>
       </Card>
     </main>
   );

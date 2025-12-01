@@ -3,6 +3,7 @@ import { CircleUser } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { StatusBar } from "@capacitor/status-bar";
 
 import { Bell } from "lucide-react";
 import SearchInput from "@/components/SearchInput";
@@ -25,6 +26,7 @@ export default function RootLayout() {
       }
     };
 
+    StatusBar.setBackgroundColor({ color: "#44BF50" });
     // initial
     handler();
     // listener
@@ -38,6 +40,9 @@ export default function RootLayout() {
       <div
         className="flex flex-col lg:flex-row gap-4 w-full min-h-screen md:pt-4
       bg-gray-400/20"
+        style={{
+          paddingTop: "env(safe-area-insert-top)",
+        }}
       >
         {/* Content in Sidebar */}
         <AppSidebar />
@@ -56,7 +61,7 @@ export default function RootLayout() {
 
             {/* Account icon and Bell on the right side */}
 
-            <div className="flex flex-row gap-2 items-center text-lg flex-shrink">
+            <div className="flex flex-row gap-4 items-center text-lg flex-shrink">
               <Bell className="hidden md:block md:w-6 md:h-6"></Bell>
               <CircleUser className="w-6 h-6 md:w-10 md:h-10"></CircleUser>
             </div>

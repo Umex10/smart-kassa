@@ -37,25 +37,20 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // Query database for user account by email
+    // Query database for user by email
     const result = await pool.query(
       `SELECT 
-        account.account_id,
-        account.password_hash,
-        account.name,
-        users.user_id AS user_id,
-        users.email,
-        users.business
-      FROM account
-      JOIN users
-        ON users.user_id = account.user_id
+        users.user_id,
+        users.password_hash,
+        users.email
+      FROM users
       WHERE users.email = $1`,
       [email]
     );
 
     // Check if user exists
     if (result.rows.length === 0) {
-      return res.status(400).json({ error: "Account not found" });
+      return res.status(400).json({ error: "User not found" });
     }
 
     const user = result.rows[0];
@@ -71,7 +66,6 @@ router.post("/", async (req, res) => {
       userId: user.user_id,
       email: user.email,
       name: user.name,
-      business: user.business,
     };
 
     // Generate both access and refresh tokens
@@ -81,9 +75,9 @@ router.post("/", async (req, res) => {
     // Calculate refresh token expiration (30 days from now)
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    // Update account record with new refresh token and expiration
+    // Update session record with new refresh token and expiration
     await pool.query(
-      `UPDATE account SET token_expiress_at = $1, refresh_token = $2 WHERE user_id = $3`,
+      `UPDATE session SET expires_at = $1, refresh_token = $2 WHERE user_id = $3`,
       [expiresAt, refreshToken, user.user_id]
     );
 
@@ -104,7 +98,6 @@ router.post("/", async (req, res) => {
         id: user.user_id,
         name: user.name,
         email: user.email,
-        business: user.business,
       },
     });
   } catch (err) {

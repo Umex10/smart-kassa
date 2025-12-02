@@ -6,17 +6,23 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import "leaflet/dist/leaflet.css"
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import '/home/umejr/Desktop/Windows/Mobile Software Development/3 Semester/smart-kassa/frontend/src/routing.css';
+import '../routing.css';
 import { Icon } from 'leaflet';
 import { useEffect, useRef, useState, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
-
+/**
+ * The Rides page, where a driver can start/end a Ride
+ * @returns Rides Page
+ * @author Casper Zielinski
+ * @author Umejr Dzinovic
+ */
 const locationIcon = new Icon({
   iconUrl: '/karte3.png',
   iconSize: [50, 50],
-  iconAnchor: [25, 25], //This will actually center the icon on to the location. its like transform -50%
+  iconAnchor: [25, 25], //This will actually center the icon on to the location. its like translate -50%
 });
 
 const driverIcon = new Icon({
@@ -68,11 +74,12 @@ export const RoutingMachine = ({ start, end }: RoutingMachineProps) => {
 
 };
 
+const wholeRide: [number, number][] = []
+
 // memo from react ensures that this element is only rendered new, if and only if the lat and lng have actually updated itself
- export const RecenterMap = memo(
+export const RecenterMap = memo(
   ({ lat, lng }: { lat: number, lng: number }) => {
     const map = useMap();
-    console.log("Ich werde aufgerufen!")
 
     const lastLocation = useRef<[number, number] | null>(null);
 
@@ -86,16 +93,22 @@ export const RoutingMachine = ({ start, end }: RoutingMachineProps) => {
       const [prevLat, prevLng] = lastLocation.current;
       const distance = map.distance([prevLat, prevLng], [lat, lng]);
 
-      if (distance > 30) {
+      const lastIndex = wholeRide.length - 1;
+      if (lastIndex <= 0) {
+        wholeRide.push([lat, lng]);
+      }
+
+      if (distance > 50) {
         // only fly if moved more than 30m
         // smooth transition to the *new* current locaton
         map.flyTo([lat, lng], map.getZoom(), { duration: 1 });
         lastLocation.current = [lat, lng];
+        wholeRide.push([lat, lng]);
       }
     }, [map, lat, lng]);
     return null;
   }
- );
+);
 
 
 // Calls the link and converts the adress into lat and lng coordinates
@@ -127,11 +140,52 @@ const formatTime = (totalSeconds: number): string => {
 const Rides = () => {
 
   const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null);
+
+  // Input
   const [destination, setDestination] = useState("");
+
   const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
+
+  // We would actually use driverLocation, but since we dont want to update Route every second,
+  // a second start Coords variable only for the route is needed
+  const [routingStartCoords, setRoutingStartCoords] = useState<[number, number] | null>(null);
 
   const [isRideActive, setIsRideActive] = useState(false);
   const [timer, setTimer] = useState(0);
+
+  // This variable is needed for the setRoutingStartCoords method, because without the ref
+  // we would have to update the route every second, which causes some other bugs
+  const driverLocationRef = useRef<[number, number] | null>(null);
+
+  useEffect(() => {
+
+    driverLocationRef.current = driverLocation;
+
+  }, [driverLocation]);
+
+  function showNewRoute() {
+
+    const currentDriverLocation = driverLocationRef.current;
+
+    if (currentDriverLocation) {
+      // Setzt den Startpunkt auf die aktuelle Position
+      setRoutingStartCoords(currentDriverLocation);
+    }
+
+  }
+
+  useEffect(() => {
+    if (!isRideActive) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      showNewRoute();
+      console.log("Routing Line new")
+    }, 10000)
+
+    return () => clearInterval(interval);
+  }, [isRideActive]);
 
 
   // This will center the karte on the current location (driver)
@@ -160,16 +214,28 @@ const Rides = () => {
       (err) => {
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            alert("Error while loading the current location of the driver:");
+            toast("Error while loading the current location of the driver:", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           case err.POSITION_UNAVAILABLE:
-            alert("GPS not available. Ensure that the device has a built in GPS!");
+            toast("GPS not available. Ensure that the device has a built in GPS!", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           case err.TIMEOUT:
-            alert("GPS request was timed out because the request has taken too long.")
+            toast("GPS request was timed out because the request has taken too long.", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           default:
-            alert("Unknown GPS failure")
+            toast("Unknown GPS failure", {
+              position: "top-center",
+              closeButton: true,
+            });
         }
       },
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 }
@@ -184,16 +250,28 @@ const Rides = () => {
       (err) => {
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            alert("GPS denied during live tracking!");
+            toast("GPS denied during live tracking!", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           case err.POSITION_UNAVAILABLE:
-            alert("GPS not available during live tracking!");
+            toast("GPS not available during live tracking!", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           case err.TIMEOUT:
-            console.warn("GPS live update timed out.");
+            toast("GPS live update timed out.", {
+              position: "top-center",
+              closeButton: true,
+            });
             break;
           default:
-            console.warn("Unknown GPS error during live tracking.");
+            toast("Unknown GPS error during live tracking.", {
+              position: "top-center",
+              closeButton: true,
+            });
         }
       },
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 }
@@ -203,22 +281,22 @@ const Rides = () => {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [])
 
-    useEffect(() => {
-    let lat = 48.21;
-    let lng = 16.36;
+  useEffect(() => {
+    let lat = driverLocation?.[0] ?? 48.21;
+    let lng = driverLocation?.[1] ?? 16.36;
 
     let interval: number | undefined;
     if (isRideActive) {
       interval = setInterval(() => {
-      lat += 0.0001; // leicht nach Norden bewegen
-      lng += 0.0001; // leicht nach Osten bewegen
-      setDriverLocation([lat, lng]);
-    }, 1000);
+        lat += 0.0001;
+        lng += 0.0001;
+        setDriverLocation([lat, lng]);
+      }, 1000);
     }
-   
+
 
     return () => clearInterval(interval);
-  }, [isRideActive]);
+  }, [isRideActive, driverLocation]);
 
   if (!driverLocation) {
     return <p className="text-center mt-4">Warte auf GPS-Daten…</p>;
@@ -226,7 +304,10 @@ const Rides = () => {
 
   const checkRide = () => {
     if (isRideActive && timer <= 60) {
-      return alert("Error: The ride cannot be saved, because the ride lasted only for 1 minute.");
+      toast("The ride cannot be saved, because the ride lasted only under 1 minute.", {
+        position: "top-center",
+        closeButton: true,
+      });
     };
   };
 
@@ -268,12 +349,12 @@ const Rides = () => {
           {destinationCoords && (
             <Marker position={destinationCoords} icon={locationIcon}></Marker>
           )}
-
-          {/* Destination-Routing */}
-          {driverLocation && destinationCoords && (
-            <RoutingMachine start={driverLocation} end={destinationCoords} />
-          )}
         </MarkerClusterGroup>
+
+        {/* Destination-Routing */}
+        {routingStartCoords && destinationCoords && (
+          <RoutingMachine start={routingStartCoords} end={destinationCoords} />
+        )}
 
       </MapContainer>
       <Input
@@ -287,13 +368,28 @@ const Rides = () => {
 
       <Button
         onClick={async () => {
+          if (!destination) {
+             toast("Bitte geben sie eine Adresse ein!", {
+              position: "top-center",
+              closeButton: true,
+            });
+            return;
+          } 
           const coords = await geocodeAddress(destination);
           if (coords) {
             setDestinationCoords(coords);
+            showNewRoute();
+          } else {
+             toast("Bitte gebe eine echte Adresse ein!", {
+              position: "top-center",
+              closeButton: true,
+            });
           }
+          
+          
         }}
         disabled={isRideActive}
-
+        
         className={`w-full py-6 mb-6 font-semibold text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition duration-150 ease-in-out`}
       >
         Route berechnen
@@ -320,6 +416,8 @@ const Rides = () => {
             setDestination("");
             setTimer(0);
             checkRide();
+            wholeRide.forEach(element => console.log(element))
+            wholeRide.length = 0;
             console.log("Ride has ended!")
           }}
           disabled={!isRideActive}>

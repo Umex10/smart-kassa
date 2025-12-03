@@ -140,7 +140,7 @@ const Rides = () => {
 
   const isMobile = useIsMobile();
   // We won't show the rides tab to deksto! only all-rides
-  const defaultTabValue = isMobile ? "rides" : "all-rides";
+  const defaultTabValue = isMobile ? "new-ride" : "all-rides";
 
   if (!driverLocation) {
     return <p className="text-center mt-4">Warte auf GPS-Daten…</p>;
@@ -155,12 +155,12 @@ const Rides = () => {
 
       <TabsList className="grid grid-cols-2 md:grid-cols-1 w-full md:w-auto
       md:hidden max-w-[400px]">
-        <TabsTrigger value="rides">Start Ride</TabsTrigger>
+        <TabsTrigger value="new-ride">Start Ride</TabsTrigger>
         <TabsTrigger value="all-rides">All Rides</TabsTrigger>
       </TabsList>
 
       <h2 className='hidden md:block font-bold text-3xl text-left'>Rides</h2>
-      <TabsContent value='rides' className='md:hidden flex flex-col gap-2'>
+      <TabsContent value='new-ride' className='md:hidden flex flex-col gap-2'>
 
         <p className='w-full text-5xl font-bold text-center'>
           {formatTime(timer)}

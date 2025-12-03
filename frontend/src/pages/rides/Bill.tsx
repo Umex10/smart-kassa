@@ -1,5 +1,9 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { Info } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+
 
 interface BillDetail {
   label: string;
@@ -33,10 +37,23 @@ const billDetails: BillDetail[] = [
 ];
 
 const Bill = () => {
+  const navigator = useNavigate();
   return (
-    <div className='w-full flex flex-col gap-8 items-center px-4'>
+    <div className='w-full flex flex-col gap-8 items-center'>
+      <Button variant={"ghost"}  onClick={() => navigator(-1)} 
+      className='self-start p-0'>
+        <ArrowLeft className='w-10 h-10'></ArrowLeft>
+        <span className='font-bold text-2xl'>Bill Summary</span>
+      </Button>
 
-      <QRCodeSVG className='w-60 h-60 mx-auto' value="https://reactjs.org/"></QRCodeSVG>
+
+      <div className='flex flex-col items-center justify-center gap-4'>
+        <h1 className='font-extrabold text-violet-400 text-2xl'>Scan to View Detailed Bill</h1>
+      <QRCodeSVG className='w-60 h-60 mx-auto' value="https://reactjs.org/"
+      level="H" fgColor="#6D28D9"></QRCodeSVG>
+      </div>
+
+     
       <div className='w-full border-b-black border-b-2'></div>
 
       <div className='w-full flex flex-col items-start gap-3'>

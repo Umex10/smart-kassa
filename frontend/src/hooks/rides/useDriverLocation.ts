@@ -89,8 +89,8 @@ export const useDriverLocation = (isRideActive: boolean) => {
     let interval: number | undefined;
     if (isRideActive) {
       interval = setInterval(() => {
-        lat += 0.0001;
-        lng += 0.0001;
+        lat += 0.0020;
+        lng += 0.0020;
         setDriverLocation([lat, lng]);
       }, 1000);
     }

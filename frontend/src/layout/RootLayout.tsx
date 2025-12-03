@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { CircleUser } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -13,7 +13,7 @@ import SearchInput from "@/components/SearchInput";
  */
 export default function RootLayout() {
   // to know which path is active for the underline in the footer
-  const [path, setPath] = useState("home");
+  //const [path, setPath] = useState("home");
   const [active, setActive] = useState(true);
 
     useEffect(() => {

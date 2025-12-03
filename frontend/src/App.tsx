@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import RootLayout from "./layout/RootLayout";
 import Settings from "./pages/settings/Settings";
-import Rides from "./pages/Rides";
+import Rides from "./pages/rides/Rides";
 
 /**
  * The Routes are all declared here

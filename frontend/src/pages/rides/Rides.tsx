@@ -6,12 +6,18 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import "leaflet/dist/leaflet.css"
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import '../routing.css';
+import '../../routing.css';
 import { Icon } from 'leaflet';
 import { useEffect, useRef, useState, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { formatTime } from '@/utils/rides/formatTime';
+import { geocodeAddress } from '@/utils/rides/geoAdress';
+import { useDriverLocation } from '@/hooks/rides/useDriverLocation';
+import { useRideStates } from '@/hooks/rides/useRideStates';
+import Bill from './Bill';
+
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -74,6 +80,7 @@ export const RoutingMachine = ({ start, end }: RoutingMachineProps) => {
 
 };
 
+// array that stores coordinates of our ride, to make a summary at the end of the ride
 const wholeRide: [number, number][] = []
 
 // memo from react ensures that this element is only rendered new, if and only if the lat and lng have actually updated itself
@@ -110,207 +117,31 @@ export const RecenterMap = memo(
   }
 );
 
-
-// Calls the link and converts the adress into lat and lng coordinates
-async function geocodeAddress(address: string): Promise<[number, number] | null> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-    );
-    const data = await response.json();
-    if (data.length === 0) return null;
-    console.log(parseFloat(data[0].lat), parseFloat(data[0].lon))
-    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-  } catch (err) {
-    console.error("Geocoding failed:", err);
-    return null;
-  }
-}
-
-const formatTime = (totalSeconds: number): string => {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const pad = (num: number) => num.toString().padStart(2, '0');
-
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`; // returns 00:00:00 format
-};
-
 const Rides = () => {
 
-  const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null);
-
-  // Input
-  const [destination, setDestination] = useState("");
-
-  const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
-
-  // We would actually use driverLocation, but since we dont want to update Route every second,
-  // a second start Coords variable only for the route is needed
-  const [routingStartCoords, setRoutingStartCoords] = useState<[number, number] | null>(null);
-
+  const [isEnd, setIsEnd] = useState(false);
   const [isRideActive, setIsRideActive] = useState(false);
-  const [timer, setTimer] = useState(0);
 
-  // This variable is needed for the setRoutingStartCoords method, because without the ref
-  // we would have to update the route every second, which causes some other bugs
-  const driverLocationRef = useRef<[number, number] | null>(null);
-
-  useEffect(() => {
-
-    driverLocationRef.current = driverLocation;
-
-  }, [driverLocation]);
-
-  function showNewRoute() {
-
-    const currentDriverLocation = driverLocationRef.current;
-
-    if (currentDriverLocation) {
-      // Setzt den Startpunkt auf die aktuelle Position
-      setRoutingStartCoords(currentDriverLocation);
-    }
-
-  }
-
-  useEffect(() => {
-    if (!isRideActive) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      showNewRoute();
-      console.log("Routing Line new")
-    }, 10000)
-
-    return () => clearInterval(interval);
-  }, [isRideActive]);
-
-
-  // This will center the karte on the current location (driver)
-
-  // timer
-  useEffect(() => {
-    let interval: number | undefined;
-
-    if (isRideActive) {
-      interval = setInterval(() => {
-        setTimer(last => last + 1);
-      }, 1000)
-    }
-
-    return () => clearInterval(interval);
-  }, [isRideActive])
-
-  // Update driver
-  useEffect(() => {
-    // To get the current location
-    navigator.geolocation.getCurrentPosition(
-      (lc) => {
-        console.log("Location loaded:", lc.coords.latitude, lc.coords.longitude);
-        setDriverLocation([lc.coords.latitude, lc.coords.longitude]);
-      },
-      (err) => {
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            toast("Error while loading the current location of the driver:", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          case err.POSITION_UNAVAILABLE:
-            toast("GPS not available. Ensure that the device has a built in GPS!", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          case err.TIMEOUT:
-            toast("GPS request was timed out because the request has taken too long.", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          default:
-            toast("Unknown GPS failure", {
-              position: "top-center",
-              closeButton: true,
-            });
-        }
-      },
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 }
-    );
-
-    // To udate the location
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        console.log("Live Update:", pos.coords.latitude, pos.coords.longitude);
-        setDriverLocation([pos.coords.latitude, pos.coords.longitude]);
-      },
-      (err) => {
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            toast("GPS denied during live tracking!", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          case err.POSITION_UNAVAILABLE:
-            toast("GPS not available during live tracking!", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          case err.TIMEOUT:
-            toast("GPS live update timed out.", {
-              position: "top-center",
-              closeButton: true,
-            });
-            break;
-          default:
-            toast("Unknown GPS error during live tracking.", {
-              position: "top-center",
-              closeButton: true,
-            });
-        }
-      },
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 }
-    );
-
-    // clean live tracker
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [])
-
-  useEffect(() => {
-    let lat = driverLocation?.[0] ?? 48.21;
-    let lng = driverLocation?.[1] ?? 16.36;
-
-    let interval: number | undefined;
-    if (isRideActive) {
-      interval = setInterval(() => {
-        lat += 0.0001;
-        lng += 0.0001;
-        setDriverLocation([lat, lng]);
-      }, 1000);
-    }
-
-
-    return () => clearInterval(interval);
-  }, [isRideActive, driverLocation]);
+  const driverLocation = useDriverLocation(isRideActive);
+  const {
+    destination,
+    setDestination,
+    destinationCoords,
+    setDestinationCoords,
+    routingStartCoords,
+    timer, 
+    setTimer,
+    showNewRoute,
+    checkRide
+  } = useRideStates(isRideActive, driverLocation);
 
   if (!driverLocation) {
     return <p className="text-center mt-4">Warte auf GPS-Daten…</p>;
   }
 
-  const checkRide = () => {
-    if (isRideActive && timer <= 60) {
-      toast("The ride cannot be saved, because the ride lasted only under 1 minute.", {
-        position: "top-center",
-        closeButton: true,
-      });
-    };
-  };
-
+  if(!isRideActive && isEnd) {
+    return <Bill></Bill>
+  }
 
   return (
     <div className="w-full flex flex-col gap-2 z-20">
@@ -362,7 +193,7 @@ const Rides = () => {
         placeholder="Mariahilfer Straße 120, Wien"
         value={destination}
         onChange={e => setDestination(e.target.value)}
-        className='w-full p-3 mb-4 text-gray-800 border-2 border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 transition duration-150'
+        className='w-full p-3 mb-4 border-2 border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 transition duration-150'
         disabled={isRideActive}
       />
 
@@ -401,7 +232,6 @@ const Rides = () => {
           className={`py-6 font-semibold text-white bg-green-500 rounded-lg shadow-md hover:bg-green-600 transition duration-150 ease-in-out`}
           onClick={() => {
             setIsRideActive(true);
-            console.log("Ride has started!");
           }}
           disabled={isRideActive}>
           Start Fahrt
@@ -415,10 +245,8 @@ const Rides = () => {
             setDestinationCoords(null);
             setDestination("");
             setTimer(0);
-            checkRide();
-            wholeRide.forEach(element => console.log(element))
-            wholeRide.length = 0;
-            console.log("Ride has ended!")
+            if (checkRide()) setIsEnd(true);
+            wholeRide.length = 0; //Clear the array
           }}
           disabled={!isRideActive}>
           End Fahrt

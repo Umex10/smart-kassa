@@ -15,7 +15,7 @@ const router = express.Router();
  *
  * @route POST /ride
  * @access Public
- * @body {integer} user_id (required, unique)
+ * @body {integer} user_id (required)
  * @body {string} start_address (required)
  * @body {string} start_time (required)
  * @body {float} start_lat (required)
@@ -24,7 +24,6 @@ const router = express.Router();
  * @body {string} end_time (required)
  * @body {float} end_lat (required)
  * @body {float} end_lng (required)
- * @body {float} end_km  (required) // FRONTED DOES NOT SEND THIS!!! POSTMAN CURRENTLY HANDLES THIS ERROR - AFTER FIX DELETE $14 IN QUERY
  * @body {string} duration (required)
  * @body {float} distance (required)
  * @body {string} ride_type (required)
@@ -41,7 +40,6 @@ router.post("/", async (req, res) => {
         end_time,
         end_lat,
         end_lng,
-        end_km, // FRONTED DOES NOT SEND THIS!!! POSTMAN CURRENTLY HANDLES THIS ERROR - AFTER FIX DELETE $14 IN QUERY
         duration,
         distance,
         ride_type,
@@ -60,22 +58,22 @@ router.post("/", async (req, res) => {
                 (user_id, vehicle_id,
                 start_address, start_time, start_lat, start_lng,
                 end_address, end_time, end_lat, end_lng,
-                duration, distance, ride_type, end_km)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                duration, distance, ride_type)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING ride_id
             `,
             [
                 user_id, vehicle_id,
                 start_address, start_time, start_lat, start_lng,
                 end_address, end_time, end_lat, end_lng,
-                duration, distance, ride_type, end_km // FRONTED DOES NOT SEND THIS!!! POSTMAN CURRENTLY HANDLES THIS ERROR - AFTER FIX DELETE $14 IN QUERY
+                duration, distance, ride_type
             ]
         );
 
         const ride_id = rideRes.rows[0].ride_id;
 
         res.json({
-            message: "Ride Data",
+            message: "Ride successfully saved",
             ride_info: {
                 ride_id: ride_id,
                 vehicle_id: vehicle_id,

@@ -21,7 +21,7 @@ export function AppSidebar() {
   const { toggleSidebar } = useSidebar();
 
   const [isMd, setIsMd] = useState(false);
-  const mdBreakpoint = 768; // Beispiel für einen "md" Breakpoint
+  const mdBreakpoint = 768; 
 
   useEffect(() => {
     const handleResize = () => {

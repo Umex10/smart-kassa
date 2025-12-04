@@ -22,6 +22,15 @@ import type { AppDispatch } from "../../../redux/store";
 import { add } from '../../../redux/slices/allRidesSlice';
 import { reverseGeocode } from '@/utils/rides/reverseGeocode';
 import { getDate } from '@/utils/rides/getDate';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { sendRide } from '@/utils/ride';
+
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -42,8 +51,8 @@ const driverIcon = new Icon({
 });
 
 interface RouteSummary {
-  totalDistance: number; 
-  totalTime: number;   
+  totalDistance: number;
+  totalTime: number;
 }
 
 interface Route {
@@ -132,6 +141,7 @@ export const RecenterMap = memo(
       const [prevLat, prevLng] = lastLocation.current;
       const distance = map.distance([prevLat, prevLng], [lat, lng]);
 
+
       const lastIndex = wholeRide.length - 1;
       if (lastIndex <= 0) {
         setWholeRide(array => [...array, [lat, lng]])
@@ -144,10 +154,42 @@ export const RecenterMap = memo(
         lastLocation.current = [lat, lng];
         setWholeRide(array => [...array, [lat, lng]])
       }
-    }, [map, lat, lng]);
+    }, [map, lat, lng, wholeRide, setWholeRide]);
     return null;
   }
 );
+
+export const DistanceTracker = ({
+  lat,
+  lng,
+  setDist,
+}: {
+  lat: number,
+  lng: number,
+  setDist: React.Dispatch<React.SetStateAction<number>>
+}) => {
+  const map = useMap();
+
+  const lastLocation = useRef<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (!lastLocation.current) {
+      lastLocation.current = [lat, lng];
+      return;
+    }
+
+    const [prevLat, prevLng] = lastLocation.current;
+    const distance = map.distance([prevLat, prevLng], [lat, lng]);
+
+
+    if (distance > 5) {
+      setDist(lastValue => lastValue + distance);
+      lastLocation.current = [lat, lng];
+    }
+  }, [map, lat, lng, setDist])
+
+  return null;
+}
 
 const Ride = () => {
 
@@ -178,6 +220,15 @@ const Ride = () => {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [distance, setDistance] = useState(0);
+  console.log(distance)
+  // The user
+  //const user_id = useSelector((state: RootState) => state.user.id)
+
+
+  const [dist, setDist] = useState(0);
+
+  // Which type?
+  const [rideType, setRideType] = useState("");
 
   // Re-Initialize fields for the next ride
   function reInitialize() {
@@ -196,27 +247,24 @@ const Ride = () => {
         ]);
 
         const newRide = {
+          user_id: Number(7),
           start_address: startAddress ?? "",
           start_time: startTime,
-          start_lat: driverLocation[0].toString(),
-          start_lng: driverLocation[1].toString(),
+          start_lat: driverLocation[0],
+          start_lng: driverLocation[1],
           end_address: endAddress ?? "",
           end_time: endTime,
-          end_lat: destinationCoords[0].toString(),
-          end_lng: destinationCoords[1].toString(),
+          end_lat: destinationCoords[0],
+          end_lng: destinationCoords[1],
           duration: formatTime(timer),
-          distance: distance.toString(),
-          rideID: "",
-          car: "",
-          ride_type: "",
-          wholeRide: wholeRide
+          distance: dist,
+          ride_type: rideType // botenfahrt
         }
-
         dispatch(add(newRide));
+        sendRide(newRide);
+        console.log(rideType)
 
-      
         reInitialize();
-        //return <SummaryRide wholeRide={wholeRide} driverIcon={driverIcon} /> //!!driver icon auslagern
       })();
     }
   }, [isRideActive, isEnd, driverLocation, destinationCoords])
@@ -270,7 +318,30 @@ const Ride = () => {
               setDistance={setDistance} />
           )}
 
+          {driverLocation && (
+            <DistanceTracker lat={driverLocation[0]} lng={driverLocation[1]}
+              setDist={setDist}></DistanceTracker>
+          )}
+
+
         </MapContainer>
+
+        <div className='w-full flex justify-center'>
+          <Select>
+            <SelectTrigger className="w-[180px] border-2 border-violet-300 rounded-md">
+              <SelectValue placeholder="Art der Fahrt" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="botenfahrt" onClick={() => setRideType("botenfahrt")}>
+                Botenfahrt
+              </SelectItem>
+              <SelectItem value="taxifahrt" onClick={() => setRideType("taxifahrt")}>
+                Taxifahrt
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Input
           type="text"
           placeholder="Mariahilfer Straße 120, Wien"

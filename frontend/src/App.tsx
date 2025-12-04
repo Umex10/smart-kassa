@@ -19,16 +19,17 @@ function App() {
         {/* This will ensure, that each Route has the same Header */}
         <Route
           element={
-           
-              <RootLayout />
-         
+
+            <RootLayout />
+
           }
         >
           <Route path="/" element={<Home />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/ride" element={<Ride/>} />
-          <Route path="/all-rides" element={<AllRides/>} />
-          <Route path="/all-rides/:id" element={<AllRides/>} />
+          <Route path="/ride" element={<Ride />} />
+          <Route path="/all-rides" element={<AllRides />}>
+            <Route path=":id" element={<AllRides />} />
+          </Route>
         </Route>
 
         <Route path="/register" element={<Register />} />

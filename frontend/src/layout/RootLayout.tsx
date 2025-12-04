@@ -1,89 +1,117 @@
-import { Link, Outlet } from "react-router-dom";
-import { MobileMenu } from "../components/MobileMenu";
-import { navContent } from "../content/header/navContent";
+import { Outlet } from "react-router-dom";
 import { CircleUser } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+
+import { Bell } from 'lucide-react';
+import SearchInput from "@/components/SearchInput";
+
 
 /**
  * @returns the Root layout
  */
 export default function RootLayout() {
   // to know which path is active for the underline in the footer
-  const [path, setPath] = useState("home");
+  //const [path, setPath] = useState("home");
+  const [active, setActive] = useState(true);
+
+    useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+
+    const handler = () => {
+      // wenn large screen → sidebar immer öffnen
+      if (mq.matches) {
+        setActive(true);
+      }
+    };
+
+    // initial
+    handler();
+    // listener
+    mq.addEventListener("change", handler);
+
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header
-        className="
-        fixed top-0 left-0 w-full h-16
-        backdrop-blur-md bg-white/60 dark:bg-black/40
-        border-b border-zinc-300 dark:border-zinc-800
+    <SidebarProvider open={active} onOpenChange={setActive}>
+      <div className="flex flex-col lg:flex-row gap-4 w-full min-h-screen md:pt-4
+      bg-gray-400/20">
+
+        {/* Content in Sidebar */}
+        <AppSidebar />
+
+        <div className="flex flex-col w-full">
+          <header
+            className="
+        h-16 backdrop-blur-md
+        border-b border-zinc-300 dark:border-zinc-800 md:border-none
         flex items-center justify-between
-        px-4 z-50
-    "
-      >
-        <MobileMenu></MobileMenu>
+        px-4 z-40"
+          >
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex gap-6 text-sm font-medium">
-          {navContent.map((element, index) => (
-            <Link
-              key={index}
-              className="hover:text-violet-500"
-              to={element.path}
-            >
-              {element.label}
-            </Link>
-          ))}
-        </nav>
+            <SidebarTrigger className="lg:hidden" />
 
-        <h1 className="font-bold text-xl md:hidden">Guten Tag User!</h1>
+            <SearchInput></SearchInput>
 
-        {/* Account icon on the right side */}
-        <div className="flex items-center gap-3">
-          <CircleUser></CircleUser>
-        </div>
-      </header>
+            {/* Account icon and Bell on the right side */}
 
-      {/* The RootLayout will automatically inject the current Page */}
-      <main className="flex-1 flex items-start py-20 px-4">
-        <Outlet />
-      </main>
+            <div className="flex flex-row gap-2 items-center text-lg flex-shrink">
 
-      <footer
-        className="
+              <Bell className="hidden md:block md:w-6 md:h-6"></Bell>
+              <CircleUser className="w-6 h-6 md:w-10 md:h-10"></CircleUser>
+
+            </div>
+
+          </header>
+
+          {/* The RootLayout will automatically inject the current Page */}
+          <main className="flex pt-4 px-4">
+            <Outlet />
+          </main>
+
+
+        {/* 
+         <footer
+            className="
     h-16 w-full
     backdrop-blur-md bg-white/60 dark:bg-black/40
     border-t border-zinc-300 dark:border-zinc-800
     px-4
-    fixed bottom-0 left-0
+    fixed bottom-0 left-0 md:hidden
   "
-      >
-        <nav className="grid grid-cols-3 h-full place-items-center text-sm font-medium">
-          {["Statistiken", "Home", "Account"].map((element, index) => {
-            const lower = element.charAt(0).toLowerCase() + element.slice(1);
+          >
+            <nav className="grid grid-cols-3 h-full place-items-center text-sm font-medium">
+              {["Statistiken", "Home", "Account"].map((element, index) => {
+                const lower = element.charAt(0).toLowerCase() + element.slice(1);
 
-            return (
-              <Link
-                key={index}
-                className={`
+                return (
+                  <Link
+                    key={index}
+                    className={`
             hover:text-violet-500 relative px-2 py-1
             ${
-              // underline color
-              path === lower
-                ? "after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[3px] after:bg-violet-500 after:transition-all after:duration-300"
-                : "after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[3px] after:bg-transparent after:transition-all after:duration-300"
-            }
+                      // underline color
+                      path === lower
+                        ? "after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[3px] after:bg-violet-500 after:transition-all after:duration-300"
+                        : "after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[3px] after:bg-transparent after:transition-all after:duration-300"
+                      }
           `}
-                to={""} //"/" + lower
-                onClick={() => setPath(lower)}
-              >
-                {element}
-              </Link>
-            );
-          })}
-        </nav>
-      </footer>
-    </div>
+                    to={""} //"/" + lower
+                    onClick={() => setPath(lower)}
+                  >
+                    {element}
+                  </Link>
+                );
+              })}
+            </nav>
+          </footer>
+        */}
+         
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }

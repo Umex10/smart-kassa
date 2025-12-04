@@ -1,10 +1,11 @@
 import { verifyAccessToken } from "../utils/jwttokens";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../redux/store";
 import { signInUser } from "../../redux/slices/userSlice";
 import type { USER_DTO } from "../../constants/User";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import { setAuthenticated, setUnauthenticated } from "../../redux/slices/authSlice";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,14 +17,17 @@ interface ProtectedRouteProps {
  * @returns
  */
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-
   // Überprüfen, ob der User eingeloggt ist
   // Kann man später mit einem Auth-Context oder localStorage machen
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
 
+  // Check if the user is getting loaded currently
+  const {isLoading} = useSelector((state: RootState) => state.authState);
+
   useEffect(() => {
     async function getJWTTokens() {
+
       try {
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
@@ -38,13 +42,23 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             phoneNumber: userData.phoneNumber,
           })
         );
+       dispatch(setAuthenticated())
       } catch {
         navigator("/register");
+        dispatch(setUnauthenticated());
       }
     }
     getJWTTokens();
   }, [dispatch, navigator]);
 
+
+  if (isLoading) {
+     return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p className="text-lg font-semibold">Loading...</p>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 };
-

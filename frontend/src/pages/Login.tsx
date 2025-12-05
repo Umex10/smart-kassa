@@ -63,7 +63,7 @@ function Login() {
     try {
       await login(email, password, dispatch);
       handleToast(true);
-      navigator("/");
+      await navigator("/");
     } catch (error) {
       console.error(error);
       handleToast(false);

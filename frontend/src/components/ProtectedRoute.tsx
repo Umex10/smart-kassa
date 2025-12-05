@@ -10,6 +10,7 @@ import {
   setUnauthenticated,
 } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
   const toastShownRef = useRef(false);
+  const isMobile = Capacitor.isNativePlatform();
 
   // Check if the user is getting loaded currently
   const { isLoading, isAuthenticated } = useSelector(
@@ -35,10 +37,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     async function getJWTTokens() {
       try {
+        if (isMobile) {
+          await navigator("/ride");
+        }
+
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
           throw new Error("User Data invalid");
         }
+
         dispatch(
           signInUser({
             id: userData.id,
@@ -48,6 +55,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             phoneNumber: userData.phoneNumber,
           })
         );
+
         dispatch(setAuthenticated());
 
         // Only show toast once per session

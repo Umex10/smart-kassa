@@ -31,7 +31,9 @@ export async function register(
     if (!data) {
       throw new Error("Response is Empty");
     }
+
     await AuthStorage.setTokens(data.accessToken);
+
     dispatch(
       signInUser({
         id: data.id,
@@ -92,7 +94,7 @@ interface LoginResponse {
   };
 }
 
-export function login(
+export async function login(
   email: string,
   password: string,
   dispatch: AppDispatch
@@ -101,15 +103,15 @@ export function login(
     throw new Error("Missing Fields");
   }
 
-  return axios.post(
-    `${import.meta.env.VITE_API_URL}/login`,
-    {
-      email: email,
-      password: password,
-    },
-    { withCredentials: true }
-  )
-  .then(async (response) => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/login`,
+      {
+        email: email,
+        password: password,
+      },
+      { withCredentials: true }
+    );
     const data = response.data;
 
     if (!data) {
@@ -128,10 +130,8 @@ export function login(
         phoneNumber: "phone number need implementation",
       })
     );
-
-    return data;
-  })
-  .catch((error) => {
+    return await data;
+  } catch (error) {
     if (error instanceof AxiosError) {
       if (error.response?.status === 401 || error.response?.status === 400) {
         throw new Error("Wrong Email or Password");
@@ -143,5 +143,5 @@ export function login(
     } else {
       throw new Error("Internal Server Error");
     }
-  });
+  }
 }

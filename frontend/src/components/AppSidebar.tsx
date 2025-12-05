@@ -25,6 +25,9 @@ export function AppSidebar() {
   const mdBreakpoint = 768;
   const isMobile = Capacitor.isNativePlatform();
 
+  /**
+   * Important to not close Side Bar on Desktop
+   */
   useEffect(() => {
     const handleResize = () => {
       setIsMd(window.innerWidth >= mdBreakpoint);
@@ -38,6 +41,9 @@ export function AppSidebar() {
     };
   }, []);
 
+  /**
+   * Closes Sidebar when Menu Item is clicked (only on Mobile)
+   */
   function closeSideBar() {
     if (!isMd) {
       toggleSidebar();

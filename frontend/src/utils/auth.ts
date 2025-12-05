@@ -118,8 +118,12 @@ export async function login(
       throw new Error("Response is empty");
     }
 
-    await AuthStorage.setTokens(data.accessToken);
+    const accessToken = await data.accessToken;
+    alert(accessToken);
+    alert("Access Token is:");
+    await AuthStorage.setTokens(accessToken);
 
+    alert(await AuthStorage.getAccessToken());
     const user = data.user;
     dispatch(
       signInUser({
@@ -135,11 +139,11 @@ export async function login(
     if (error instanceof AxiosError) {
       if (error.response?.status === 401 || error.response?.status === 400) {
         throw new Error("Wrong Email or Password");
-      }
-      if (error.response?.status === 500) {
+      } else if (error.response?.status === 500) {
         throw new Error("Internal Server Error");
+      } else {
+        throw new Error(`Login failed: ${error.message}`);
       }
-      throw new Error(`Login failed: ${error.message}`);
     } else {
       throw new Error("Internal Server Error");
     }

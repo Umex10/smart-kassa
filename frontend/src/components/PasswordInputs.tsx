@@ -22,11 +22,11 @@ const PasswordInputs = ({
     >
       {PasswordContainer.map((value, index) => (
         <div key={index}>
-          <Label htmlFor="password">{value.label}</Label>
+          <Label htmlFor={value.id}>{value.label}</Label>
 
           <InputGroup className={value.className}>
             <InputGroupInput
-              id="password"
+              id={value.id}
               type={value.showPassword ? "text" : "password"}
               title="Über 6 Zeichen mit einer Zahl und einem Zeichen"
               placeholder={value.placeholder}
@@ -35,6 +35,7 @@ const PasswordInputs = ({
               onChange={(e) => value.onChangeListener(e.target.value)}
               onBlur={value.onBlurListener}
               onClick={() => resizeKeyboard()}
+              autoComplete={value.autocomplete}
             />
 
             <InputGroupAddon align="inline-end">

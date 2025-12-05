@@ -109,6 +109,7 @@ function Login() {
       validation: invalidemail && showHint.EmailFocused,
       validationMessage: v.email.invalid,
       value: email,
+      autocomplete: "email",
     },
   ];
 
@@ -137,6 +138,7 @@ function Login() {
       ],
       validationMessage: [v.password.tooShort],
       value: password,
+      autocomplete: "current-password",
     },
   ];
 

@@ -30,6 +30,7 @@ const NameInputs = ({ Containers, classname }: NameInputsProps) => {
             onBlur={value.onBlurListener}
             onFocus={value.onFocusListener}
             onClick={() => resizeKeyboard()}
+            autoComplete={value.autocomplete}
           />
           <AnimatePresence>
             {value.validation && (

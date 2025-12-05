@@ -53,7 +53,7 @@ export function AppSidebar() {
   return (
     <Sidebar className="hidden lg:flex w-full max-w-64 z-50">
       <SidebarHeader className="flex pt-10 md:pt-5 flex-row justify-between items-center">
-        <Link to="/">
+        <Link to="/" onClick={() => closeSideBar()}>
           <img
             src="/Logo.png"
             width={120}

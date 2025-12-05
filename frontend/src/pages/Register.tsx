@@ -284,6 +284,7 @@ function Register() {
       validation: invalidATU && showHint.ATUFocused,
       validationMessage: v.atu.invalid,
       value: atu,
+      autocomplete: "off",
     },
   ];
 
@@ -318,6 +319,7 @@ function Register() {
         v.password.tooShort,
       ],
       value: password,
+      autocomplete: "new-password",
     },
     {
       className:
@@ -325,7 +327,7 @@ function Register() {
           showHint.ConfirmPasswordFocused &&
           "border-2 border-red-500") ||
         "",
-      id: "confirmPassword",
+      id: "new-password",
       label: r.labels.confirmPassword,
       onBlurListener: () =>
         setShowHint((prev) => ({
@@ -347,6 +349,7 @@ function Register() {
         v.confirmPassword.invalid,
       ],
       value: confirmPassword,
+      autocomplete: "off",
     },
   ];
 

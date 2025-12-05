@@ -63,6 +63,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           toast.success(`Welcome back ${userData.firstName}!`, {
             className: "mt-5 md:mt-0",
             position: "top-center",
+            closeButton: true,
           });
           toastShownRef.current = true;
         }

@@ -3,6 +3,7 @@ import type {
   FocusEventHandler,
   HTMLInputTypeAttribute,
   Dispatch,
+  HTMLInputAutoCompleteAttribute,
 } from "react";
 
 /**
@@ -64,6 +65,7 @@ export interface Container {
   onFocusListener: FocusEventHandler<HTMLInputElement>;
   validation: boolean;
   validationMessage: string;
+  autocomplete?: HTMLInputAutoCompleteAttribute | undefined;
 }
 
 export interface PasswordContainer {
@@ -80,4 +82,5 @@ export interface PasswordContainer {
   onBlurListener: FocusEventHandler<HTMLInputElement>;
   validation: boolean[];
   validationMessage: string[];
+  autocomplete?: HTMLInputAutoCompleteAttribute | undefined;
 }

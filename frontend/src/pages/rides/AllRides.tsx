@@ -13,6 +13,8 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { getRidesToday, getRidesYesterday } from "@/utils/rides/getRides";
+import { SelectValue } from "@radix-ui/react-select";
 
 const AllRides = () => {
 
@@ -50,37 +52,17 @@ const AllRides = () => {
   //  // return <SummaryRide ride={rides[ride_id - 1]}></SummaryRide>
   // };
 
+  const [isDescending, setIsDescending] = useState(true);
+  const [isAscending, setIsAscending] = useState(false);
+  const [sortAfter, setSortAfter] = useState("");
+  const [rideType, setRideType] = useState("");
+
   if (!rides) return;
 
-  function pad(n: number) {
-    return n < 10 ? "0" + n : n.toString();
-  }
+  const ridesToday = getRidesToday(rides);
+  const ridesYesterday = getRidesYesterday(rides);
 
-  const ridesToday = rides.filter((element) => {
-    const onlyDate = element.start_time.replace('T', ' ').split(" ")[0];
-    const today = new Date();
-    const [year, month, day] = onlyDate.split("-");
 
-    if (pad(today.getFullYear()) === year &&
-      pad(today.getMonth() + 1) === month &&
-      pad(today.getDate()) === (day)) {
-      return element;
-    }
-  })
-
-  const ridesYesterday = rides.filter((element) => {
-    const onlyDate = element.start_time.replace('T', ' ').split(" ")[0];
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 200)
-    const [year, month, day] = onlyDate.split("-");
-
-    if (pad(yesterday.getFullYear()) === year &&
-      pad(yesterday.getMonth() + 1) === month &&
-      pad(yesterday.getDate()) === day) {
-      return element;
-    }
-  })
 
   return (
     <div className='w-full flex'>
@@ -92,43 +74,73 @@ const AllRides = () => {
             <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
             <TabsTrigger value="every">Every</TabsTrigger>
           </TabsList>
-          <div className="flex flex-row items-center gap-3">
-            
+          <div className="w-full flex flex-row justify-between items-center">
+            <div className="flex flex-row items-center gap-1">
+              <Select>
+                <SelectTrigger className={`max-w-[70px] px-1 border-2
+                  border-gray-400/50`}>
+                  <ListFilter></ListFilter>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="date"
+                    onClick={() => setSortAfter("date")}
+                  >
+                    Date
+                  </SelectItem>
+                  <SelectItem
+                    value="distance"
+                    onClick={() => setSortAfter("distance")}
+                  >
+                    Distanz
+                  </SelectItem>
+
+                  <SelectItem
+                    value="duration"
+                    onClick={() => setSortAfter("duration")}
+                  >
+                    Dauer
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <ArrowDown className={`w-8 h-8 ${isDescending ? "text-violet-400" : ''} `}
+                onClick={() => {
+                  setIsDescending(!isDescending);
+                  setIsAscending(!isAscending)
+                }}></ArrowDown>
+              <ArrowUp className={`w-8 h-8 ${isAscending ? "text-violet-400" : ''} `}
+                onClick={() => {
+                  setIsAscending(!isAscending);
+                  setIsDescending(!isDescending)
+                }}></ArrowUp>
+            </div>
+
             <Select>
-              <SelectTrigger className="max-w-[80px] border-2 border-violet-300 rounded-md">
-                <ListFilter className="text-violet-400"></ListFilter>
+              <SelectTrigger className="w-[180px] border-2 border-violet-300 rounded-md">
+                <SelectValue placeholder="Art der Fahrt" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
-                  value="date"
-
+                  value="every"
+                  onClick={() => setRideType("every")}
                 >
-                  Date
+                  Every
                 </SelectItem>
                 <SelectItem
-                  value="distance"
-
+                  value="botenfahrt"
+                  onClick={() => setRideType("botenfahrt")}
                 >
-                  Distanz
+                  Botenfahrt
                 </SelectItem>
-
                 <SelectItem
-                  value="type"
-
+                  value="taxifahrt"
+                  onClick={() => setRideType("taxifahrt")}
                 >
-                  Art
-                </SelectItem>
-
-                <SelectItem
-                  value="duration"
-
-                >
-                  Dauer
+                  Taxifahrt
                 </SelectItem>
               </SelectContent>
             </Select>
-            <ArrowUp className="w-8 h-8"></ArrowUp>
-            <ArrowDown className="w-8 h-8"></ArrowDown>
+
           </div>
 
         </div>
@@ -137,13 +149,16 @@ const AllRides = () => {
         {/* TabsContent rechts */}
         <div className="w-full">
           <TabsContent value="today">
-            <RideAtDate rides={ridesToday}></RideAtDate>
+            <RideAtDate rides={ridesToday} sortAfter={sortAfter}
+              isDescending={isDescending} rideType={rideType}></RideAtDate>
           </TabsContent>
           <TabsContent value="yesterday">
-            <RideAtDate rides={ridesYesterday}></RideAtDate>
+            <RideAtDate rides={ridesYesterday} sortAfter={sortAfter}
+              isDescending={isDescending} rideType={rideType}></RideAtDate>
           </TabsContent>
           <TabsContent value="every">
-            <RideAtDate rides={rides}></RideAtDate>
+            <RideAtDate rides={rides} sortAfter={sortAfter}
+              isDescending={isDescending} rideType={rideType}></RideAtDate>
           </TabsContent>
         </div>
       </Tabs>

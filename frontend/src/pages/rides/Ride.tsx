@@ -242,7 +242,6 @@ const Ride = () => {
           reverseGeocode(driverLocation[0], driverLocation[1]),
           reverseGeocode(destinationCoords[0], destinationCoords[1]),
         ]);
-        console.log(startTime)
         const newRide = {
           user_id: Number(user_id) !== 0 ? Number(user_id) : 1,
           start_address: startAddress ?? "",

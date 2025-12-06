@@ -54,15 +54,13 @@ const AllRides = () => {
 
   const [isDescending, setIsDescending] = useState(true);
   const [isAscending, setIsAscending] = useState(false);
-  const [sortAfter, setSortAfter] = useState("");
+  const [sortAfter, setSortAfter] = useState("date");
   const [rideType, setRideType] = useState("");
 
   if (!rides) return;
 
   const ridesToday = getRidesToday(rides);
   const ridesYesterday = getRidesYesterday(rides);
-
-
 
   return (
     <div className='w-full flex'>
@@ -76,7 +74,7 @@ const AllRides = () => {
           </TabsList>
           <div className="w-full flex flex-row justify-between items-center">
             <div className="flex flex-row items-center gap-1">
-              <Select>
+              <Select defaultValue="date">
                 <SelectTrigger className={`max-w-[70px] px-1 border-2
                   border-gray-400/50`}>
                   <ListFilter></ListFilter>

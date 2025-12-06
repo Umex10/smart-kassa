@@ -10,7 +10,7 @@ function getMilliSeconds(rideDate: string) {
   const [year, month, day] = dateString.split("-").map(Number);
   const [h, m, s] = timeString.split(":").map(Number)
 
-  return new Date(year, month + 1, day, h, m, s).getTime();
+  return new Date(year, month - 1, day, h, m, s).getTime();
 
 }
 

@@ -31,6 +31,7 @@ import { sendRide } from "@/utils/rides/ride";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import StatusOverlay from "@/components/StatusOverlay";
+import { ROUTING_CONFIG } from "@/utils/config";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -61,12 +62,27 @@ export const RoutingMachine = ({ start, end }:
 ) => {
   const map = useMap();
 
+  // use ref to hold control between renders
+  const routingControlRef = useRef<L.Routing.Control | null>(null);
+
   useEffect(() => {
     if (!map) return;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-expect-error
-    const routingControl = L.Routing.control({
+    if (routingControlRef.current) return;
+
+    let router;
+    // osrm demo for testing only
+    if (ROUTING_CONFIG.mode === "demo") {
+      router = L.Routing.osrmv1({
+        serviceUrl: ROUTING_CONFIG.demo.serviceUrl,
+      });
+    } else if (ROUTING_CONFIG.mode === "mapbox") {
+       // stable osrm for dev-ready-status
+      router = L.Routing.mapbox(ROUTING_CONFIG.mapbox.apiKey);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const routingControl = (L as any).Routing.control({
       waypoints: [L.latLng(start[0], start[1]), L.latLng(end[0], end[1])],
       // ensures that the driver cannot change the route
       routeWhileDragging: false,
@@ -76,16 +92,30 @@ export const RoutingMachine = ({ start, end }:
       addWaypoints: false,
       lineOptions: {
         styles: [{ weight: 5 }],
+        extendToWaypoints: true,
+        missingRouteTolerance: 10,
       },
       // This will ensure that leaflet doesn't add additional markers
       createMarker: () => null,
+      router: router, // Tell leaflet to use this router
     }).addTo(map);
 
-    // Clean
-    return () => {
-      map.removeControl(routingControl);
-    };
-  }, [map, start, end]);
+    routingControlRef.current = routingControl;
+  }, [end, map, start]);
+
+  // We are not building new control object, we are instead setting 
+  // new lng and lat
+  useEffect(() => {
+    if (routingControlRef.current) {
+      
+      const newWaypoints = [
+        L.latLng(start[0], start[1]), 
+        L.latLng(end[0], end[1])
+      ];
+      
+      routingControlRef.current.setWaypoints(newWaypoints);
+    }
+  }, [start, end]); 
 
   return null;
 };

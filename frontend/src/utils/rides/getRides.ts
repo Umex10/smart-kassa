@@ -25,11 +25,11 @@ import type { AllRide } from "constants/AllRide";
     const onlyDate = element.start_time.replace('T', ' ').split(" ")[0];
     const today = new Date();
     const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 200)
+    yesterday.setDate(today.getDate() - 1)
     const [year, month, day] = onlyDate.split("-");
 
     if (pad(yesterday.getFullYear()) === year &&
-      pad(yesterday.getMonth() + 1) === month &&
+      pad(yesterday.getMonth() + 1) === month && //because month is 0 based, Nov is: 10
       pad(yesterday.getDate()) === day) {
       return element;
     }

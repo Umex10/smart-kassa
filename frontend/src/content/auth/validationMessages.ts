@@ -1,3 +1,15 @@
+export interface PasswordErrors {
+  tooShort: string;
+  missingNumber: string;
+  missingSymbol: string;
+}
+
+export interface ConfirmPasswordErrors {
+  required: string;
+  invalid: string;
+}
+
+
 // 🔹 Alle Validierungsnachrichten
 export const validationMessages = {
   // 🔸 Login-bezogene Fehler
@@ -18,7 +30,7 @@ export const validationMessages = {
     vorname: {
       required: "Bitten geben Sie ihren Vornamen ein",
     },
-    nachanme: {
+    nachname: {
       required: "Bitten geben Sie ihren Nachnamen ein",
     },
     email: {

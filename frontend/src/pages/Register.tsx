@@ -32,8 +32,8 @@ import type {
   PasswordContainer,
   showError,
 } from "../../constants/Compontents";
-import Inputs from "@/components/Inputs";
-import PasswordInputs from "@/components/PasswordInputs";
+import Inputs from "../components/Inputs";
+import PasswordInputs from "../components/PasswordInputs";
 
 /**
  * The Sign Up page, where users Sign Up
@@ -202,7 +202,7 @@ function Register() {
       type: "text",
       validation: invalidLastname && showHint.LastnameFocused,
       value: lastanme,
-      validationMessage: v.nachanme.required,
+      validationMessage: v.nachname.required,
     },
   ];
 
@@ -382,6 +382,7 @@ function Register() {
               type="submit"
               className="w-full bg-black text-white dark:bg-white dark:text-black"
               disabled={formUnvalid}
+              data-testid="register"
             >
               {r.buttons.register}
             </Button>
@@ -394,6 +395,7 @@ function Register() {
                 <Link
                   to="/login"
                   className="font-extrabold underline hover:text-violet-400"
+                  data-testid="loginLink"
                 >
                   {r.footer.link}
                 </Link>

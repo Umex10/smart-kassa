@@ -21,14 +21,14 @@ import { toastMessages } from "../content/auth/toastMessages";
 import { useWarningToast } from "../hooks/useToast";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../redux/store";
-import { login } from "@/utils/auth";
+import { login } from "../utils/auth";
 import type {
   Container,
   LoginShowError,
   PasswordContainer,
 } from "../../constants/Compontents";
-import Inputs from "@/components/Inputs";
-import PasswordInputs from "@/components/PasswordInputs";
+import Inputs from "../components/Inputs";
+import PasswordInputs from "../components/PasswordInputs";
 
 /**
  * The Login page, where users sign in
@@ -197,6 +197,7 @@ function Login() {
               className="w-full bg-black text-white dark:bg-white dark:text-black"
               variant="default"
               disabled={formUnvalid}
+              data-testid="login"
             >
               {l.buttons.login}
             </Button>
@@ -209,6 +210,7 @@ function Login() {
                 <Link
                   to="/register"
                   className="font-extrabold underline hover:text-violet-400"
+                  data-testid="registerLink"
                 >
                   {l.footer.link}
                 </Link>

@@ -122,11 +122,11 @@ export async function login(
     }
 
     const accessToken = await data.accessToken;
-    alert(accessToken);
-    alert("Access Token is:");
+    console.log(accessToken);
+    console.log("Access Token is:");
     await AuthStorage.setTokens(accessToken);
 
-    alert(await AuthStorage.getAccessToken());
+    console.log(await AuthStorage.getAccessToken());
     const user = data.user;
     dispatch(
       signInUser({

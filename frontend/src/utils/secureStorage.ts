@@ -13,11 +13,11 @@ export const SecureStorage = {
    */
   async set(key: string, value: string): Promise<void> {
     if (isMobile) {
-      alert("Set Token");
-      alert(`key: ${key}, value: ${value}`);
+      console.log("Set Token");
+      console.log(`key: ${key}, value: ${value}`);
       await Preferences.set({ key: key, value: value });
     } else {
-      alert("Local Storage lil bro");
+      console.log("Local Storage lil bro");
       localStorage.setItem(key, value);
     }
   },
@@ -27,12 +27,12 @@ export const SecureStorage = {
    */
   async get(key: string): Promise<string | null> {
     if (isMobile) {
-      alert("Get Token");
+      console.log("Get Token");
       const { value } = await Preferences.get({ key: key });
       if (value) {
-        alert(`Gefundener Value: ${value}`);
+        console.log(`Gefundener Value: ${value}`);
       } else {
-        alert("Value not found");
+        console.log("Value not found");
       }
       return value;
     } else {
@@ -71,7 +71,7 @@ export const AuthStorage = {
    * Save access and refresh tokens
    */
   async setTokens(accessToken: string, refreshToken?: string): Promise<void> {
-    alert("Function Secure Storage Fired, of setTokens");
+    console.log("Function Secure Storage Fired, of setTokens");
     await SecureStorage.set("accessToken", accessToken);
     if (refreshToken) {
       await SecureStorage.set("refreshToken", refreshToken);
@@ -82,7 +82,7 @@ export const AuthStorage = {
    * Get the access token
    */
   async getAccessToken(): Promise<string | null> {
-    alert("Function Secure Storage Fired, of getAccessToken");
+    console.log("Function Secure Storage Fired, of getAccessToken");
     return await SecureStorage.get("accessToken");
   },
 
@@ -101,7 +101,7 @@ export const AuthStorage = {
    * Remove all tokens (for logout)
    */
   async clearTokens(): Promise<void> {
-    alert("Function Secure Storage Fired, of clearTokens");
+    console.log("Function Secure Storage Fired, of clearTokens");
     await SecureStorage.remove("accessToken");
     await SecureStorage.remove("refreshToken");
   },

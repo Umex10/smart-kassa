@@ -19,9 +19,7 @@ export const validationMessages = {
       required: "E-Mail-Adresse darf nicht leer sein",
     },
     password: {
-      tooShort: "Passwort braucht mindestens 8 Zeichen",
-      invalidFormat:
-        "Das Passwort muss mindestens eine Zahl und ein Sonderzeichen enthalten",
+      tooShort: "Passwort braucht mindestens 8 Zeichen"
     },
   },
 

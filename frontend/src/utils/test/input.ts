@@ -1,4 +1,4 @@
-import type { ConfirmPasswordErrors, PasswordErrors } from "@/content/auth/validationMessages";
+
 import userEvent from "@testing-library/user-event";
 import { expect } from "vitest";
 import { screen } from "@testing-library/react";
@@ -7,7 +7,7 @@ export interface InfoField {
   field: HTMLElement;
   value: string;
   wrongValue: string;
-  validationMessage: string | PasswordErrors | ConfirmPasswordErrors 
+  validationMessage?: string
 }
 
 export const fillField = async (field: HTMLElement, value: string) => {

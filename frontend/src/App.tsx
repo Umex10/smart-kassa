@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-import Register from "./pages/Register";
+import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import Login from "./pages/Login";
+import Login from "./pages/auth/Login";
 import RootLayout from "./layout/RootLayout";
 import Settings from "./pages/settings/Settings";
 import { useEffect } from "react";
@@ -40,9 +39,9 @@ function App() {
               <RootLayout />
             ) : (
               // Web: Use ProtectedRoute
-              <ProtectedRoute>
+              
                 <RootLayout />
-              </ProtectedRoute>
+            
             )
           }
         >

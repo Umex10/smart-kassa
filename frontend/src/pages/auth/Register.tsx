@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "../components/ui/button";
+import { Button } from "../../components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "../components/ui/card";
+} from "../../components/ui/card";
 import {
   useInvalidATU,
   useInvalidConfirmPassword,
@@ -18,22 +18,22 @@ import {
   useInvalidTelefonnummer,
   useInvalidUsername,
   type PASSWORD_VALIDATOR,
-} from "../hooks/useValidator";
-import { authContent } from "../content/auth/auth";
-import { validationMessages } from "../content/auth/validationMessages";
-import { toastMessages } from "../content/auth/toastMessages";
-import type { AppDispatch, RootState } from "../../redux/store";
+} from "../../hooks/useValidator";
+import { authContent } from "../../content/auth/auth";
+import { validationMessages } from "../../content/auth/validationMessages";
+import { toastMessages } from "../../content/auth/toastMessages";
+import type { AppDispatch, RootState } from "../../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { useWarningToast } from "../hooks/useToast";
-import { register } from "../utils/auth";
+import { useWarningToast } from "../../hooks/useToast";
+import { register } from "../../utils/auth";
 import { toast } from "sonner";
 import type {
   Container,
   PasswordContainer,
   showError,
-} from "../../constants/Compontents";
-import Inputs from "../components/Inputs";
-import PasswordInputs from "../components/PasswordInputs";
+} from "../../../constants/Compontents";
+import Inputs from "../../components/Inputs";
+import PasswordInputs from "../../components/PasswordInputs";
 
 /**
  * The Sign Up page, where users Sign Up
@@ -44,7 +44,7 @@ import PasswordInputs from "../components/PasswordInputs";
 function Register() {
   // useState Hooks for the Form
   const [firstname, setFirstname] = useState("");
-  const [lastanme, setLastname] = useState("");
+  const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -75,7 +75,7 @@ function Register() {
 
   // invalid... returns true if used value is invalid
   const invalidFirstname = useInvalidUsername(firstname);
-  const invalidLastname = useInvalidUsername(lastanme);
+  const invalidLastname = useInvalidUsername(lastname);
   const invalidEmail = useInvalidEmail(email);
   const invalidATU = useInvalidATU(atu);
   const invalidFN = useInvalidFirmenbuchnummer(firmenbuchnummer);
@@ -110,7 +110,7 @@ function Register() {
     try {
       await register(
         firstname,
-        lastanme,
+        lastname,
         email,
         telefonnummer,
         password,
@@ -201,7 +201,7 @@ function Register() {
       placeholder: r.placeholders.nachanme,
       type: "text",
       validation: invalidLastname && showHint.LastnameFocused,
-      value: lastanme,
+      value: lastname,
       validationMessage: v.nachname.required,
     },
   ];

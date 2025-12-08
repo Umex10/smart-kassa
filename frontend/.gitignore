@@ -26,3 +26,11 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Android
+android/.gradle/
+android/app/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/
+android/local.properties

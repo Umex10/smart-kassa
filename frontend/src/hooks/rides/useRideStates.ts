@@ -67,7 +67,6 @@ export const useRideStates = (isRideActive: boolean,
 
     const interval = setInterval(() => {
       showNewRoute();
-      console.log("Routing Line new")
     }, 10000)
 
     return () => clearInterval(interval);

@@ -18,7 +18,6 @@ import { useDriverLocation } from "@/hooks/rides/useDriverLocation";
 import { useRideStates } from "@/hooks/rides/useRideStates";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { add } from "../../../redux/slices/allRidesSlice";
 import { reverseGeocode } from "@/utils/rides/reverseGeocode";
 import { getDate } from "@/utils/rides/getDate";
 import {
@@ -28,10 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sendRide } from "@/utils/ride";
+import { sendRide } from "@/utils/rides/ride";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import StatusOverlay from "@/components/StatusOverlay";
+import { ROUTING_CONFIG } from "@/utils/config";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -51,23 +51,37 @@ const driverIcon = new Icon({
   iconAnchor: [16, 16],
 });
 
-
 // This will create the route itself between start and end address
-export const RoutingMachine = ({ start, end }:
-  {
-    start: [number, number],
-    end: [number, number]
-  },
-
-) => {
+export const RoutingMachine = ({
+  start,
+  end,
+}: {
+  start: [number, number];
+  end: [number, number];
+}) => {
   const map = useMap();
+
+  // use ref to hold control between renders
+  const routingControlRef = useRef<L.Routing.Control | null>(null);
 
   useEffect(() => {
     if (!map) return;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-expect-error
-    const routingControl = L.Routing.control({
+    if (routingControlRef.current) return;
+
+    let router;
+    // osrm demo for testing only
+    if (ROUTING_CONFIG.mode === "demo") {
+      router = L.Routing.osrmv1({
+        serviceUrl: ROUTING_CONFIG.demo.serviceUrl,
+      });
+    } else if (ROUTING_CONFIG.mode === "mapbox") {
+      // stable osrm for dev-ready-status
+      router = L.Routing.mapbox(ROUTING_CONFIG.mapbox.apiKey);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const routingControl = (L as any).Routing.control({
       waypoints: [L.latLng(start[0], start[1]), L.latLng(end[0], end[1])],
       // ensures that the driver cannot change the route
       routeWhileDragging: false,
@@ -77,16 +91,29 @@ export const RoutingMachine = ({ start, end }:
       addWaypoints: false,
       lineOptions: {
         styles: [{ weight: 5 }],
+        extendToWaypoints: true,
+        missingRouteTolerance: 10,
       },
       // This will ensure that leaflet doesn't add additional markers
       createMarker: () => null,
+      router: router, // Tell leaflet to use this router
     }).addTo(map);
 
-    // Clean
-    return () => {
-      map.removeControl(routingControl);
-    };
-  }, [map, start, end]);
+    routingControlRef.current = routingControl;
+  }, [end, map, start]);
+
+  // We are not building new control object, we are instead setting
+  // new lng and lat
+  useEffect(() => {
+    if (routingControlRef.current) {
+      const newWaypoints = [
+        L.latLng(start[0], start[1]),
+        L.latLng(end[0], end[1]),
+      ];
+
+      routingControlRef.current.setWaypoints(newWaypoints);
+    }
+  }, [start, end]);
 
   return null;
 };
@@ -216,7 +243,7 @@ const Ride = () => {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const user_id = useSelector((state: RootState) => state.user.id)
+  const user_id = useSelector((state: RootState) => state.user.id);
 
   const [distance, setDistance] = useState(0);
 
@@ -243,7 +270,6 @@ const Ride = () => {
           reverseGeocode(driverLocation[0], driverLocation[1]),
           reverseGeocode(destinationCoords[0], destinationCoords[1]),
         ]);
-
         const newRide = {
           user_id: Number(user_id) !== 0 ? Number(user_id) : 1,
           start_address: startAddress ?? "",
@@ -257,15 +283,15 @@ const Ride = () => {
           duration: formatTime(timer),
           distance: distance,
           ride_type: rideType,
-          wholeRide: wholeRide // botenfahrt
-        }
+          //wholeRide: wholeRide // botenfahrt
+        };
         try {
-          const data = await sendRide(newRide);
-          const ride_info = data.ride_info;
-          const whole = {...ride_info, ...newRide};
-          dispatch(add(whole));
+          await sendRide(newRide);
+          //const ride_id = data.ride_info.ride_id;
+          //const whole = {...ride_info, ...newRide};
+          //dispatch(add(whole));
           reInitialize();
-          navigator("/all-rides/");
+          navigator(`/all-rides`);
         } catch (error) {
           console.error(error);
         } finally {
@@ -273,7 +299,22 @@ const Ride = () => {
         }
       })();
     }
-  }, [isRideActive, isSuccessful, driverLocation, destinationCoords, startTime, endTime, timer, distance, rideType, dispatch, reInitialize, user_id, navigator, wholeRide])
+  }, [
+    isRideActive,
+    isSuccessful,
+    driverLocation,
+    destinationCoords,
+    startTime,
+    endTime,
+    timer,
+    distance,
+    rideType,
+    dispatch,
+    reInitialize,
+    user_id,
+    navigator,
+    wholeRide,
+  ]);
 
   // Simle loading state
   if (!driverLocation) {
@@ -326,12 +367,18 @@ const Ride = () => {
 
           {/* Destination-Routing */}
           {routingStartCoords && destinationCoords && (
-            <RoutingMachine start={routingStartCoords} end={destinationCoords} />
+            <RoutingMachine
+              start={routingStartCoords}
+              end={destinationCoords}
+            />
           )}
 
           {driverLocation && (
-            <DistanceTracker lat={driverLocation[0]} lng={driverLocation[1]}
-              setDist={setDistance}></DistanceTracker>
+            <DistanceTracker
+              lat={driverLocation[0]}
+              lng={driverLocation[1]}
+              setDist={setDistance}
+            ></DistanceTracker>
           )}
 
           {isRideActive && (
@@ -372,10 +419,11 @@ const Ride = () => {
           onBlur={() => setShowDestinationHint(true)}
           onFocus={() => setShowDestinationHint(false)}
           className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 transition duration-150
-      ${isDestinationInvalid && showDestinationHint
-              ? "border-red-500"
-              : "border-violet-300"
-            }`}
+      ${
+        isDestinationInvalid && showDestinationHint
+          ? "border-red-500"
+          : "border-violet-300"
+      }`}
           disabled={isRideActive}
         />
 

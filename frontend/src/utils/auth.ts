@@ -103,6 +103,8 @@ export async function login(
     throw new Error("Missing Fields");
   }
 
+  console.log(import.meta.env.VITE_API_URL);
+  console.log(`${email}  and ${password}`);
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/login`,
@@ -113,6 +115,7 @@ export async function login(
       { withCredentials: true }
     );
     const data = response.data;
+    console.log(data);
 
     if (!data) {
       throw new Error("Response is empty");

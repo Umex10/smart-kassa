@@ -41,11 +41,13 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           await navigator("/ride");
         }
 
+        console.log("dadadafafafafaf");
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
           throw new Error("User Data invalid");
         }
 
+        console.log("dadadafafafafaf");
         dispatch(
           signInUser({
             id: userData.id,
@@ -68,6 +70,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           toastShownRef.current = true;
         }
       } catch {
+        console.log("dadadafafafafaf")
         await navigator("/register");
         dispatch(setUnauthenticated());
       }

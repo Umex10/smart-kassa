@@ -179,6 +179,7 @@ function Register() {
       validation: invalidFirstname && showHint.Firstnamefocused,
       value: firstname,
       validationMessage: v.vorname.required,
+      autocomplete: "name",
     },
     {
       className:
@@ -204,6 +205,7 @@ function Register() {
       validation: invalidLastname && showHint.LastnameFocused,
       value: lastanme,
       validationMessage: v.nachanme.required,
+      autocomplete: "family-name",
     },
   ];
 
@@ -224,6 +226,7 @@ function Register() {
       validation: invalidEmail && showHint.EmailFocused,
       validationMessage: v.email.invalid,
       value: email,
+      autocomplete: "email",
     },
     {
       className:
@@ -249,6 +252,7 @@ function Register() {
       validation: invalidTelefonNumber && showHint.TelefonnummerFocused,
       validationMessage: v.phone.invalid,
       value: telefonnummer,
+      autocomplete: "tel",
     },
   ];
 
@@ -268,6 +272,7 @@ function Register() {
       validation: invalidFN && showHint.FNFocused,
       validationMessage: v.fn.invalid,
       value: firmenbuchnummer,
+      autocomplete: "off",
     },
     {
       className:

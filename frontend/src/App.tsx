@@ -37,7 +37,9 @@ function App() {
           element={
             isMobile ? (
               // Mobile: No ProtectedRoute, direct access
-              <RootLayout />
+              <ProtectedRoute>
+                <RootLayout />
+              </ProtectedRoute>
             ) : (
               // Web: Use ProtectedRoute
               <ProtectedRoute>

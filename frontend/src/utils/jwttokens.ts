@@ -8,8 +8,10 @@ import { AuthStorage } from "./secureStorage";
 export async function verifyAccessToken() {
   try {
     const accessToken = await AuthStorage.getAccessToken();
+    alert(typeof accessToken);
 
     if (!accessToken) {
+      console.log("null accestoken");
       throw new Error("No access token found");
     }
 
@@ -20,27 +22,32 @@ export async function verifyAccessToken() {
       withCredentials: true,
     });
 
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError && error.response) {
-      await AuthStorage.clearTokens();
-      try {
-        const newAccessToken = await refreshAccessToken();
+    if (!response) {
+      throw new Error("Response Object is Empty");
+    }
 
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/verify`, {
+    return response.data;
+  } catch {
+    alert("no access token and Axios Error");
+    await AuthStorage.clearAccessToken();
+    try {
+      const newAccessToken = await refreshAccessToken();
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/verify`,
+        {
           headers: {
             Authorization: `Bearer ${newAccessToken}`,
           },
           withCredentials: true,
-        });
+        }
+      );
 
-        return response.data;
-      } catch {
-        await AuthStorage.clearTokens();
-        throw new Error("Session expired, please login again");
-      }
-    } else {
-      throw new Error("Unknown Error");
+      return response.data;
+    } catch {
+      alert("cleared both tokens");
+      await AuthStorage.clearTokens();
+      throw new Error("Session expired, please login again");
     }
   }
 }

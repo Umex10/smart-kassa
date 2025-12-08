@@ -13,8 +13,11 @@ export const SecureStorage = {
    */
   async set(key: string, value: string): Promise<void> {
     if (isMobile) {
-      await Preferences.set({ key, value });
+      alert("Set Token");
+      alert(`key: ${key}, value: ${value}`);
+      await Preferences.set({ key: key, value: value });
     } else {
+      alert("Local Storage lil bro");
       localStorage.setItem(key, value);
     }
   },
@@ -24,7 +27,13 @@ export const SecureStorage = {
    */
   async get(key: string): Promise<string | null> {
     if (isMobile) {
-      const { value } = await Preferences.get({ key });
+      alert("Get Token");
+      const { value } = await Preferences.get({ key: key });
+      if (value) {
+        alert(`Gefundener Value: ${value}`);
+      } else {
+        alert("Value not found");
+      }
       return value;
     } else {
       return localStorage.getItem(key);
@@ -36,7 +45,7 @@ export const SecureStorage = {
    */
   async remove(key: string): Promise<void> {
     if (isMobile) {
-      await Preferences.remove({ key });
+      await Preferences.remove({ key: key });
     } else {
       localStorage.removeItem(key);
     }
@@ -62,6 +71,7 @@ export const AuthStorage = {
    * Save access and refresh tokens
    */
   async setTokens(accessToken: string, refreshToken?: string): Promise<void> {
+    alert("Function Secure Storage Fired, of setTokens");
     await SecureStorage.set("accessToken", accessToken);
     if (refreshToken) {
       await SecureStorage.set("refreshToken", refreshToken);
@@ -72,6 +82,7 @@ export const AuthStorage = {
    * Get the access token
    */
   async getAccessToken(): Promise<string | null> {
+    alert("Function Secure Storage Fired, of getAccessToken");
     return await SecureStorage.get("accessToken");
   },
 
@@ -82,10 +93,15 @@ export const AuthStorage = {
     return await SecureStorage.get("refreshToken");
   },
 
+  async clearAccessToken(): Promise<void> {
+    await SecureStorage.remove("accessToken");
+  },
+
   /**
    * Remove all tokens (for logout)
    */
   async clearTokens(): Promise<void> {
+    alert("Function Secure Storage Fired, of clearTokens");
     await SecureStorage.remove("accessToken");
     await SecureStorage.remove("refreshToken");
   },

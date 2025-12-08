@@ -1,11 +1,25 @@
 import { Button } from "@/components/ui/button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Account = () => {
   const form = useForm({
@@ -16,13 +30,16 @@ const Account = () => {
     },
   });
 
-  const onSubmit = (values: { firstName: string; lastName: string; email: string }) => {
+  const onSubmit = (values: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
     console.log("Form submitted:", values);
   };
 
   return (
     <div className="flex flex-col gap-16">
-
       {/* Page Header */}
       <div className="pb-6 border-b border-gray-300">
         <h2 className="text-3xl font-extrabold">Account Settings</h2>
@@ -33,7 +50,6 @@ const Account = () => {
 
       {/* Information Section */}
       <div className="flex flex-col md:flex-row gap-10 items-start border-b border-gray-300 pb-10">
-
         {/* Left Label Column */}
         <div className="w-full md:w-64">
           <h3 className="font-extrabold text-lg">Information</h3>
@@ -44,7 +60,6 @@ const Account = () => {
 
         {/* Right Content */}
         <div className="flex flex-col gap-10 w-full max-w-xl">
-
           {/* Avatar Row */}
           <div className="flex flex-row gap-8 items-center">
             <Avatar>
@@ -76,11 +91,12 @@ const Account = () => {
 
           {/* Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-xl">
-
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6 w-full max-w-xl"
+            >
               {/* 2 column grid on desktop */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                 {/* First Name */}
                 <FormField
                   control={form.control}
@@ -139,7 +155,6 @@ const Account = () => {
                     )}
                   />
                 </div>
-
               </div>
 
               <Button
@@ -165,12 +180,14 @@ const Account = () => {
         <div className="w-full md:w-64">
           <h3 className="font-extrabold text-lg">Delete account</h3>
           <p className="text-sm font-light max-w-xs">
-            No longer want to use our service? This action is permanent and cannot be undone.
+            No longer want to use our service? This action is permanent and
+            cannot be undone.
           </p>
         </div>
-
-        <Button
-          className="
+        <Dialog>
+          <DialogTrigger>
+            <Button
+              className="
             bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
             transition-all duration-200
             hover:bg-red-500
@@ -178,13 +195,35 @@ const Account = () => {
             hover:scale-[1.02]
             active:scale-[0.98]
           "
-        >
-          Delete my account
-        </Button>
+            >
+              Delete my account
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete your
+                account and remove your data from our servers.
+                <Button
+                  className=" my-4
+            bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
+            transition-all duration-200
+            hover:bg-red-500
+            hover:shadow-md
+            hover:scale-[1.02]
+            active:scale-[0.98]
+          "
+                >
+                  Delete my account
+                </Button>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
-
     </div>
-  )
-}
+  );
+};
 
 export default Account;

@@ -31,7 +31,6 @@ const AllRides = () => {
 
       if (!data || !data.rides) throw new Error("No rides found");
       setRides(data.rides);
-      console.log(data.rides)
     })();
   }, []);
 
@@ -42,12 +41,11 @@ const AllRides = () => {
   // }
 
   // const ride = rides.find(r => Number(r.ride_id) === ride_id);
-  // console.log("Ride and id: ", ride, id)
 
   // if (!ride && id) {
   //   return <>Ride not found</>
   // } else if (!id) {
-  //   console.log()
+  //   // Handle case when no id
   // } else {
   //  // return <SummaryRide ride={rides[ride_id - 1]}></SummaryRide>
   // };

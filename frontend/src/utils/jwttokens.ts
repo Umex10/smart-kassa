@@ -8,10 +8,8 @@ import { AuthStorage } from "./secureStorage";
 export async function verifyAccessToken() {
   try {
     const accessToken = await AuthStorage.getAccessToken();
-    console.log(typeof accessToken);
 
     if (!accessToken) {
-      console.log("null accestoken");
       throw new Error("No access token found");
     }
 
@@ -28,7 +26,6 @@ export async function verifyAccessToken() {
 
     return response.data;
   } catch {
-    console.error("no access token and Axios Error");
     await AuthStorage.clearAccessToken();
     try {
       const newAccessToken = await refreshAccessToken();
@@ -45,7 +42,6 @@ export async function verifyAccessToken() {
 
       return response.data;
     } catch {
-      console.log("cleared both tokens");
       await AuthStorage.clearTokens();
       throw new Error("Session expired, please login again");
     }

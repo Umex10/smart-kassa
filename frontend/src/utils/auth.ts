@@ -104,8 +104,6 @@ export async function login(
     throw new Error("Missing Fields");
   }
 
-  console.log(import.meta.env.VITE_API_URL);
-  console.log(`${email}  and ${password}`);
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/login`,
@@ -116,18 +114,14 @@ export async function login(
       { withCredentials: true }
     );
     const data = response.data;
-    console.log(data);
 
     if (!data) {
       throw new Error("Response is empty");
     }
 
     const accessToken = await data.accessToken;
-    console.log(accessToken);
-    console.log("Access Token is:");
     await AuthStorage.setTokens(accessToken);
 
-    console.log(await AuthStorage.getAccessToken());
     const user = data.user;
     dispatch(
       signInUser({

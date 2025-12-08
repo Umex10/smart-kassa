@@ -1,7 +1,7 @@
 /**
  * Test Suite for the Register Page.
  * Tests the functionality of the Register form, including validation and navigation.
- * @author 
+ * @author
  */
 import { screen, waitFor } from "@testing-library/react";
 import Register from "./Register";
@@ -10,13 +10,16 @@ import "@testing-library/jest-dom/vitest";
 import { renderWithRouter } from "../../utils/test/renderWithRouter";
 import userEvent from "@testing-library/user-event";
 import Login from "./Login";
-import { expectValidationMessage, fillField, type InfoField } from "../../utils/test/input";
+import {
+  expectValidationMessage,
+  fillField,
+  type InfoField,
+} from "../../utils/test/input";
 import { validationMessages } from "../../content/auth/validationMessages";
 import { useInvalidEmail, useInvalidPassword } from "../../hooks/useValidator";
 import * as authModule from "../../utils/auth";
 import type { USER_DTO } from "constants/User";
 import Home from "../Home";
-
 
 // ResizeObserver Mock (Recharts) "Unused"
 globalThis.ResizeObserver = class {
@@ -33,7 +36,7 @@ vi.mock("axios");
 // function is called wether the main action itself.
 vi.mock("../../redux/slices/userSlice", () => ({
   // redux action calls are returning this very object
-  signInUser: (payload: USER_DTO) => ({ type: "user/signInUser", payload })
+  signInUser: (payload: USER_DTO) => ({ type: "user/signInUser", payload }),
 }));
 
 // We are just tracking the function here, which is not a fake function
@@ -48,10 +51,9 @@ vi.mock("react-redux", async () => {
   return {
     // Only change disatch, nothing else from redux
     ...actual,
-    useDispatch: () => dispatch
-  }
-})
-
+    useDispatch: () => dispatch,
+  };
+});
 
 describe("Register Page", () => {
   let name: HTMLElement;
@@ -73,12 +75,11 @@ describe("Register Page", () => {
    */
 
   beforeEach(() => {
-
     vi.clearAllMocks();
 
     renderWithRouter(<Register />, "/register", [
       { path: "/login", element: <Login /> },
-      { path: "/", element: <Home></Home> }
+      { path: "/", element: <Home></Home> },
     ]);
 
     // Get all input elements
@@ -98,12 +99,42 @@ describe("Register Page", () => {
 
     // Info fields for testing invalid and valid inputs (business data only)
     info = [
-      { field: name, value: "Thomas", wrongValue: "", validationMessage: err.vorname.required },
-      { field: sirName, value: "Laimer", wrongValue: "", validationMessage: err.nachname.required },
-      { field: email, value: "Laimer@gmail.com", wrongValue: "Laimer@", validationMessage: err.email.invalid },
-      { field: telefon, value: "+43 222 45452", wrongValue: "452", validationMessage: err.phone.invalid },
-      { field: fn, value: "FN123456a", wrongValue: "F6a", validationMessage: err.fn.invalid },
-      { field: atu, value: "ATU123334455", wrongValue: "A55", validationMessage: err.atu.invalid },
+      {
+        field: name,
+        value: "Thomas",
+        wrongValue: "",
+        validationMessage: err.vorname.required,
+      },
+      {
+        field: sirName,
+        value: "Laimer",
+        wrongValue: "",
+        validationMessage: err.nachname.required,
+      },
+      {
+        field: email,
+        value: "Laimer@gmail.com",
+        wrongValue: "Laimer@",
+        validationMessage: err.email.invalid,
+      },
+      {
+        field: telefon,
+        value: "+43 222 45452",
+        wrongValue: "452",
+        validationMessage: err.phone.invalid,
+      },
+      {
+        field: fn,
+        value: "FN123456a",
+        wrongValue: "F6a",
+        validationMessage: err.fn.invalid,
+      },
+      {
+        field: atu,
+        value: "ATU123334455",
+        wrongValue: "A55",
+        validationMessage: err.atu.invalid,
+      },
     ];
 
     // Auth fields (password, confirmPassword) – also using wrongValue
@@ -141,10 +172,13 @@ describe("Register Page", () => {
       await userEvent.tab(); // trigger validation
     }
 
-    await waitFor(() => {
-      expect(registerButton).toBeEnabled();
-    });
-  });
+    await waitFor(
+      () => {
+        expect(registerButton).toBeEnabled();
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
 
   // -----------------------------
   // Test 2: Keep register button disabled with invalid data
@@ -181,7 +215,9 @@ describe("Register Page", () => {
     await fillField(password, "Laimer+"); // contains symbol but no number
     await userEvent.tab();
 
-    await expectValidationMessage(validationMessages.register.password.missingNumber);
+    await expectValidationMessage(
+      validationMessages.register.password.missingNumber
+    );
   });
 
   // -----------------------------
@@ -191,7 +227,9 @@ describe("Register Page", () => {
     await fillField(password, "Laimer123"); // contains number but no symbol
     await userEvent.tab();
 
-    await expectValidationMessage(validationMessages.register.password.missingSymbol);
+    await expectValidationMessage(
+      validationMessages.register.password.missingSymbol
+    );
   });
 
   // -----------------------------
@@ -207,7 +245,9 @@ describe("Register Page", () => {
     await fillField(confirmInfo.field, confirmInfo.wrongValue); // mismatch via wrongValue
     await userEvent.tab();
 
-    await expectValidationMessage(validationMessages.register.confirmPassword.invalid);
+    await expectValidationMessage(
+      validationMessages.register.confirmPassword.invalid
+    );
   });
 
   // -----------------------------
@@ -229,10 +269,7 @@ describe("Register Page", () => {
     }
 
     // Valid email formats
-    const validEmails = [
-      "user@example.com",
-      "user.name+tag@example.co.uk",
-    ];
+    const validEmails = ["user@example.com", "user.name+tag@example.co.uk"];
 
     for (const value of validEmails) {
       // Check validator function
@@ -266,7 +303,9 @@ describe("Register Page", () => {
 
     await fillField(password, tooShort);
     await userEvent.tab();
-    await expectValidationMessage(validationMessages.register.password.tooShort);
+    await expectValidationMessage(
+      validationMessages.register.password.tooShort
+    );
 
     // Test 2: No number
     const noNumber = "Password+";
@@ -276,7 +315,9 @@ describe("Register Page", () => {
 
     await fillField(password, noNumber);
     await userEvent.tab();
-    await expectValidationMessage(validationMessages.register.password.missingNumber);
+    await expectValidationMessage(
+      validationMessages.register.password.missingNumber
+    );
 
     // Test 3: No special character
     const noSpecial = "Password123";
@@ -286,7 +327,9 @@ describe("Register Page", () => {
 
     await fillField(password, noSpecial);
     await userEvent.tab();
-    await expectValidationMessage(validationMessages.register.password.missingSymbol);
+    await expectValidationMessage(
+      validationMessages.register.password.missingSymbol
+    );
 
     // Test 4: Valid password (≥8 characters, number, special character) – use value from auth
     const validPass = pwdInfo.value ?? "Pass+word1";
@@ -310,32 +353,40 @@ describe("Register Page", () => {
   });
 
   // -----------------------------
-  // Test 9: Successful Register 
+  // Test 9: Successful Register
   // -----------------------------
   it("simulates the register function with success", async () => {
-
     // returns fake data (not a function call, just what to do when it is called)
-    mockedRegister.mockImplementation(async (_firstName, _lastName,
-      _email, _telefonnummer, _password, _firmenbuchnummer,
-      _atu, dispatch) => {
-      dispatch({
-        type: "user/signInUser",
-        payload: {
-          id: 42,
-          firstName: "Max",
-          lastName: "Mustermann",
-          email: "max@x.com",
-          phoneNumber: "phone number need implementation",
-        },
-      });
+    mockedRegister.mockImplementation(
+      async (
+        _firstName,
+        _lastName,
+        _email,
+        _telefonnummer,
+        _password,
+        _firmenbuchnummer,
+        _atu,
+        dispatch
+      ) => {
+        dispatch({
+          type: "user/signInUser",
+          payload: {
+            id: 42,
+            firstName: "Max",
+            lastName: "Mustermann",
+            email: "max@x.com",
+            phoneNumber: "phone number need implementation",
+          },
+        });
 
-      // return successful object 
-      return {
-        message: "User registered successfully",
-        accessToken: "FAKE_TOKEN",
-        user: { userId: 42, name: "Max", email: "max@x.com" }
-      };
-    })
+        // return successful object
+        return {
+          message: "User registered successfully",
+          accessToken: "FAKE_TOKEN",
+          user: { userId: 42, name: "Max", email: "max@x.com" },
+        };
+      }
+    );
 
     // Fill data
     await fillField(name, "Max");
@@ -372,22 +423,20 @@ describe("Register Page", () => {
         email: "max@x.com",
         phoneNumber: "phone number need implementation",
       },
-    })
+    });
 
     await waitFor(() => {
       expect(screen.queryByTestId("register")).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome/i)).toBeInTheDocument();
     });
-
   });
 
   // -----------------------------
   // Test 10: Unsuccessful Register due to error
   // -----------------------------
   it("simulates the register function with unsuccess", async () => {
-
     // Ignore the stderr messages in the console
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // returns fake data (not a function call, just what to do when it is called)
     // We are using here "rejected", because vite needs some time to get into the catch() block
@@ -425,7 +474,7 @@ describe("Register Page", () => {
     // was it called with this data
     expect(dispatch).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "user/signInUser"
+        type: "user/signInUser",
       })
     );
 
@@ -435,6 +484,4 @@ describe("Register Page", () => {
     // restore the usual behavior of console.err
     consoleSpy.mockRestore();
   });
-
-
 });

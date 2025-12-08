@@ -332,7 +332,7 @@ function Register() {
           showHint.ConfirmPasswordFocused &&
           "border-2 border-red-500") ||
         "",
-      id: "new-password",
+      id: "confirmPassword",
       label: r.labels.confirmPassword,
       onBlurListener: () =>
         setShowHint((prev) => ({

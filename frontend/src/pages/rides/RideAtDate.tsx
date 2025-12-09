@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import type { AllRide } from "constants/AllRide";
 import { date, distance, duration } from "@/utils/rides/sort";
+import { useNavigate } from "react-router";
 
 interface RideAtDateArgs {
   rides: AllRide[];
@@ -56,6 +57,8 @@ function handleRideType(rides: AllRide[], rideType: string) {
 
 const RideAtDate = ({ rides, sortAfter, isDescending, rideType }: RideAtDateArgs) => {
 
+  const navigator = useNavigate();
+
   handleSort(rides, sortAfter, isDescending);
   rides = handleRideType(rides, rideType);
 
@@ -64,8 +67,8 @@ const RideAtDate = ({ rides, sortAfter, isDescending, rideType }: RideAtDateArgs
      xl:grid-cols-3 gap-4 2xl:grid-cols-4 3xl:grid-cols-5'>
       {rides && rides.map((ride, index) => (
         <li key={index} className='w-full max-w-[600px]'>
-          {/*<Card onClick={() => navigator(`/all-rides/${ride.ride_id}`)}> */}
-          <Card>
+          <Card onClick={() => navigator(`/all-rides/${ride.ride_id}`)}> 
+          
             <CardHeader className="space-y-1">
               {/* Start Address */}
               <CardTitle className="flex items-center gap-2 text-lg font-semibold">

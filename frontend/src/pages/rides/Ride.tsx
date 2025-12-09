@@ -273,15 +273,13 @@ const Ride = () => {
           duration: formatTime(timer),
           distance: distance,
           ride_type: rideType,
-          //wholeRide: wholeRide // botenfahrt
+          wholeRide: wholeRide
         };
         try {
-          await sendRide(newRide);
-          //const ride_id = data.ride_info.ride_id;
-          //const whole = {...ride_info, ...newRide};
-          //dispatch(add(whole));
+          const data = await sendRide(newRide);
+          const ride_id = data.ride_info.ride_id;
           reInitialize();
-          navigator(`/all-rides`);
+          navigator(`/all-rides/${ride_id}`);
         } catch (error) {
           console.error(error);
         } finally {

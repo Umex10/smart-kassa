@@ -4,14 +4,14 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineDot from '@mui/lab/TimelineDot';
 import TimelineContent from '@mui/lab/TimelineContent';
-import type { Ride } from 'constants/Ride';
+import type { AllRide } from 'constants/AllRide';
 
 export interface dataArgs {
   label: string;
   value: string;
 }
 
-export function getRideTimeline(ride: Ride): dataArgs[] {
+export function getRideTimeline(ride: AllRide): dataArgs[] {
   // Formats a timestamp into: "DD Mon YY, HH:MM Uhr"
   function formatDateTime(dateStr: string) {
     const date = new Date(dateStr);
@@ -54,7 +54,7 @@ export function getRideTimeline(ride: Ride): dataArgs[] {
 }
 
 export default function BasicTimeline(labelClass: string, valueClass: string,
-  ride: Ride
+  ride: AllRide
 ) {
 
   const timelineData: dataArgs[] = getRideTimeline(ride);

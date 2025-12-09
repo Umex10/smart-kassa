@@ -8,8 +8,8 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L, { Icon } from "leaflet";
 import "leaflet-routing-machine";
 import { useEffect, useRef } from 'react';
-import type { Ride } from 'constants/Ride';
 import { durationToMinutes, formatMinutes } from '@/utils/rides/summaryMinutes';
+import type { AllRide } from 'constants/AllRide';
 
 
 const driverIcon = new Icon({
@@ -20,16 +20,17 @@ const driverIcon = new Icon({
 
 
 interface SummaryRideArgs {
-  ride: Ride
+  ride: AllRide
 };
 
 interface DrawMapArgs {
-  wholeRide: [number, number][]
+  wholeride: [number, number][]
 }
 
 export const DrawMap = (data: DrawMapArgs) => {
 
-  const wholeRide = data.wholeRide;
+  const wholeride = data.wholeride;
+
   const map = useMap();
   // This will hold the whole ride at the end
   const routePolyline = useRef<L.Polyline | null>(null);
@@ -42,10 +43,10 @@ export const DrawMap = (data: DrawMapArgs) => {
   useEffect(() => {
 
     // Fixed Start marker
-    L.marker(wholeRide[0]).addTo(map);
+    L.marker(wholeride[0]).addTo(map);
 
     routePolyline.current = L.polyline([], { color: 'violet' }).addTo(map);
-    animatedMarker.current = L.marker(wholeRide[0], { icon: driverIcon }).addTo(map);
+    animatedMarker.current = L.marker(wholeride[0], { icon: driverIcon }).addTo(map);
 
     return () => {
       if (routePolyline.current) map.removeLayer(routePolyline.current);
@@ -56,14 +57,14 @@ export const DrawMap = (data: DrawMapArgs) => {
   useEffect(() => {
     function addToLine() {
       let i = currentIndex.current;
-      if (i < wholeRide.length) {
+      if (i < wholeride.length) {
 
-        if (!wholeRide[i + 1]) {
-          L.marker(wholeRide[i]).addTo(map);
+        if (!wholeride[i + 1]) {
+          L.marker(wholeride[i]).addTo(map);
         }
 
-        routePolyline.current?.addLatLng(wholeRide[i]);
-        animatedMarker.current?.setLatLng(wholeRide[i]);
+        routePolyline.current?.addLatLng(wholeride[i]);
+        animatedMarker.current?.setLatLng(wholeride[i]);
 
         currentIndex.current = ++i;
       } else {
@@ -85,15 +86,14 @@ export const DrawMap = (data: DrawMapArgs) => {
   return null;
 }
 
-export const SummaryRide = (data: SummaryRideArgs) => {
+export const SummaryRide = ({ride}: SummaryRideArgs) => {
   const navigator = useNavigate();
   const labelClass = 'text-gray-500 text-sm'
   const valueClass = 'font-bold text-lg';
 
-  const ride = data.ride;
+  const wholeride: [number, number][] = ride.wholeride;
 
   return (
-
 
     <div className='w-full flex flex-col gap-8 items-center z-20'>
 
@@ -114,7 +114,8 @@ export const SummaryRide = (data: SummaryRideArgs) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
-        <DrawMap wholeRide={ride.wholeRide}></DrawMap>
+
+          <DrawMap wholeride={wholeride} />
       </MapContainer>
 
       {/* Ride ID */}

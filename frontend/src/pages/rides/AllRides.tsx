@@ -15,14 +15,22 @@ import {
 } from "@/components/ui/select";
 import { getRidesToday, getRidesYesterday } from "@/utils/rides/getRides";
 import { SelectValue } from "@radix-ui/react-select";
+import { useParams } from "react-router";
+import SummaryRide from "./SummaryRide";
 
 const AllRides = () => {
+
+
+  const [isDescending, setIsDescending] = useState(true);
+  const [isAscending, setIsAscending] = useState(false);
+  const [sortAfter, setSortAfter] = useState("date");
+  const [rideType, setRideType] = useState("");
 
   //const rides = useSelector((state: RootState) => state.allRidesSlice);
   //const user_id = useSelector((state: RootState) => state.user.id);
   //const navigator = useNavigate();
   const [rides, setRides] = useState<AllRide[] | null>(null);
-  //const { id } = useParams();
+  const { id } = useParams();
 
   useEffect(() => {
     (async () => {
@@ -34,28 +42,26 @@ const AllRides = () => {
     })();
   }, []);
 
-  // const ride_id = Number(id);
+  const ride_id = Number(id);
 
-  // if (!rides || rides.length === 0) {
-  //   return <>Loading rides…</>;
-  // }
 
-  // const ride = rides.find(r => Number(r.ride_id) === ride_id);
+  if (!rides || rides.length === 0) {
+    return <>Loading rides…</>;
+  }
 
-  // if (!ride && id) {
-  //   return <>Ride not found</>
-  // } else if (!id) {
-  //   // Handle case when no id
-  // } else {
-  //  // return <SummaryRide ride={rides[ride_id - 1]}></SummaryRide>
-  // };
+  if (ride_id) {
+     const ride = rides.find(r => Number(r.ride_id) === ride_id);
 
-  const [isDescending, setIsDescending] = useState(true);
-  const [isAscending, setIsAscending] = useState(false);
-  const [sortAfter, setSortAfter] = useState("date");
-  const [rideType, setRideType] = useState("");
+  if (!ride) {
+    return <>Ride not found</>
+  } else if (!id) {
+    // Handle case when no id
+  } else {
+    return <SummaryRide ride={ride}></SummaryRide>
+  };
 
-  if (!rides) return;
+  }
+
 
   const ridesToday = getRidesToday(rides);
   const ridesYesterday = getRidesYesterday(rides);

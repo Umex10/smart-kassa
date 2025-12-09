@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { durationToMinutes, formatMinutes } from '@/utils/rides/summaryMinutes';
 import type { AllRide } from 'constants/AllRide';
 import { driverIcon } from '@/utils/icons';
+import StatusOverlay from '@/components/StatusOverlay';
 
 interface SummaryRideArgs {
   ride: AllRide
@@ -24,7 +25,6 @@ export const DrawMap = (data: DrawMapArgs) => {
 
   const map = useMap();
   const wholeride = data.wholeride;
-
 
   // This will hold the whole ride at the end
   const routePolyline = useRef<L.Polyline | null>(null);
@@ -85,6 +85,12 @@ export const SummaryRide = ({ ride }: SummaryRideArgs) => {
   const labelClass = 'text-gray-500 text-sm'
   const valueClass = 'font-bold text-lg';
 
+  if (!ride) {
+    return <StatusOverlay text='Ride data could not be loaded. Please try again or check if the ride still exists.' 
+    isError={true}></StatusOverlay>
+
+  }
+
   const wholeride: [number, number][] = ride.wholeride;
 
   return (
@@ -97,20 +103,28 @@ export const SummaryRide = ({ ride }: SummaryRideArgs) => {
         <span className='font-bold text-2xl'>Ride Summary</span>
       </Button>
 
-      <MapContainer
-        center={[48.210033, 16.363449]}
-        zoom={13}
-        style={{ height: "500px", width: "100%" }}
-      >
-        {/* TileLayer actually shows the individual layers of the whole map */}
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+      {!ride.wholeride && (
+        <StatusOverlay text='Map data for this ride is missing. The route cannot be displayed.' 
+        isError={true}></StatusOverlay>
+
+      )}
+      {ride.wholeride && (
+        <MapContainer
+          center={[48.210033, 16.363449]}
+          zoom={13}
+          style={{ height: "500px", width: "100%" }}
+        >
+          {/* TileLayer actually shows the individual layers of the whole map */}
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
 
 
-        <DrawMap wholeride={wholeride} />
-      </MapContainer>
+          <DrawMap wholeride={wholeride} />
+        </MapContainer>
+      )}
+
 
       {/* Ride ID */}
       <div className='w-full flex flex-col gap-4'>

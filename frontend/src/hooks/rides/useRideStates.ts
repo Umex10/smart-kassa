@@ -41,7 +41,7 @@ export const useRideStates = (isRideActive: boolean,
   }
 
   const checkRide = () => {
-    if (isRideActive && timer <= 5) {
+    if (isRideActive && timer <= 3) {
       toast("The ride cannot be saved, because the ride lasted only under 1 minute.", {
         position: "top-center",
         closeButton: true,
@@ -99,6 +99,7 @@ export const useRideStates = (isRideActive: boolean,
     destinationCoords,
     setDestinationCoords,
     routingStartCoords,
+    setRoutingStartCoords,
     timer,
     setTimer,
     showNewRoute,

@@ -45,21 +45,15 @@ import { driverIcon, locationIcon } from "@/utils/icons";
 export const RoutingMachine = ({
   start,
   end,
+  setRoutingError,
+  routingRef
 }: {
   start: [number, number];
   end: [number, number];
+  setRoutingError: (text: string) => void
+  routingRef: React.MutableRefObject<L.Routing.Control | null>; 
 }) => {
   const map = useMap();
-
-  useEffect(() => {
-    // Create a custom pane for the route line
-    map.createPane("fixedRoutes");
-
-    // Make sure the line is above tiles but below markers
-    map.getPane("fixedRoutes")!.style.zIndex = "399";
-
-    // Prevent route from becoming thick during zoom animation
-  }, [map]);
 
   // use ref to hold control between renders
   const routingControlRef = useRef<L.Routing.Control | null>(null);
@@ -94,14 +88,22 @@ export const RoutingMachine = ({
         extendToWaypoints: true,
         missingRouteTolerance: 10,
       },
-      pane: "fixedRoutes",
       // This will ensure that leaflet doesn't add additional markers
       createMarker: () => null,
       router: router, // Tell leaflet to use this router
     }).addTo(map);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    routingControl.on("routingerror", (e: any) => {
+      console.error("Routing failed:", e);
+      setRoutingError("Die Route konnte nicht berechnet werden. Bitte probiere es später erneut.");
+    });
+
+    routingRef.current = routingControl;
+
     routingControlRef.current = routingControl;
-  }, [end, map, start]);
+
+  }, [end, map, start, setRoutingError]);
 
   // We are not building new control object, we are instead setting
   // new lng and lat
@@ -214,6 +216,11 @@ const Ride = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
 
+  // Necessary, to be able to delete the drawn route, if the route was unsuccessful
+  const routingRef = useRef<L.Routing.Control | null>(null);
+
+  const [routingError, setRoutingError] = useState<string | null>(null);
+
   // array that stores coordinates of our ride, to make a summary at the end of the ride
   const [wholeRide, setWholeRide] = useState<[number, number][]>([]);
 
@@ -261,6 +268,9 @@ const Ride = () => {
     setTimer(0);
     setIsSuccessful(false);
     setIsRouteCalculated(false);
+    // Delete the drawn route
+    routingRef.current?.remove();
+    routingRef.current = null;
   }, [setDestinationCoords, setDestination, setTimer, setIsRouteCalculated]);
 
   useEffect(() => {
@@ -317,11 +327,15 @@ const Ride = () => {
 
   // Simle loading state
   if (!driverLocation) {
-    return <StatusOverlay text="Warte auf GPS-Daten…" />;
+    return <StatusOverlay text="Warte auf GPS-Daten…" isLoading={true} />;
   }
 
   if (isLoading) {
-    return <StatusOverlay text="Fahrt wird verarbeitet..." />;
+    return <StatusOverlay text="Fahrt wird verarbeitet..." isLoading={true} />;
+  }
+
+  if (routingError) {
+    return <StatusOverlay text={routingError} isError={true} />;
   }
 
   return (
@@ -336,6 +350,7 @@ const Ride = () => {
           center={driverLocation ?? [48.210033, 16.363449]}
           zoom={13}
           style={{ height: "500px", width: "100%" }}
+          preferCanvas={true}
         >
           {/* TileLayer actually shows the individual layers of the whole map */}
           <TileLayer
@@ -369,6 +384,8 @@ const Ride = () => {
             <RoutingMachine
               start={routingStartCoords}
               end={destinationCoords}
+              setRoutingError={setRoutingError}
+              routingRef={routingRef}
             />
           )}
 
@@ -418,11 +435,10 @@ const Ride = () => {
           onBlur={() => setShowDestinationHint(true)}
           onFocus={() => setShowDestinationHint(false)}
           className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 transition duration-150
-      ${
-        isDestinationInvalid && showDestinationHint
-          ? "border-red-500"
-          : "border-violet-300"
-      }`}
+      ${isDestinationInvalid && showDestinationHint
+              ? "border-red-500"
+              : "border-violet-300"
+            }`}
           disabled={isRideActive}
         />
 
@@ -508,7 +524,7 @@ const Ride = () => {
               if (checkRide()) {
                 setIsSuccessful(true);
               } else {
-                reInitialize(); // If the ride wasn't successful re-initialize duration
+                reInitialize(); // If the ride wasn't successful re-initialize ride objects
               }
             }}
             disabled={!isRideActive}

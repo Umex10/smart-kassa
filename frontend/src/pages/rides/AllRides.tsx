@@ -17,6 +17,7 @@ import { getRidesToday, getRidesYesterday } from "@/utils/rides/getRides";
 import { SelectValue } from "@radix-ui/react-select";
 import { useParams } from "react-router";
 import SummaryRide from "./SummaryRide";
+import StatusOverlay from "@/components/StatusOverlay";
 
 const AllRides = () => {
 
@@ -41,7 +42,7 @@ const AllRides = () => {
   const ride_id = Number(id);
 
   if (!rides) {
-    return <>Loading rides…</>;
+    return <>Loading rides...</>;
   }
 
   if (rides.length === 0) {
@@ -54,7 +55,7 @@ const AllRides = () => {
      const ride = rides.find(r => Number(r.ride_id) === ride_id);
 
   if (!ride) {
-    return <>Ride not found</>
+    return <StatusOverlay text="Ride not found!" isError={true}></StatusOverlay>;
   } else {
     return <SummaryRide ride={ride}></SummaryRide>
   };

@@ -100,14 +100,10 @@ const Balance = ({ entry, duration }: BalanceData) => {
                   />
                 </RadialBar>
 
-
-
-
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent nameKey="name" />}
                 />
-
 
               </RadialBarChart>
             </ChartContainer>

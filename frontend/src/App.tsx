@@ -9,7 +9,6 @@ import { StatusBar } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
 import Ride from "./pages/rides/Ride";
 import AllRides from "./pages/rides/AllRides";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 
 /**
  * The Routes are all declared here
@@ -35,9 +34,9 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute>
+         
               <RootLayout />
-            </ProtectedRoute>
+         
           }
         >
           <Route path="/" element={<Home />} />

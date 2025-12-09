@@ -7,7 +7,6 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "../../routing.css";
-import { Icon } from "leaflet";
 import { useEffect, useRef, useState, memo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import StatusOverlay from "@/components/StatusOverlay";
 import { ROUTING_CONFIG } from "@/utils/config";
+import { driverIcon, locationIcon } from "@/utils/icons";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -39,17 +39,7 @@ import { ROUTING_CONFIG } from "@/utils/config";
  * @author Casper Zielinski
  * @author Umejr Dzinovic
  */
-const locationIcon = new Icon({
-  iconUrl: "/karte3.png",
-  iconSize: [50, 50],
-  iconAnchor: [25, 25], //This will actually center the icon on to the location. its like translate -50%
-});
 
-const driverIcon = new Icon({
-  iconUrl: "/dot.png",
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-});
 
 // This will create the route itself between start and end address
 export const RoutingMachine = ({

@@ -9,5 +9,5 @@ export interface AllRide {
   duration: string,
   distance: number,
   ride_type: string,
-  wholeride: [number, number][]
+  whole_ride: [number, number][]
 }

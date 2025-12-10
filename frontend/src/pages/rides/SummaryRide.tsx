@@ -18,13 +18,13 @@ interface SummaryRideArgs {
 };
 
 interface DrawMapArgs {
-  wholeride: [number, number][]
+  whole_ride: [number, number][]
 }
 
 export const DrawMap = (data: DrawMapArgs) => {
 
   const map = useMap();
-  const wholeride = data.wholeride;
+  const wholeRide = data.whole_ride;
 
   // This will hold the whole ride at the end
   const routePolyline = useRef<L.Polyline | null>(null);
@@ -37,10 +37,10 @@ export const DrawMap = (data: DrawMapArgs) => {
   useEffect(() => {
 
     // Fixed Start marker
-    L.marker(wholeride[0]).addTo(map);
+    L.marker(wholeRide[0]).addTo(map);
 
     routePolyline.current = L.polyline([], { color: 'violet' }).addTo(map);
-    animatedMarker.current = L.marker(wholeride[0], { icon: driverIcon }).addTo(map);
+    animatedMarker.current = L.marker(wholeRide[0], { icon: driverIcon }).addTo(map);
 
     return () => {
       if (routePolyline.current) map.removeLayer(routePolyline.current);
@@ -51,14 +51,14 @@ export const DrawMap = (data: DrawMapArgs) => {
   useEffect(() => {
     function addToLine() {
       let i = currentIndex.current;
-      if (i < wholeride.length) {
+      if (i < wholeRide.length) {
 
-        if (!wholeride[i + 1]) {
-          L.marker(wholeride[i]).addTo(map);
+        if (!wholeRide[i + 1]) {
+          L.marker(wholeRide[i]).addTo(map);
         }
 
-        routePolyline.current?.addLatLng(wholeride[i]);
-        animatedMarker.current?.setLatLng(wholeride[i]);
+        routePolyline.current?.addLatLng(wholeRide[i]);
+        animatedMarker.current?.setLatLng(wholeRide[i]);
 
         currentIndex.current = ++i;
       } else {
@@ -91,7 +91,7 @@ export const SummaryRide = ({ ride }: SummaryRideArgs) => {
 
   }
 
-  const wholeride: [number, number][] = ride.wholeride;
+  const wholeRide: [number, number][] = ride.whole_ride;
 
   return (
 
@@ -103,12 +103,12 @@ export const SummaryRide = ({ ride }: SummaryRideArgs) => {
         <span className='font-bold text-2xl'>Ride Summary</span>
       </Button>
 
-      {!ride.wholeride && (
+      {!ride.whole_ride && (
         <StatusOverlay text='Map data for this ride is missing. The route cannot be displayed.' 
         isError={true}></StatusOverlay>
 
       )}
-      {ride.wholeride && (
+      {ride.whole_ride && (
         <MapContainer
           center={[48.210033, 16.363449]}
           zoom={13}
@@ -121,7 +121,7 @@ export const SummaryRide = ({ ride }: SummaryRideArgs) => {
           />
 
 
-          <DrawMap wholeride={wholeride} />
+          <DrawMap whole_ride={wholeRide} />
         </MapContainer>
       )}
 

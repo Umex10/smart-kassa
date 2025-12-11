@@ -18,7 +18,7 @@ import { useRideStates } from "@/hooks/rides/useRideStates";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { reverseGeocode } from "@/utils/rides/reverseGeocode";
-import { getDate } from "@/utils/rides/getDate";
+import { getDateNow } from "@/utils/rides/getDate";
 import {
   Select,
   SelectContent,
@@ -294,8 +294,13 @@ const Ride = () => {
           duration: formatTime(timer),
           distance: distance,
           ride_type: rideType,
+<<<<<<< HEAD
           whole_ride: wholeRide
         };
+=======
+          wholeRide: wholeRide // botenfahrt
+        }
+>>>>>>> test/frontend
         try {
           const data = await sendRide(newRide);
           const ride_id = data.ride_info.ride_id;
@@ -508,7 +513,7 @@ const Ride = () => {
               }
               setIsRideActive(true);
               setWholeRide(() => []);
-              setStartTime(getDate());
+              setStartTime(getDateNow());
               setIsSuccessful(false);
             }}
             disabled={!isRoutCalculated || isRideActive}
@@ -520,7 +525,7 @@ const Ride = () => {
             className={`py-6 font-semibold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-600 transition duration-150 ease-in-out`}
             onClick={() => {
               setIsRideActive(false);
-              setEndTime(getDate());
+              setEndTime(getDateNow());
               if (checkRide()) {
                 setIsSuccessful(true);
               } else {

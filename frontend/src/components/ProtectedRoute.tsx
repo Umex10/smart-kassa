@@ -5,12 +5,19 @@ import { signInUser } from "../../redux/slices/userSlice";
 import type { USER_DTO } from "../../constants/User";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+<<<<<<< Updated upstream
 import {
   setAuthenticated,
   setUnauthenticated,
 } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
+<<<<<<< HEAD
 import { Capacitor } from "@capacitor/core";
+=======
+=======
+import { finishLoading, setAuthenticated, setUnauthenticated, startLoading } from "../../redux/slices/authSlice";
+>>>>>>> Stashed changes
+>>>>>>> test/frontend
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -35,8 +42,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     (state: RootState) => state.authState
   );
 
+  // Check if the user is getting loaded currently
+  const {isLoading} = useSelector((state: RootState) => state.authState);
+
   useEffect(() => {
     async function getJWTTokens() {
+
+      dispatch(startLoading());
+
       try {
         if (isMobile && !toastShownRef.current) {
           await navigator("/ride");
@@ -60,6 +73,20 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
           dispatch(setAuthenticated());
         }
+<<<<<<< HEAD
+=======
+        dispatch(
+          signInUser({
+            id: userData.id,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
+            phoneNumber: userData.phoneNumber,
+          })
+        );
+<<<<<<< Updated upstream
+        dispatch(setAuthenticated());
+>>>>>>> test/frontend
 
         // Only show toast once per session
         if (!toastShownRef.current) {
@@ -73,14 +100,27 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       } catch {
         await navigator("/register");
         dispatch(setUnauthenticated());
+=======
+       dispatch(setAuthenticated())
+      } catch {
+        navigator("/register");
+        dispatch(setUnauthenticated());
+        dispatch(finishLoading());
+>>>>>>> Stashed changes
       }
     }
     getJWTTokens();
   }, [dispatch, isAuthenticated, isMobile, navigator, user.firstName]);
 
+<<<<<<< Updated upstream
   // had to also use the authenticate value so it doesn't show home page for split second to non-loged in Users
   if (!isAuthenticated || isLoading) {
     return (
+=======
+
+  if (isLoading) {
+     return (
+>>>>>>> Stashed changes
       <div className="w-full h-screen flex items-center justify-center">
         <p className="text-lg font-semibold">Loading...</p>
       </div>

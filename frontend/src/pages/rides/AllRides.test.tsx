@@ -7,83 +7,103 @@ import * as ridesUtils from "../../utils/rides/all-rides";
 import userEvent from "@testing-library/user-event";
 import { getRidesToday, getRidesYesterday } from "../../utils/rides/getRides";
 import { getDateFormat, getDateNow, getDateYesterday } from "../../utils/rides/getDate";
-import { timeToSeconds } from "../../utils/rides/sort";
+import { date, distance, duration, timeToSeconds } from "../../utils/rides/sort";
+import type { AllRide } from "constants/AllRide";
 
-const rides = [
-  // --- YESTERDAY ---
+const rides: AllRide[] = [
+
   {
-    user_id: 1,
+    user_id: 6,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Hauptstraße 1",
     start_time: getDateYesterday(),
     end_address: "Bahnhof",
     end_time: getDateYesterday(),
     duration: "00:20:00",
     distance: 3200,
-    ride_type: "Taxifahrt"
+    ride_type: "Taxifahrt",
+    whole_ride: [[50.55, 55], [50.55,  55]]
   },
   {
-    user_id: 2,
+    user_id: 7,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Sarkweg 12",
     start_time: getDateYesterday(),
     end_address: "Altstadt",
     end_time: getDateYesterday(),
     duration: "00:10:00",
     distance: 1500,
-    ride_type: "Botenfahrt"
+    ride_type: "Botenfahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
   },
 
-  // --- TODAY 2025-12-10 ---
   {
     user_id: 3,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Neugasse 20",
     start_time: getDateNow(),
     end_address: "Zentrum",
     end_time: getDateNow(),
     duration: "00:15:00",
     distance: 2800,
-    ride_type: "Taxifahrt"
-  },
-  {
-    user_id: 1,
-    start_address: "Bergstraße 5",
-    start_time: getDateNow(),
-    end_address: "Universität",
-    end_time: getDateNow(),
-    duration: "00:17:00",
-    distance: 4100,
-    ride_type: "Botenfahrt"
+    ride_type: "Taxifahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
   },
   {
     user_id: 5,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Lindenplatz",
     start_time: getDateNow(),
     end_address: "Hauptplatz",
     end_time: getDateNow(),
     duration: "00:09:50",
     distance: 1200,
-    ride_type: "Taxifahrt"
+    ride_type: "Taxifahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
   },
 
-  // --- AFTER TODAY ---
   {
     user_id: 4,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Gartenweg 2",
     start_time: "2025-12-11 11:10:00",
     end_address: "ZOB",
     end_time: "2025-12-11 11:25:00",
     duration: "00:15:00",
     distance: 3000,
-    ride_type: "Taxifahrt"
+    ride_type: "Taxifahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
+  },
+  {
+    user_id: 1,
+    ride_id: 4,
+    vehicle_id: 7,
+    start_address: "Bergstraße 5",
+    start_time: getDateNow(),
+    end_address: "Universität",
+    end_time: getDateNow(),
+    duration: "00:17:00",
+    distance: 4100,
+    ride_type: "Botenfahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
   },
   {
     user_id: 2,
+    ride_id: 4,
+    vehicle_id: 7,
     start_address: "Ringstraße",
     start_time: "2025-12-20 19:00:00",
     end_address: "Rathaus",
     end_time: "2025-12-20 19:12:00",
     duration: "00:12:00",
     distance: 2500,
-    ride_type: "Taxifahrt"
+    ride_type: "Taxifahrt",
+    whole_ride: [[50.55, 55], [50.55, 55]]
   }
 ]
 
@@ -282,24 +302,22 @@ describe("AllRides", () => {
 
     const descSorted: Date[] = []
 
-    console.log(rides)
-
     for (const ride of rides) {
       // to bring it into format: yyyy-mm-ddThh:mm:ss
-      const start = ride.start_time.split(" ").join("T");
-      console.log("start in beginning:", start)
+      const start = ride.start_time.replace(" ", "T");
       descSorted.push(new Date(start))
     }
 
+    //sort our array DESC
+    date(rides, true)
+
     descSorted.sort((a, b) => b.getTime() - a.getTime());
 
-    console.log(descSorted)
-
     expect(rides.every((ride, index) => {
-      const start = new Date(ride.start_time.split(" ").join("T"));
-      console.log("start:", start)
-      return start === descSorted[index]
+      const start = new Date(ride.start_time.replace(" ", "T"));
+      return start.getTime() === descSorted[index].getTime()
     })).toBe(true);
+
 
     // ASC
     await userEvent.click(asc);
@@ -308,132 +326,143 @@ describe("AllRides", () => {
 
     for (const ride of rides) {
       // to bring it into format: yyyy-mm-ddThh:mm:ss
-      const start = ride.start_time.split(" ").join("T");
+      const start = ride.start_time.replace(" ", "T");
       ascSorted.push(new Date(start))
     }
+
+    //sort our array ASC
+    date(rides, false)
 
     // test if sorted correctly
     ascSorted.sort((a, b) => a.getTime() - b.getTime());
 
     expect(rides.every((ride, index) => {
-      const start = new Date(ride.start_time.split(" ").join("T"));
-      return start === ascSorted[index]
+      const start = new Date(ride.start_time.replace(" ", "T"));
+      return start.getTime() === ascSorted[index].getTime()
     })).toBe(true);
   });
 
-   // -----------------------------
+  // -----------------------------
   // Test 7: Does the sort method: 'distance' work correctly with DESC and ASC?
   // -----------------------------
 
-  // it("sorts after 'distance' DESC as well as ASC correctly", async () => {
-  //   const { tabs, filters, order } = await setup()
-  //   const { every } = tabs;
-  //   const { useFilters } = filters;
+  it("sorts after 'distance' DESC as well as ASC correctly", async () => {
+    const { tabs, filters, order } = await setup()
+    const { every } = tabs;
+    const { useFilters } = filters;
 
-  //   const { desc, asc } = order;
+    const { desc, asc } = order;
 
-  //   // load all-rides
-  //   await userEvent.click(every);
+    // load all-rides
+    await userEvent.click(every);
 
-  //   const { distanceItem } = await useFilters();
-  //   await userEvent.click(distanceItem);
+    const { distanceItem } = await useFilters();
+    await userEvent.click(distanceItem);
 
-  //   await useFilters();
+    await useFilters();
 
-  //   const selected = await screen.findByTestId("distance");
+    const selected = await screen.findByTestId("distance");
 
-  //   // Again search is needed, because the click results in closing the menu, and distance is then undefined
-  //   await waitFor(async () => {
-  //     expect(selected).toHaveAttribute("aria-selected", "true");
-  //   });
+    // Again search is needed, because the click results in closing the menu, and distance is then undefined
+    await waitFor(async () => {
+      expect(selected).toHaveAttribute("aria-selected", "true");
+    });
 
-  //   await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{Escape}');
 
-  //   // DESC
-  //   await userEvent.click(desc);
+    // DESC
+    await userEvent.click(desc);
 
-  //   const descSorted: number[] = []
+    const descSorted: number[] = []
 
-  //   for (const ride of rides) {
-  //     descSorted.push(Number(ride.distance))
-  //   }
+    for (const ride of rides) {
+      descSorted.push(Number(ride.distance))
+    }
 
-  //   descSorted.sort((a, b) => a - b);
+    //sort our array DESC
+    distance(rides, true);
 
-  //   expect(rides.every((ride, index) => ride.distance === descSorted[index])).toBe(true);
+    descSorted.sort((a, b) => b - a);
 
-  //   // ASC
-  //   await userEvent.click(asc);
+    expect(rides.every((ride, index) => Number(ride.distance) === descSorted[index])).toBe(true);
 
-  //   const ascSorted: number[] = []
+    // ASC
+    await userEvent.click(asc);
 
-  //   for (const ride of rides) {
-  //     descSorted.push(Number(ride.distance))
-  //   }
+    const ascSorted: number[] = []
 
-  //   // test if sorted correctly
-  //   ascSorted.sort((a, b) => a - b);
+    for (const ride of rides) {
+      ascSorted.push(Number(ride.distance))
+    }
 
-  //   expect(rides.every((ride, index) => ride.distance === descSorted[index])).toBe(true);
-  // });
+    //sort our array ASC
+    distance(rides, false);
 
-   // -----------------------------
+    // test if sorted correctly
+    ascSorted.sort((a, b) => a - b);
+
+    expect(rides.every((ride, index) => Number(ride.distance) === ascSorted[index])).toBe(true);
+  });
+
+  // -----------------------------
   // Test 8: Does the sort method: 'duration' work correctly with DESC and ASC?
   // -----------------------------
 
-  //  it("sorts after 'duration' DESC as well as ASC correctly",  async () => {
-  //   const { tabs, filters, order } = await setup()
-  //   const { every } = tabs;
-  //   const {useFilters} = filters;
+  it("sorts after 'duration' DESC as well as ASC correctly", async () => {
+    const { tabs, filters, order } = await setup()
+    const { every } = tabs;
+    const { useFilters } = filters;
 
-  //   const {desc, asc} = order;
+    const { desc, asc } = order;
 
-  //   // load all-rides
-  //   await userEvent.click(every);
+    // load all-rides
+    await userEvent.click(every);
 
-  //   const { durationItem } = await useFilters();
-  //   await userEvent.click(durationItem);
+    const { durationItem } = await useFilters();
+    await userEvent.click(durationItem);
 
-  //   await useFilters();
+    await useFilters();
 
-  //   const selected = await screen.findByTestId("duration");
+    const selected = await screen.findByTestId("duration");
 
-  //   // Again search is needed, because the click results in closing the menu, and distance is then undefined
-  //   await waitFor(async () => {
-  //     expect(selected).toHaveAttribute("aria-selected", "true");
-  //   });
+    // Again search is needed, because the click results in closing the menu, and distance is then undefined
+    await waitFor(async () => {
+      expect(selected).toHaveAttribute("aria-selected", "true");
+    });
 
-  //   await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{Escape}');
 
-  //   // DESC
-  //   await userEvent.click(desc);
-  
-
-  //   const descSorted: number[] = []
-
-  //   for (const ride of rides) {
-  //     descSorted.push(timeToSeconds(ride.duration))
-  //   }
-
-  //   descSorted.sort((a,b) => a - b);
-
-  //   expect(rides.every((ride, index) => ride.distance === descSorted[index])).toBe(true);
-
-  //   // ASC
-  //   await userEvent.click(asc);
-
-  //   const ascSorted: number[] = []
+    // DESC
+    await userEvent.click(desc);
 
 
-  //    for (const ride of rides) {
-  //     descSorted.push(Number(ride.duration))
-  //   }
+    const descSorted: number[] = []
 
-  //   // test if sorted correctly
-  //   ascSorted.sort((a,b) => a - b);
+    for (const ride of rides) {
+      descSorted.push(timeToSeconds(ride.duration))
+    }
+    //sort our array DESC
+    duration(rides, true);
 
-  //   expect(rides.every((ride, index) => ride.distance === descSorted[index])).toBe(true);
-  // });
+    descSorted.sort((a, b) => b - a);
 
+    expect(rides.every((ride, index) => timeToSeconds(ride.duration) === descSorted[index])).toBe(true);
 
-})
+    // ASC
+    await userEvent.click(asc);
+
+    const ascSorted: number[] = []
+
+    for (const ride of rides) {
+      ascSorted.push(timeToSeconds(ride.duration))
+    }
+
+    //sort our array ASC
+    duration(rides, false);
+
+    // test if sorted correctly
+    ascSorted.sort((a, b) => a - b);
+
+    expect(rides.every((ride, index) => timeToSeconds(ride.duration) === ascSorted[index])).toBe(true);
+  });
+});

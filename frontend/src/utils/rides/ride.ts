@@ -15,7 +15,11 @@ export async function sendRide(
   duration: string,
   distance: number;
   ride_type: string,
+<<<<<<< HEAD
   whole_ride: [number, number][]
+=======
+  wholeRide: [number, number][]
+>>>>>>> test/frontend
   }
 ) {
   try {

@@ -42,6 +42,7 @@ router.post("/", async (req, res) => {
     password,
     fn,
     atu,
+    isMobile,
   } = req.body;
 
   try {
@@ -77,7 +78,7 @@ router.post("/", async (req, res) => {
     let userId;
 
     try {
-        // Begin of database transaction, if an operation fails, all queries roll back
+      // Begin of database transaction, if an operation fails, all queries roll back
       await pool.query("BEGIN");
 
       // Insert company into company table and return the generated company_id
@@ -117,20 +118,19 @@ router.post("/", async (req, res) => {
       await pool.query(
         `INSERT INTO session (user_id, refresh_token, created_at, expires_at)
        VALUES ($1, $2, NOW(), $3)`,
-        [
-          userId,
-          refreshToken,
-          expiresAt
-        ]
+        [userId, refreshToken, expiresAt]
       );
 
       await pool.query("COMMIT");
     } catch (error) {
       await pool.query("ROLLBACK");
       const errorResponse = error;
-      console.error(errorResponse)
+      console.error(errorResponse);
       if (
-        /^Key \(phone_number\)=\(\+?\d+\s?\d+\) already exists\.$/.test(error.detail)) {
+        /^Key \(phone_number\)=\(\+?\d+\s?\d+\) already exists\.$/.test(
+          error.detail
+        )
+      ) {
         return res.status(409).send({
           error: `Ein Account mit der Telefonnumer '${phone_number}' existiert bereits.`,
         });
@@ -138,7 +138,7 @@ router.post("/", async (req, res) => {
 
       if (/Key \(fn\)=\(([^)]+)\)/.test(error.detail)) {
         return res.status(409).send({
-          error: `Ein Account mit der FN '${fn}' existiert bereits.`
+          error: `Ein Account mit der FN '${fn}' existiert bereits.`,
         });
       }
 
@@ -148,23 +148,27 @@ router.post("/", async (req, res) => {
         });
       }
 
-
-      return res.status(500).send({ error: errorResponse, message: "Internal Server Error" });
+      return res
+        .status(500)
+        .send({ error: errorResponse, message: "Internal Server Error" });
     }
 
-    // Store refresh token in httpOnly cookie (not accessible via JavaScript)
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Prevents XSS attacks
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "none", // Protection via HTTPS
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      path: "/",
-    });
+    if (!isMobile) {
+      // Store refresh token in httpOnly cookie (not accessible via JavaScript)
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true, // Prevents XSS attacks
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "none", // Protection via HTTPS
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
+      });
+    }
 
     // Return access token and user info to client
     return res.status(201).json({
       message: "User registered successfully",
       accessToken,
+      refreshToken: isMobile ? refreshToken : undefined,
       user: {
         id: userId,
         name: `${first_name} ${last_name}`,

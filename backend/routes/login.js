@@ -30,7 +30,7 @@ const router = express.Router();
  */
 
 router.post("/", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, isMobile } = req.body;
 
   if (!email || !password) {
     return res.status(400).send({ error: "Missing required fields" });
@@ -84,18 +84,21 @@ router.post("/", async (req, res) => {
     );
 
     // Store refresh token in httpOnly cookie (not accessible via JavaScript)
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Prevents XSS attacks
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "none", // // Protection via HTTPS
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      path: "/",
-    });
+    if (!isMobile) {
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true, // Prevents XSS attacks
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "none", // // Protection via HTTPS
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
+      });
+    }
 
     // Return access token and user info to client
     res.json({
       message: "Login successful",
       accessToken,
+      refreshToken: isMobile ? refreshToken : undefined,
       user: {
         userId: user.user_id,
         email: user.email,

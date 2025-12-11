@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
+import { isMobile } from "@/hooks/use-mobile";
 
 /**
  * Method to check if access token is valid or not
@@ -53,9 +54,12 @@ export async function verifyAccessToken() {
  */
 async function refreshAccessToken() {
   try {
+    const refreshToken = await AuthStorage.getRefreshToken();
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/refresh`,
-      {},
+      {
+        refreshToken: isMobile ? refreshToken : undefined,
+      },
       { withCredentials: true }
     );
 

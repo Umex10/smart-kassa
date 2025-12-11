@@ -12,10 +12,10 @@ import {
   useSidebar,
 } from "../components/ui/sidebar";
 import { sidebarSections } from "@/content/sidebar/sidebar";
-import { Capacitor } from "@capacitor/core";
 import { useState, useEffect } from "react";
 
 import { Link } from "react-router-dom";
+import { isMobile } from "@/hooks/use-mobile";
 
 export function AppSidebar() {
   // to close the Side Bar when a menu item is clicked
@@ -23,7 +23,6 @@ export function AppSidebar() {
 
   const [isMd, setIsMd] = useState(false);
   const mdBreakpoint = 768;
-  const isMobile = Capacitor.isNativePlatform();
 
   /**
    * Important to not close Side Bar on Desktop

@@ -45,6 +45,7 @@ app.use(
       "http://localhost", // Capacitor Android/iOS
       "https://localhost",
       "capacitor://localhost",
+      "http://localhost:5173",
       process.env.DEBUG_URL, // to test/debug
     ],
     credentials: true, // Allow cookies to be sent

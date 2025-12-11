@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
 import type { AppDispatch } from "../../redux/store";
 import { signInUser } from "../../redux/slices/userSlice";
-
+import { isMobile } from "@/hooks/use-mobile";
 
 export async function register(
   firstName: string,
@@ -25,6 +25,7 @@ export async function register(
         password: password,
         fn: fn,
         atu: atu,
+        isMobile: isMobile,
       },
       { withCredentials: true } // to set the refresh token in the Cookie
     );
@@ -33,7 +34,9 @@ export async function register(
       throw new Error("Response is Empty");
     }
 
-    await AuthStorage.setTokens(data.accessToken);
+    const accessToken = await data.accessToken;
+    const refreshToken: string | undefined = await data.refreshToken;
+    await AuthStorage.setTokens(accessToken, refreshToken);
 
     dispatch(
       signInUser({
@@ -86,20 +89,11 @@ export async function register(
   }
 }
 
-interface LoginResponse {
-  accessToken: string;
-  user: {
-    userId: number;
-    name: string;
-    email: string;
-  };
-}
-
 export async function login(
   email: string,
   password: string,
   dispatch: AppDispatch
-): Promise<LoginResponse> {
+) {
   if (!email || !password) {
     throw new Error("Missing Fields");
   }
@@ -110,6 +104,7 @@ export async function login(
       {
         email: email,
         password: password,
+        isMobile: isMobile,
       },
       { withCredentials: true }
     );
@@ -120,7 +115,8 @@ export async function login(
     }
 
     const accessToken = await data.accessToken;
-    await AuthStorage.setTokens(accessToken);
+    const refreshToken: string | undefined = await data.refreshToken;
+    await AuthStorage.setTokens(accessToken, refreshToken);
 
     const user = data.user;
     dispatch(

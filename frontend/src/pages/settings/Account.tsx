@@ -20,6 +20,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { logOut } from "@/utils/auth";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "redux/store";
 
 const Account = () => {
   const form = useForm({
@@ -37,6 +42,10 @@ const Account = () => {
   }) => {
     console.log("Form submitted:", values);
   };
+
+  const navigator = useNavigate();
+  const dispatch: AppDispatch = useDispatch();
+  const userId = useSelector((state: RootState) => state.user.id);
 
   return (
     <div className="flex flex-col gap-16">
@@ -175,13 +184,12 @@ const Account = () => {
         </div>
       </div>
 
-      {/* Delete Account Section */}
+      {/* Log Out Section */}
       <div className="flex flex-col md:flex-row gap-10 items-start">
         <div className="w-full md:w-64">
-          <h3 className="font-extrabold text-lg">Delete account</h3>
+          <h3 className="font-extrabold text-lg">Log out</h3>
           <p className="text-sm font-light max-w-xs">
-            No longer want to use our service? This action is permanent and
-            cannot be undone.
+            Log out of your account. You can log back in anytime.
           </p>
         </div>
         <Dialog>
@@ -196,16 +204,24 @@ const Account = () => {
             active:scale-[0.98]
           "
             >
-              Delete my account
+              Log out
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogTitle>Log out of your account?</DialogTitle>
               <DialogDescription>
-                This action cannot be undone. This will permanently delete your
-                account and remove your data from our servers.
+                You will be logged out of your account. You can log back in anytime with your credentials.
                 <Button
+                  onClick={async () => {
+                    toast.promise(() => logOut(userId, dispatch), {
+                      success: "Erfolgreich Abgemeldet",
+                      error: "Abmeldung fehlgeschlagen",
+                      loading: "Abmelden...",
+                    });
+
+                    await navigator("/register");
+                  }}
                   className=" my-4
             bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
             transition-all duration-200
@@ -215,7 +231,7 @@ const Account = () => {
             active:scale-[0.98]
           "
                 >
-                  Delete my account
+                  Log out
                 </Button>
               </DialogDescription>
             </DialogHeader>

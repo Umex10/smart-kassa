@@ -28,6 +28,7 @@ const router = express.Router();
  * @body {string} password - User's password (required, will be hashed)
  * @body {string} fn - User's fn number (required)
  * @body {string} atu - User's atu number (required)
+ * @body {boolean} isMobile - if the User is on the Mobile App or on the Browser (important for Cookie/refreshToken logic)
  * @returns {Object} 201 - User created with access token and user info
  * @returns {Object} 400 - Missing required fields
  * @returns {Object} 409 - User with this email already exists
@@ -153,12 +154,13 @@ router.post("/", async (req, res) => {
         .send({ error: errorResponse, message: "Internal Server Error" });
     }
 
+    // if user is not on the Mobile App, refreshtoken is being sent via httpOnly cookie
     if (!isMobile) {
       // Store refresh token in httpOnly cookie (not accessible via JavaScript)
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true, // Prevents XSS attacks
         secure: process.env.NODE_ENV === "production", // HTTPS only in production
-        sameSite: "none", // Protection via HTTPS
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: "/",
       });
@@ -168,7 +170,7 @@ router.post("/", async (req, res) => {
     return res.status(201).json({
       message: "User registered successfully",
       accessToken,
-      refreshToken: isMobile ? refreshToken : undefined,
+      refreshToken: isMobile ? refreshToken : undefined, // on Mobile the the refres token is in the response body, because httpOnly Cookies do not work on Mobile Apps
       user: {
         id: userId,
         name: `${first_name} ${last_name}`,

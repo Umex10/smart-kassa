@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
 import type { AppDispatch } from "../../redux/store";
-import { signInUser } from "../../redux/slices/userSlice";
+import { signInUser, signOutUser } from "../../redux/slices/userSlice";
 import { isMobile } from "@/hooks/use-mobile";
 
 export async function register(
@@ -142,4 +142,23 @@ export async function login(
       throw new Error("Internal Server Error");
     }
   }
+}
+
+export async function logOut(userId: string, dispatch: AppDispatch) {
+  const { data } = await axios.post(
+    `${import.meta.env.VITE_API_URL}/logout`,
+    {
+      userId: userId,
+      refreshToken: isMobile ? AuthStorage.getRefreshToken() : undefined,
+    },
+    { withCredentials: true }
+  );
+
+  if (isMobile) {
+    await AuthStorage.clearTokens();
+  } else {
+    AuthStorage.clearAccessToken();
+  }
+  dispatch(signOutUser());
+  console.log(data.message);
 }

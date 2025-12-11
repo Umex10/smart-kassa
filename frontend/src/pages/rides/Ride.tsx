@@ -294,13 +294,8 @@ const Ride = () => {
           duration: formatTime(timer),
           distance: distance,
           ride_type: rideType,
-<<<<<<< HEAD
-          whole_ride: wholeRide
-        };
-=======
-          wholeRide: wholeRide // botenfahrt
+          whole_ride: wholeRide // botenfahrt
         }
->>>>>>> test/frontend
         try {
           const data = await sendRide(newRide);
           const ride_id = data.ride_info.ride_id;

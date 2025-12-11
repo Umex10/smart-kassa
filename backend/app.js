@@ -44,6 +44,7 @@ app.use(
       "https://smart-kassa.vercel.app",
       "http://localhost", // Capacitor Android/iOS
       "https://localhost",
+      "http://localhost:5173",
       "capacitor://localhost",
       process.env.DEBUG_URL, // to test/debug
     ],

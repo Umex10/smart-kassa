@@ -31,7 +31,6 @@ const AllRides = () => {
 
       if (!data || !data.rides) throw new Error("No rides found");
       setRides(data.rides);
-      console.log(data.rides)
     })();
   }, []);
 

@@ -9,6 +9,7 @@ import { getRidesToday, getRidesYesterday } from "../../utils/rides/getRides";
 import { getDateFormat, getDateNow, getDateYesterday } from "../../utils/rides/getDate";
 import { date, distance, duration, timeToSeconds } from "../../utils/rides/sort";
 
+// Test Data. 2 objects for yesterday, 3 for today, and 2 random
 const rides = [
 
   {
@@ -118,10 +119,24 @@ async function setup() {
     return { dateItem, distanceItem, durationItem };
   };
 
+  // Get all rides from the DOM
+  const getRidesFromDom = async () => {
+    const ridesDom = await screen.findAllByTestId("ride-item");
+    const currentRides = ridesDom.map((ride) => {
+      const json = ride.getAttribute("data-ride");
+      if (json) {
+        return JSON.parse(json);
+      }
+    })
+    return currentRides;
+  }
+
+
   return {
     tabs: { today, yesterday, every },
     order: { desc, asc },
-    filters: { trigger, useFilters }
+    filters: { trigger, useFilters },
+    getRidesFromDom: getRidesFromDom
   }
 }
 
@@ -260,7 +275,7 @@ describe("AllRides", () => {
   // -----------------------------
 
   it("sorts after 'date' (default) DESC as well as ASC correctly", async () => {
-    const { tabs, filters, order } = await setup()
+    const { tabs, filters, order, getRidesFromDom: ridesDom } = await setup()
     const { every } = tabs;
     const { useFilters } = filters;
 
@@ -280,18 +295,24 @@ describe("AllRides", () => {
 
     const descSorted: Date[] = []
 
-    for (const ride of rides) {
+    const currentRides = await ridesDom();
+
+    currentRides.forEach((ride) => {
       // to bring it into format: yyyy-mm-ddThh:mm:ss
       const start = ride.start_time.replace(" ", "T");
-      descSorted.push(new Date(start))
-    }
+      descSorted.push(new Date(start));
+    })
+
+    console.log("BEFORE:", currentRides)
 
     //sort our array DESC
-    date(rides, true)
+    date(currentRides, true)
+
+    console.log("AFTER:", currentRides)
 
     descSorted.sort((a, b) => b.getTime() - a.getTime());
 
-    expect(rides.every((ride, index) => {
+    expect(currentRides.every((ride, index) => {
       const start = new Date(ride.start_time.replace(" ", "T"));
       return start.getTime() === descSorted[index].getTime()
     })).toBe(true);
@@ -302,19 +323,19 @@ describe("AllRides", () => {
 
     const ascSorted: Date[] = []
 
-    for (const ride of rides) {
+    currentRides.forEach((ride) => {
       // to bring it into format: yyyy-mm-ddThh:mm:ss
       const start = ride.start_time.replace(" ", "T");
-      ascSorted.push(new Date(start))
-    }
+      ascSorted.push(new Date(start));
+    })
 
     //sort our array ASC
-    date(rides, false)
+    date(currentRides, false)
 
     // test if sorted correctly
     ascSorted.sort((a, b) => a.getTime() - b.getTime());
 
-    expect(rides.every((ride, index) => {
+    expect(currentRides.every((ride, index) => {
       const start = new Date(ride.start_time.replace(" ", "T"));
       return start.getTime() === ascSorted[index].getTime()
     })).toBe(true);
@@ -325,7 +346,7 @@ describe("AllRides", () => {
   // -----------------------------
 
   it("sorts after 'distance' DESC as well as ASC correctly", async () => {
-    const { tabs, filters, order } = await setup()
+    const { tabs, filters, order, getRidesFromDom: ridesDom } = await setup()
     const { every } = tabs;
     const { useFilters } = filters;
 
@@ -353,9 +374,11 @@ describe("AllRides", () => {
 
     const descSorted: number[] = []
 
-    for (const ride of rides) {
-      descSorted.push(Number(ride.distance))
-    }
+    const currentRides = await ridesDom();
+
+    currentRides.forEach((ride) => {
+      descSorted.push(Number(ride.distance));
+    })
 
     //sort our array DESC
     distance(rides, true);
@@ -369,17 +392,17 @@ describe("AllRides", () => {
 
     const ascSorted: number[] = []
 
-    for (const ride of rides) {
-      ascSorted.push(Number(ride.distance))
-    }
+    currentRides.forEach((ride) => {
+      ascSorted.push(Number(ride.distance));
+    })
 
     //sort our array ASC
-    distance(rides, false);
+    distance(currentRides, false);
 
     // test if sorted correctly
     ascSorted.sort((a, b) => a - b);
 
-    expect(rides.every((ride, index) => Number(ride.distance) === ascSorted[index])).toBe(true);
+    expect(currentRides.every((ride, index) => Number(ride.distance) === ascSorted[index])).toBe(true);
   });
 
   // -----------------------------
@@ -387,7 +410,7 @@ describe("AllRides", () => {
   // -----------------------------
 
   it("sorts after 'duration' DESC as well as ASC correctly", async () => {
-    const { tabs, filters, order } = await setup()
+    const { tabs, filters, order, getRidesFromDom: ridesDom } = await setup()
     const { every } = tabs;
     const { useFilters } = filters;
 
@@ -416,31 +439,34 @@ describe("AllRides", () => {
 
     const descSorted: number[] = []
 
-    for (const ride of rides) {
-      descSorted.push(timeToSeconds(ride.duration))
-    }
+    const currentRides = await ridesDom();
+
+    currentRides.forEach((ride) => {
+      descSorted.push(timeToSeconds(ride.duration));
+    })
+
     //sort our array DESC
-    duration(rides, true);
+    duration(currentRides, true);
 
     descSorted.sort((a, b) => b - a);
 
-    expect(rides.every((ride, index) => timeToSeconds(ride.duration) === descSorted[index])).toBe(true);
+    expect(currentRides.every((ride, index) => timeToSeconds(ride.duration) === descSorted[index])).toBe(true);
 
     // ASC
     await userEvent.click(asc);
 
     const ascSorted: number[] = []
 
-    for (const ride of rides) {
-      ascSorted.push(timeToSeconds(ride.duration))
-    }
+    currentRides.forEach((ride) => {
+      ascSorted.push(timeToSeconds(ride.duration));
+    })
 
     //sort our array ASC
-    duration(rides, false);
+    duration(currentRides, false);
 
     // test if sorted correctly
     ascSorted.sort((a, b) => a - b);
 
-    expect(rides.every((ride, index) => timeToSeconds(ride.duration) === ascSorted[index])).toBe(true);
+    expect(currentRides.every((ride, index) => timeToSeconds(ride.duration) === ascSorted[index])).toBe(true);
   });
 });

@@ -15,9 +15,9 @@ import {
 } from "../../components/ui/select";
 import { getRidesToday, getRidesYesterday } from "../../utils/rides/getRides";
 import { SelectValue } from "@radix-ui/react-select";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import SummaryRide from "./SummaryRide";
-import StatusOverlay from "@/components/StatusOverlay";
+import StatusOverlay from "../../components/StatusOverlay";
 
 const AllRides = () => {
 

@@ -9,12 +9,8 @@ import {
   CardTitle,
 } from "../../components/ui/card"
 import type { AllRide } from "constants/AllRide";
-<<<<<<< HEAD
-import { date, distance, duration } from "@/utils/rides/sort";
-import { useNavigate } from "react-router";
-=======
 import { date, distance, duration } from "../../utils/rides/sort";
->>>>>>> test/frontend
+import { useNavigate } from "react-router-dom";
 
 interface RideAtDateArgs {
   rides: AllRide[];

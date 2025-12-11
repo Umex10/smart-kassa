@@ -112,7 +112,6 @@ vi.spyOn(ridesUtils, "getAllRides").mockResolvedValue({
   rides: rides
 })
 
-
 async function setup() {
 
   // tabs from the tabslist
@@ -153,7 +152,9 @@ describe("AllRides", () => {
     vi.clearAllMocks();
     Element.prototype.hasPointerCapture = () => false;
     Element.prototype.scrollIntoView = vi.fn();
-    renderWithRouter(<AllRides />, "/all-rides")
+    renderWithRouter(<AllRides />, "/all-rides", 
+      [{path: "/allrides/:id", element: <AllRides/>}]
+    )
   })
 
   // -----------------------------

@@ -1,17 +1,17 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '../../components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router';
 import { BadgeCheck } from 'lucide-react';
-import BasicTimeline from '@/components/ui/basicTimeline';
+import BasicTimeline from '../../components/ui/basicTimeline';
 import { Clock3 } from 'lucide-react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from "leaflet";
 import "leaflet-routing-machine";
 import { useEffect, useRef } from 'react';
-import { durationToMinutes, formatMinutes } from '@/utils/rides/summaryMinutes';
+import { durationToMinutes, formatMinutes } from '../../utils/rides/summaryMinutes';
 import type { AllRide } from 'constants/AllRide';
-import { driverIcon } from '@/utils/icons';
-import StatusOverlay from '@/components/StatusOverlay';
+import { driverIcon } from '../../utils/icons';
+import StatusOverlay from '../../components/StatusOverlay';
 
 interface SummaryRideArgs {
   ride: AllRide

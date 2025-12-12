@@ -145,11 +145,14 @@ export async function login(
 }
 
 export async function logOut(userId: string, dispatch: AppDispatch) {
-  const { data } = await axios.post(
+  const refreshToken = await AuthStorage.getRefreshToken();
+  //const { data } =
+  await axios.post(
     `${import.meta.env.VITE_API_URL}/logout`,
     {
       userId: userId,
-      refreshToken: isMobile ? AuthStorage.getRefreshToken() : undefined,
+      refreshToken: isMobile ? refreshToken : undefined,
+      isMobile: isMobile,
     },
     { withCredentials: true }
   );
@@ -157,8 +160,31 @@ export async function logOut(userId: string, dispatch: AppDispatch) {
   if (isMobile) {
     await AuthStorage.clearTokens();
   } else {
-    AuthStorage.clearAccessToken();
+    await AuthStorage.clearAccessToken();
   }
   dispatch(signOutUser());
-  console.log(data.message);
+}
+
+export async function deleteAccount(password: string, dispatch: AppDispatch) {
+  const accessToken = await AuthStorage.getAccessToken();
+  const refreshToken = await AuthStorage.getRefreshToken();
+  //const { data } =
+  await axios.delete(`${import.meta.env.VITE_API_URL}/account`, {
+    data: {
+      isMobile: isMobile,
+      password: password,
+      refreshToken: isMobile ? refreshToken : undefined,
+    },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    withCredentials: true,
+  });
+
+  if (isMobile) {
+    await AuthStorage.clearTokens();
+  } else {
+    await AuthStorage.clearAccessToken();
+  }
+  dispatch(signOutUser());
 }

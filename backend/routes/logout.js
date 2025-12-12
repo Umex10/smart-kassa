@@ -4,11 +4,12 @@ import pool from "../db.js";
 const router = express.Router();
 
 router.post("/", async (req, res) => {
+  const isMobile = req.body.isMobile;
   let refreshToken = "";
-  if (!req.body.refreshToken) {
-    refreshToken = req.cookies.refreshToken;
-  } else {
+  if (isMobile) {
     refreshToken = req.body.refreshToken;
+  } else {
+    refreshToken = req.cookies.refreshToken;
   }
   const user_id = req.body.userId;
 
@@ -20,7 +21,7 @@ router.post("/", async (req, res) => {
       missingFieldsMessage = "Refresh Token is not provided";
     }
 
-    console.error("Logout Error: Fields Missing");
+    console.error("Logout Error: Fields Missing \n", missingFieldsMessage);
 
     return res.status(400).send({
       error: "Fields missing",
@@ -39,13 +40,15 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "User not found" });
     }
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true, // Prevents XSS attacks
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      path: "/",
-    });
+    if (!isMobile) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true, // Prevents XSS attacks
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
+      });
+    }
 
     return res.status(200).send({
       message: "Logged out successfully",

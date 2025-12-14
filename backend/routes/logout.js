@@ -1,9 +1,10 @@
 import express from "express";
 import pool from "../db.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
   const isMobile = req.body.isMobile;
   let refreshToken = "";
   if (isMobile) {
@@ -11,7 +12,7 @@ router.post("/", async (req, res) => {
   } else {
     refreshToken = req.cookies.refreshToken;
   }
-  const user_id = req.body.userId;
+  const user_id = req.user.userId;
 
   if (!refreshToken || !user_id) {
     let missingFieldsMessage = "Refresh Token or User ID are not provided";

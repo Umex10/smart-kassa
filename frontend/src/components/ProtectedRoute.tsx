@@ -11,6 +11,7 @@ import {
 } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
 import { isMobile } from "@/hooks/use-mobile";
+import { handleTokenError } from "../utils/errorHandling";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -71,7 +72,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           });
           toastShownRef.current = true;
         }
-      } catch {
+      } catch (error) {
+        handleTokenError(error);
         await navigator("/register");
         dispatch(setUnauthenticated());
       }

@@ -23,9 +23,14 @@ import {
 import { deleteAccount, logOut } from "@/utils/auth";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "redux/store";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "redux/store";
 import { useState } from "react";
+import {
+  handleLogoutError,
+  handleDeleteAccountError,
+} from "@/utils/errorHandling";
+import { toastMessages } from "@/content/auth/toastMessages";
 
 const Account = () => {
   const form = useForm({
@@ -46,7 +51,6 @@ const Account = () => {
 
   const navigator = useNavigate();
   const dispatch: AppDispatch = useDispatch();
-  const userId = useSelector((state: RootState) => state.user.id);
   const [deletePassword, setDeletePassword] = useState("");
 
   return (
@@ -220,13 +224,20 @@ const Account = () => {
                   <br />
                   <Button
                     onClick={async () => {
-                      toast.promise(() => logOut(userId, dispatch), {
-                        success: "Erfolgreich Abgemeldet",
-                        error: "Abmeldung fehlgeschlagen",
-                        loading: "Abmelden...",
-                      });
-
-                      await navigator("/register");
+                      toast.promise(
+                        async () => {
+                          await logOut(dispatch);
+                        },
+                        {
+                          loading: "Abmelden...",
+                          success: async () => {
+                            await navigator("/register");
+                            return toastMessages.logout.success.title;
+                          },
+                          error: (err) => handleLogoutError(err),
+                          className: "mt-5 md:mt-0",
+                        }
+                      );
                     }}
                     className=" my-4
               bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
@@ -302,20 +313,29 @@ const Account = () => {
                   <Button
                     onClick={async () => {
                       if (!deletePassword) {
-                        toast.error("Please enter your password to confirm");
+                        toast.error(
+                          "Bitte geben Sie Ihr Passwort ein, um zu bestätigen",
+                          {
+                            className: "mt-5 md:mt-0",
+                          }
+                        );
                         return;
                       }
                       toast.promise(
-                        () => deleteAccount(deletePassword, dispatch),
+                        async () => {
+                          await deleteAccount(deletePassword, dispatch);
+                        },
                         {
-                          success: "Account deleted successfully",
-                          error: "Error deleting Account",
-                          loading: "deleting account",
+                          loading: "Konto wird gelöscht...",
+                          success: async () => {
+                            setDeletePassword("");
+                            await navigator("/register");
+                            return toastMessages.deleteAccount.success.title;
+                          },
+                          error: (err) => handleDeleteAccountError(err),
+                          className: "mt-5 md:mt-0",
                         }
                       );
-
-                      setDeletePassword("");
-                      await navigator("/register");
                     }}
                     disabled={!deletePassword}
                     className=" my-2

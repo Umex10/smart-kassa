@@ -363,3 +363,57 @@ const Account = () => {
 };
 
 export default Account;
+
+// to Test Refresh Token on Mobile
+//
+// import { AuthStorage } from "@/utils/secureStorage"; //above
+//
+// <div className="flex flex-col gap-4"> //somewhere in the page
+//   <div>
+//     <h3 className="font-extrabold text-lg">Delete Access Token</h3>
+//     <p className="text-sm font-light mt-1">Delete AccessToken</p>
+//   </div>
+//   <Dialog>
+//     <DialogTrigger asChild>
+//       <Button
+//         className="
+//       bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
+//       transition-all duration-200
+//       hover:bg-red-500
+//       hover:shadow-md
+//       hover:scale-[1.02]
+//       active:scale-[0.98]
+//     "
+//       >
+//         Delete access Token
+//       </Button>
+//     </DialogTrigger>
+//     <DialogContent>
+//       <DialogHeader>
+//         <DialogTitle>Delete Access token?</DialogTitle>
+//         <DialogDescription>
+//           Delete Access Token
+//           <br />
+//           <Button
+//             onClick={async () => {
+//               await AuthStorage.clearAccessToken();
+//               console.log("deleted access token");
+//             }}
+//             className=" my-4
+//       bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
+//       transition-all duration-200
+//       hover:bg-red-500
+//       hover:shadow-md
+//       hover:scale-[1.02]
+//       active:scale-[0.98]
+//     "
+//           >
+//             Delete Access Token
+//           </Button>
+//         </DialogDescription>
+//       </DialogHeader>
+//     </DialogContent>
+//   </Dialog>
+// </div>
+
+// <button onClick={() => window.location.reload()}>Reload</button>

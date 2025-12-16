@@ -24,7 +24,7 @@ const SingleNotification = () => {
       <div className="flex flex-col">
         <h3 className="font-semibold text-sm">News & Shout-OUTS</h3>
         <p className="text-xs text-gray-600 dark:text-gray-500">
-          Receive news and Shout-OUTS xxxxxxxxxxxxxxx
+          Receive news and Shout-OUTS xxxxxxxxxx
         </p>
       </div>
 

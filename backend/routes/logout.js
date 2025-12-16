@@ -5,13 +5,7 @@ import { authenticateToken } from "../middleware/auth.js";
 const router = express.Router();
 
 router.post("/", authenticateToken, async (req, res) => {
-  const isMobile = req.body.isMobile;
-  let refreshToken = "";
-  if (isMobile) {
-    refreshToken = req.body.refreshToken;
-  } else {
-    refreshToken = req.cookies.refreshToken;
-  }
+  const refreshToken = req.cookies.refreshToken;
   const user_id = req.user.userId;
 
   if (!refreshToken || !user_id) {
@@ -41,15 +35,13 @@ router.post("/", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "User not found" });
     }
 
-    if (!isMobile) {
-      res.clearCookie("refreshToken", {
-        httpOnly: true, // Prevents XSS attacks
-        secure: process.env.NODE_ENV === "production", // HTTPS only in production
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: "/",
-      });
-    }
+    res.clearCookie("refreshToken", {
+      httpOnly: true, // Prevents XSS attacks
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      path: "/",
+    });
 
     return res.status(200).send({
       message: "Logged out successfully",

@@ -1,29 +1,31 @@
 import axios, { AxiosError } from "axios";
 
-
-export async function sendRide(
- ride: {
+export async function sendRide(ride: {
   user_id: number;
-  start_address: string,
-  start_time: string,
-  start_lat: number,
-  start_lng: number,
-  end_address: string,
-  end_time: string,
-  end_lat: number,
-  end_lng: number,
-  duration: string,
+  start_address: string;
+  start_time: string;
+  start_lat: number;
+  start_lng: number;
+  end_address: string;
+  end_time: string;
+  end_lat: number;
+  end_lng: number;
+  duration: string;
   distance: number;
-  ride_type: string,
-  whole_ride: [number, number][]
-  }
-) {
+  ride_type: string;
+  whole_ride: [number, number][];
+}) {
+  //"http://localhost:3000/ride"
   try {
-    const { data } = await axios.post("http://localhost:3000/ride", ride, {
-      headers: {
-        "Content-Type": "application/json"
-      },
-    });
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_API_URL}/ride`,
+      ride,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     if (!data) {
       throw new Error("Response is empty");
     }
@@ -32,7 +34,6 @@ export async function sendRide(
     console.error("Error while sending ride:", err);
 
     if (err instanceof AxiosError) {
-
       //500
       if (err.response?.status === 500) {
         throw new Error("Internal Server Error");
@@ -56,6 +57,3 @@ export async function sendRide(
     throw new Error("Unknown Error while sending ride");
   }
 }
-
-
-

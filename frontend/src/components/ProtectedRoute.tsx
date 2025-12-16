@@ -10,7 +10,6 @@ import {
   setUnauthenticated,
 } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
-import { Capacitor } from "@capacitor/core";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,8 +26,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
   const toastShownRef = useRef(false);
-  const isMobile = Capacitor.isNativePlatform();
-  const user = useSelector((state: RootState) => state.user);
 
   // Check if the user is getting loaded currently
   const { isLoading, isAuthenticated } = useSelector(
@@ -38,8 +35,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     async function getJWTTokens() {
       try {
-        if (isMobile && !toastShownRef.current) {
-          await navigator("/ride");
+        const userData: USER_DTO = await verifyAccessToken();
+        if (!userData) {
+          throw new Error("User Data invalid");
         }
 
         if (!isAuthenticated) {
@@ -63,10 +61,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
         // Only show toast once per session
         if (!toastShownRef.current) {
-          toast.success(`Welcome back ${user.firstName}!`, {
+          toast.success(`Welcome back ${userData.firstName}!`, {
             className: "mt-5 md:mt-0",
             position: "top-center",
-            closeButton: true,
           });
           toastShownRef.current = true;
         }
@@ -76,7 +73,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     }
     getJWTTokens();
-  }, [dispatch, isAuthenticated, isMobile, navigator, user.firstName]);
+  }, [dispatch, navigator]);
 
   // had to also use the authenticate value so it doesn't show home page for split second to non-loged in Users
   if (!isAuthenticated || isLoading) {

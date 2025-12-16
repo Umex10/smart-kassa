@@ -57,13 +57,10 @@ export const SecureStorage = {
  */
 export const AuthStorage = {
   /**
-   * Save access and refresh tokens
+   * Save access token
    */
-  async setTokens(accessToken: string, refreshToken?: string): Promise<void> {
+  async setTokens(accessToken: string): Promise<void> {
     await SecureStorage.set("accessToken", accessToken);
-    if (refreshToken) {
-      await SecureStorage.set("refreshToken", refreshToken);
-    }
   },
 
   /**
@@ -73,22 +70,7 @@ export const AuthStorage = {
     return await SecureStorage.get("accessToken");
   },
 
-  /**
-   * Get the refresh token
-   */
-  async getRefreshToken(): Promise<string | null> {
-    return await SecureStorage.get("refreshToken");
-  },
-
   async clearAccessToken(): Promise<void> {
     await SecureStorage.remove("accessToken");
-  },
-
-  /**
-   * Remove all tokens (for logout)
-   */
-  async clearTokens(): Promise<void> {
-    await SecureStorage.remove("accessToken");
-    await SecureStorage.remove("refreshToken");
   },
 };

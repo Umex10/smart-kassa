@@ -8,30 +8,30 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "../../routing.css";
 import { useEffect, useRef, useState, memo, useCallback } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
-import { formatTime } from "@/utils/rides/formatTime";
-import { geocodeAddress } from "@/utils/rides/geoAdress";
-import { useDriverLocation } from "@/hooks/rides/useDriverLocation";
-import { useRideStates } from "@/hooks/rides/useRideStates";
+import { formatTime } from "../../utils/rides/formatTime";
+import { geocodeAddress } from "../../utils/rides/geoAdress";
+import { useDriverLocation } from "../../hooks/rides/useDriverLocation";
+import { useRideStates } from "../../hooks/rides/useRideStates";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { reverseGeocode } from "@/utils/rides/reverseGeocode";
-import { getDateNow } from "@/utils/rides/getDate";
+import { reverseGeocode } from "../../utils/rides/reverseGeocode";
+import { getDateNow } from "../../utils/rides/getDate";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { sendRide } from "@/utils/rides/ride";
+} from "../../components/ui/select";
+import { sendRide } from "../../utils/rides/ride";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router";
-import StatusOverlay from "@/components/StatusOverlay";
-import { ROUTING_CONFIG } from "@/utils/config";
-import { driverIcon, locationIcon } from "@/utils/icons";
+import { useNavigate } from "react-router-dom";
+import StatusOverlay from "../../components/StatusOverlay";
+import { ROUTING_CONFIG } from "../../utils/config";
+import { driverIcon, locationIcon } from "../../utils/icons";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -342,7 +342,8 @@ const Ride = () => {
     <div className="w-full flex flex-col z-20 gap-2">
       <h2 className="hidden md:block font-bold text-3xl text-left">Rides</h2>
       <div className="md:hidden flex flex-col gap-2">
-        <p className="w-full text-5xl font-bold text-center">
+        <p className="w-full text-5xl font-bold text-center"
+        data-testid="timer">
           {formatTime(timer)}
         </p>
 
@@ -407,18 +408,21 @@ const Ride = () => {
 
         <div className="w-full flex justify-center">
           <Select>
-            <SelectTrigger className="w-[180px] border-2 border-violet-300 rounded-md">
+            <SelectTrigger data-testid="select-trigger"
+             className="w-[180px] border-2 border-violet-300 rounded-md">
               <SelectValue placeholder="Art der Fahrt" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem
                 value="botenfahrt"
+                data-testid="botenfahrt"
                 onClick={() => setRideType("botenfahrt")}
               >
                 Botenfahrt
               </SelectItem>
               <SelectItem
                 value="taxifahrt"
+                data-testid="taxifahrt"
                 onClick={() => setRideType("taxifahrt")}
               >
                 Taxifahrt
@@ -429,6 +433,7 @@ const Ride = () => {
 
         <Input
           type="text"
+          data-testid="address"
           placeholder="Mariahilfer Straße 120, Wien"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
@@ -457,6 +462,7 @@ const Ride = () => {
         </AnimatePresence>
 
         <Button
+        data-testid="calculate-route"
           onClick={() => {
             if (!destination) {
               toast("Bitte geben sie eine Adresse ein!", {
@@ -489,6 +495,7 @@ const Ride = () => {
 
         <div className="w-full grid grid-cols-2 gap-4">
           <Button
+          data-testid="start-ride"
             className={`py-6 font-semibold text-white bg-green-500 rounded-lg shadow-md hover:bg-green-600 transition duration-150 ease-in-out`}
             onClick={() => {
               if (!destination) {
@@ -517,6 +524,7 @@ const Ride = () => {
           </Button>
 
           <Button
+          data-testid="end-ride"
             className={`py-6 font-semibold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-600 transition duration-150 ease-in-out`}
             onClick={() => {
               setIsRideActive(false);

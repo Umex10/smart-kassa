@@ -15,6 +15,10 @@ const config: CapacitorConfig = {
     },
     CapacitorCookies: { enabled: true },
   },
+  server: {
+    url: "http://192.168.0.167:5173",
+    cleartext: true,
+  }
 };
 
 export default config;

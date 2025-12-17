@@ -12,14 +12,8 @@ const router = express.Router();
  * uses both tokens
  */
 router.delete("/", authenticateToken, async (req, res) => {
-  const { isMobile, password } = req.body;
-  // to check if the User is on the Mobile App, the refresh token is either in the cookies or in the request body
-  let refreshToken = "";
-  if (isMobile) {
-    refreshToken = req.body.refreshToken;
-  } else {
-    refreshToken = req.cookies.refreshToken;
-  }
+  const { password } = req.body;
+  const refreshToken = req.cookies.refreshToken;
   const user_id = req.user.userId;
 
   // to check which value is missing
@@ -78,15 +72,13 @@ router.delete("/", authenticateToken, async (req, res) => {
         .json({ error: "User not found", path: "/delete/acount, line: 54" });
     }
 
-    if (!isMobile) {
-      res.clearCookie("refreshToken", {
-        httpOnly: true, // Prevents XSS attacks
-        secure: process.env.NODE_ENV === "production", // HTTPS only in production
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: "/",
-      });
-    }
+    res.clearCookie("refreshToken", {
+      httpOnly: true, // Prevents XSS attacks
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      path: "/",
+    });
 
     return res.status(200).send({
       message: "Account deleted successfully",

@@ -2,7 +2,6 @@ import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
 import type { AppDispatch } from "../../redux/store";
 import { signInUser, signOutUser } from "../../redux/slices/userSlice";
-import { isMobile } from "../hooks/use-mobile";
 
 export async function register(
   firstName: string,
@@ -25,7 +24,6 @@ export async function register(
         password: password,
         fn: fn,
         atu: atu,
-        isMobile: isMobile,
       },
       { withCredentials: true } // to set the refresh token in the Cookie
     );
@@ -35,8 +33,7 @@ export async function register(
     }
 
     const accessToken = await data.accessToken;
-    const refreshToken: string | undefined = await data.refreshToken;
-    await AuthStorage.setTokens(accessToken, refreshToken);
+    await AuthStorage.setTokens(accessToken);
 
     dispatch(
       signInUser({
@@ -127,7 +124,6 @@ export async function login(
       {
         email: email,
         password: password,
-        isMobile: isMobile,
       },
       {
         withCredentials: true,
@@ -140,8 +136,7 @@ export async function login(
       throw new Error("Response is empty");
     }
 
-    const refreshToken: string | undefined = await data.refreshToken;
-    await AuthStorage.setTokens(accessToken, refreshToken);
+    await AuthStorage.setTokens(accessToken);
 
     const user = data.user;
     dispatch(
@@ -153,6 +148,7 @@ export async function login(
         phoneNumber: "phone number need implementation",
       })
     );
+
     return await data;
   } catch (error) {
     console.error(error);
@@ -204,13 +200,9 @@ export async function login(
 export async function logOut(dispatch: AppDispatch) {
   try {
     const accessToken = await AuthStorage.getAccessToken();
-    const refreshToken = await AuthStorage.getRefreshToken();
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/logout`,
-      {
-        refreshToken: isMobile ? refreshToken : undefined,
-        isMobile: isMobile,
-      },
+      {},
       {
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
@@ -221,11 +213,7 @@ export async function logOut(dispatch: AppDispatch) {
       throw new Error("Empty Response");
     }
 
-    if (isMobile) {
-      await AuthStorage.clearTokens();
-    } else {
-      await AuthStorage.clearAccessToken();
-    }
+    await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
   } catch (error) {
     console.error(error);
@@ -271,15 +259,12 @@ export async function logOut(dispatch: AppDispatch) {
 export async function deleteAccount(password: string, dispatch: AppDispatch) {
   try {
     const accessToken = await AuthStorage.getAccessToken();
-    const refreshToken = await AuthStorage.getRefreshToken();
 
     const response = await axios.delete(
       `${import.meta.env.VITE_API_URL}/account`,
       {
         data: {
-          isMobile: isMobile,
           password: password,
-          refreshToken: isMobile ? refreshToken : undefined,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -292,11 +277,7 @@ export async function deleteAccount(password: string, dispatch: AppDispatch) {
       throw new Error("Empty Response");
     }
 
-    if (isMobile) {
-      await AuthStorage.clearTokens();
-    } else {
-      await AuthStorage.clearAccessToken();
-    }
+    await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
   } catch (error) {
     console.error(error);

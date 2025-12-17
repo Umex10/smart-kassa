@@ -1,6 +1,5 @@
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
-import { isMobile } from "@/hooks/use-mobile";
 
 /**
  * Method to check if access token is valid or not
@@ -8,6 +7,7 @@ import { isMobile } from "@/hooks/use-mobile";
  */
 export async function verifyAccessToken() {
   try {
+    console.log("got accesstoken");
     const accessToken = await AuthStorage.getAccessToken();
 
     if (!accessToken) {
@@ -36,6 +36,7 @@ export async function verifyAccessToken() {
     try {
       const newAccessToken = await refreshAccessToken();
 
+      console.log("geting new access token");
       // Retry verification with the new access token
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/verify`,
@@ -49,8 +50,8 @@ export async function verifyAccessToken() {
 
       return response.data;
     } catch (refreshError) {
-      // If refresh fails, clear all tokens and re-throw the specific error
-      await AuthStorage.clearTokens();
+      // If refresh fails, clear access token and re-throw the specific error
+      await AuthStorage.clearAccessToken();
       console.error("Token refresh failed:", refreshError);
 
       // Re-throw the specific error from refresh for better error messages
@@ -64,12 +65,10 @@ export async function verifyAccessToken() {
  */
 async function refreshAccessToken() {
   try {
-    const refreshToken = await AuthStorage.getRefreshToken();
+    console.log("Getting access Token");
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/refresh`,
-      {
-        refreshToken: isMobile ? refreshToken : undefined,
-      },
+      {},
       { withCredentials: true }
     );
 
@@ -77,9 +76,11 @@ async function refreshAccessToken() {
       throw new Error("Empty Response");
     }
 
+    console.log("about to set token");
     const { accessToken } = await response.data;
 
     await AuthStorage.setTokens(accessToken);
+    console.log("Setted accessToken");
     return accessToken;
   } catch (error) {
     console.error(error);

@@ -42,7 +42,7 @@ export default function RootLayout() {
   ];
 
   useEffect(() => {
-    dispatch(setLink(1));
+    dispatch(setLink(isMobile ? 0 : 1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

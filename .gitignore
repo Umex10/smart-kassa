@@ -155,4 +155,4 @@ vite.config.ts.timestamp-*
 .vscode
 
 # Frontend Documentation folder
-frontend\docs
+frontend/docs

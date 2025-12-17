@@ -151,5 +151,8 @@ vite.config.ts.timestamp-*
 # Tools
 .claude/
 
-#Code Editor
+# Code Editor
 .vscode
+
+# Frontend Documentation folder
+frontend/docs

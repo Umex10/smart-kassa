@@ -109,8 +109,8 @@ export const useDriverLocation = (isRideActive: boolean) => {
     // TEST/DEBUG: Simulates driver movement for development
     if (isRideActive) {
       interval = setInterval(() => {
-        lat += 0.0005;
-        lng += 0.0005;
+        lat += 0.0001;
+        lng += 0.0001;
         setDriverLocation([lat, lng]);
       }, 1000);
     }

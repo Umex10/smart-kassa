@@ -213,7 +213,7 @@ export const ZoomDriver = ({ lat, lng }: { lat: number; lng: number }) => {
 
   useEffect(() => {
     if (!alreadyZoomed.current) {
-      map.flyTo([lat, lng], 16, { duration: 1.5 });
+      map.setView([lat, lng], 16, { duration: 1 });
       alreadyZoomed.current = true;
     }
   }, [map, lat, lng]);
@@ -561,7 +561,8 @@ const Ride = () => {
             });
           }}
           disabled={isRideActive}
-          className={`w-full py-6 mb-6 font-semibold text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition duration-150 ease-in-out`}
+          className={`w-full py-6 mb-6 font-semibold text-white bg-violet-600
+             rounded-lg shadow-md hover:bg-violet-700 transition duration-150 ease-in-out`}
         >
           Route berechnen
         </Button>

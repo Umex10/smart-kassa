@@ -80,8 +80,8 @@ export const DrawMap = (data: DrawMapArgs) => {
           L.marker(wholeRide[i], {icon: locationIcon}).addTo(map);
           // At the last index, adjust the driver icon a little bit so it can 
           // float over the Location Marker instead beneath it
-          animatedMarker.current?.setLatLng([wholeRide[i][0] - 0.00014, 
-          wholeRide[i][1] - 0.00017]);
+          animatedMarker.current?.setLatLng([wholeRide[i][0] - 0.00003, 
+          wholeRide[i][1] - 0.00003]);
         }
 
         currentIndex.current = ++i;
@@ -90,7 +90,7 @@ export const DrawMap = (data: DrawMapArgs) => {
 
         //Center Route
         if (routePolyline.current) {
-          map.flyToBounds(routePolyline.current.getBounds(), {
+          map.fitBounds(routePolyline.current.getBounds(), {
             padding: [40, 40],
             duration: 1
           });

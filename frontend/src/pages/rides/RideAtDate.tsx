@@ -122,7 +122,7 @@ const RideAtDate = ({ rides, sortAfter, isDescending, rideType }: RideAtDateArgs
                 {ride.end_address.split(",").slice(2, 4).join(", ")}
               </CardTitle>
 
-              <CardDescription className="flex gap-4 text-sm text-gray-600">
+              <CardDescription className="flex gap-4 text-sm">
                 <span className="flex items-center gap-1">
                   <Route className="w-4 h-4" />
                   {formatDistance(ride.distance)}

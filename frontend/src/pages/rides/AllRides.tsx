@@ -42,8 +42,7 @@ const AllRides = () => {
   const [isAscending, setIsAscending] = useState(false);
   const [sortAfter, setSortAfter] = useState("date");
   const [rideType, setRideType] = useState("all");
-  //const navigator = useNavigate();
-
+  const [loading, setIsLoading] = useState(true);
   const [rides, setRides] = useState<AllRide[] | null>(null);
   const { id } = useParams();
   const user_id = useSelector((state: RootState) => state.user.id)
@@ -57,18 +56,21 @@ const AllRides = () => {
 
       if (!data || !data.rides) throw new Error("No rides found");
       setRides(data.rides);
+      setIsLoading(false);
     })();
   }, []);
 
   const ride_id = Number(id);
 
-  if (rides && rides.length === 0) {
-    return <>No Rides yet</>
+  if (loading) {
+    return <>Loading rides...</>
   }
 
   if (!rides) {
-    return <>Loading rides...</>;
+    return <>Unfortunately there are no rides yet...</>
   }
+
+  
 
   // Test if all-rides was called with a id, if so find the exact route
 
@@ -99,7 +101,7 @@ const AllRides = () => {
           <div className="flex flex-col gap-1 text-center md:text-left">
             <h2 data-testid="h2text" className="page-title">Rides</h2>
             <p className="subheader">
-              Visit, sort and sceify every ride you took!
+              Visit and sort every ride you took!
             </p>
           </div>
 

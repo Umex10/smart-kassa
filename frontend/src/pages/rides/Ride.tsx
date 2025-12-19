@@ -32,7 +32,7 @@ import { useNavigate } from "react-router-dom";
 import StatusOverlay from "../../components/StatusOverlay";
 import { ROUTING_CONFIG } from "../../utils/config";
 import { driverIcon, locationIcon } from "../../utils/icons";
-import type { NotificationsArgs } from "redux/slices/notificationsSlice";
+import type { NotificationsArgs } from "../../../redux/slices/notificationsSlice";
 import { add } from "../../../redux/slices/notificationsSlice"
 import { useNotificationCheck } from "@/hooks/useNotificationCheck";
 

@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import type { RootState } from "redux/store";
+import type { RootState } from "../../redux/store";
 
 export const useNotificationCheck = (id: string): boolean => {
   const notifications = useSelector((state: RootState) => state.notificationsState.items);

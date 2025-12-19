@@ -35,7 +35,7 @@ import type {
 } from "../../../constants/Compontents";
 import Inputs from "../../components/Inputs";
 import PasswordInputs from "../../components/PasswordInputs";
-import type { NotificationsArgs } from "redux/slices/notificationsSlice";
+import type { NotificationsArgs } from "../.../../../../redux/slices/notificationsSlice";
 import { getDateNow } from "@/utils/rides/getDate";
 import { add } from "../../../redux/slices/notificationsSlice"
 

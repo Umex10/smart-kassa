@@ -6,7 +6,6 @@ import footerLinkSlice from "./slices/footerLinksSlice";
 import invoicesSlice from "./slices/invoices";
 import accessTokenSlice from "./slices/accessTokenSlice";
 import notificationsSlice from "./slices/notificationsSlice";
-import newNotificationsSlice from "./slices/newNotificationsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,10 +15,16 @@ export const store = configureStore({
     setFooterLink: footerLinkSlice,
     setBills: invoicesSlice,
     accessTokenState: accessTokenSlice,
-    notificationsState: notificationsSlice,
-    newNotificationsState: newNotificationsSlice
+    notificationsState: notificationsSlice
   },
    devTools: process.env.NODE_ENV !== "production",
+});
+
+store.subscribe(() => {
+  const notifications = store.getState().notificationsState.items;
+  const notifications_archived = store.getState().notificationsState.items_archived;
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+  localStorage.setItem("notifications_archived", JSON.stringify(notifications_archived));
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

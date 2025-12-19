@@ -8,9 +8,7 @@ import { Bell, X, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch,  RootState } from "redux/store";
 import { clearAll } from "../../redux/slices/notificationsSlice"
-import { invert } from "../../redux/slices/newNotificationsSlice"
 import Message from "./Message";
-import { useEffect, useState } from "react";
 
 /**
  * Notifications panel component that displays user notifications in a side sheet.
@@ -24,30 +22,18 @@ import { useEffect, useState } from "react";
 export function NotificationsMessages() {
 
   const notifications = useSelector((state: RootState) => state.notificationsState.items);
-  const newNotifications = useSelector((state: RootState) => state.newNotificationsState);
   const dispatch = useDispatch<AppDispatch>();
-  const [unread, setUnread] = useState(false);
 
-  // Look if there is any unRead message
-  useEffect(() => {
-     const unReadMessage = notifications.find(notification => notification.read === false);
-     console.log(unReadMessage)
-     setUnread(true);
-  if (!unReadMessage) {
-    console.log("Ich habe keine ungelesene Nachricht gefunden, setzte auf false:")
-    dispatch(invert(false));
-    setUnread(false);
-  }
-  console.log("Es gibt mind. 1 ungelesene Nachricht! Wert: ", newNotifications)
-  }, [notifications])
- 
+  const hasUnread = useSelector(
+  (state: RootState) => state.notificationsState.items.some(n => !n.read)
+);
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <button className="relative">
            <Bell className="w-6 h-6" />
-        {newNotifications && (
+        {hasUnread && (
            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border border-white" />
         )}
          
@@ -70,7 +56,7 @@ export function NotificationsMessages() {
           {/* Messages */}
           {notifications.length > 0 ? (
             <div className={`flex-1 flex flex-col divide-y 
-        ${unread ? "divide-slate-700" : "divide-slate-200"} overflow-y-auto pb-10`}>
+        ${hasUnread ? "divide-slate-700" : "divide-slate-200"} overflow-y-auto pb-24`}>
 
               {notifications.map((notification, index) => (
                 <Message key={index} id={notification.id} icon={notification.icon}
@@ -80,11 +66,11 @@ export function NotificationsMessages() {
               ))}
 
             </div>
-          ) : <p className="h-full text-center">Unfortunately there are no notifications yet! Soon!</p>
+          ) : <p className="h-full text-center mt-5">Unfortunately there are no notifications yet! Soon!</p>
           }
 
           {/* Clear notifications */}
-          <div className="sticky bottom-0 px-6 flex justify-center border-t border-slate-200 py-6">
+          <div className="sticky bg-white dark:bg-sidebar bottom-0 px-6 flex justify-center border-t border-slate-200 py-6">
             <button className="w-full flex flex-row items-center py-3 px-4 justify-center
                                 gap-4 rounded-xl border"
                     onClick={() => dispatch(clearAll())}>

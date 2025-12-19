@@ -18,10 +18,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import SummaryRide from "./SummaryRide";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../../redux/store";
-import type { NotificationsArgs } from "../../../redux/slices/notificationsSlice"
 import { add } from "../../../redux/slices/notificationsSlice"
-import { invert } from "../../../redux/slices/newNotificationsSlice"
 import { getDateNow } from "@/utils/rides/getDate";
+import { useNotificationCheck } from "@/hooks/useNotificationCheck";
 
 /**
  * Component that displays all rides for the logged-in user with filtering and sorting capabilities.
@@ -51,10 +50,7 @@ const AllRides = () => {
   const user_id = useSelector((state: RootState) => state.user.id)
   const navigator = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  //Necessary for testing, since without it every notification will be 
-  // written twice
-  const alreadyLoaded = useRef(false);
-
+ const sentNotifications = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -64,40 +60,47 @@ const AllRides = () => {
       if (!data || !data.rides) throw new Error("No rides found");
       setRides(data.rides);
       console.log(data.rides.length)
-      
-      if (alreadyLoaded.current) {return}
-      alreadyLoaded.current = true;
-      setIsLoading(false);
-      if (data.rides.length >= 13) {
-        const notification: NotificationsArgs = {
-          icon: "trophy",
-          title: "Your first ride ✅",
-          desc: "You successfully finished your first ride!",
-          date: getDateNow(),
-          read: false,
-          color: "amber"
-        }
-        dispatch(add(notification))
-        dispatch(invert(true));
-        console.log("Invert wurde nun von all-rides auf true gesetzt!")
-        console.log(notification)
-      }
 
-      if (data.rides.length >= 5) {
-         const notification: NotificationsArgs = {
-          icon: "leaf",
-          title: "5-Rides Streak ⭐",
-          desc: "You successfully finished 5 rides!",
-          date: getDateNow(),
-          read: false,
-          color: "green"
-        }
-        dispatch(add(notification))
-        dispatch(invert(true));
-      }
-       
+      setIsLoading(false);
     })();
   }, []);
+
+  const hasNotSendFirstRide= useNotificationCheck("first-ride");
+  const hasNotSendTwoStreak = useNotificationCheck("two-streak");
+
+  useEffect(() => {
+  if (!rides) return;
+
+  
+
+  if (rides.length >= 60 && hasNotSendFirstRide && 
+  !sentNotifications.current.has("first-ride")) {
+    dispatch(add({
+      id: "first-ride",
+      icon: "trophy",
+      title: "Your first ride ✅",
+      desc: "You successfully finished your first ride!",
+      date: getDateNow(),
+      read: false,
+      color: "amber"
+    }));
+     sentNotifications.current.add("first-ride");
+  }
+
+  if (rides.length >= 2 && hasNotSendTwoStreak && 
+  !sentNotifications.current.has("two-streak")) {
+    dispatch(add({
+       id: "two-streak",
+      icon: "leaf",
+      title: "2-Rides Streak ⭐",
+      desc: "You successfully finished 2 rides!",
+      date: getDateNow(),
+      read: false,
+      color: "green"
+    }));
+     sentNotifications.current.add("two-streak");
+  }
+}, [rides, dispatch,]);
 
   const ride_id = Number(id);
 
@@ -108,6 +111,7 @@ const AllRides = () => {
   if (!rides) {
     return <>Unfortunately there are no rides yet...</>
   }
+
 
   // Test if all-rides was called with a id, if so find the exact route
 

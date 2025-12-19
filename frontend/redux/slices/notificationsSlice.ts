@@ -1,8 +1,8 @@
-import { createSlice, nanoid, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 
 export interface NotificationsArgs {
-  id?: string,
+  id: string,
   icon: string,
   title: string,
   desc: string,
@@ -13,31 +13,49 @@ export interface NotificationsArgs {
 
 interface NotificationsState {
   items: NotificationsArgs[];
+  items_archived: NotificationsArgs[]
 }
 
-const initialState: NotificationsState = {
-  items: []
+// Load from localstorage
+const loadNotifications = (): NotificationsArgs[] => {
+  try {
+    const raw = localStorage.getItem("notifications");
+    if (!raw) return [];
+    return JSON.parse(raw) as NotificationsArgs[];
+  } catch (err) {
+    console.error("Failed to load notifications from localStorage", err);
+    return [];
+  }
 };
+
+const loadNotificationsArchiv = (): NotificationsArgs[] => {
+  try {
+    const raw = localStorage.getItem("notifications_archived");
+    if (!raw) return [];
+    return JSON.parse(raw) as NotificationsArgs[];
+  } catch (err) {
+    console.error("Failed to load notifications from localStorage", err);
+    return [];
+  }
+};
+
+const initialState: NotificationsState = {
+  items: loadNotifications(),
+  items_archived: loadNotificationsArchiv()
+};
+
 const notificationsSlice = createSlice({
   name: "notifications",
   initialState,
   reducers: {
-    add: {
-      reducer: (state, action: PayloadAction<NotificationsArgs>) => {
+    add: (state, action: PayloadAction<NotificationsArgs>) => {
         state.items.push(action.payload);
-        localStorage.setItem("notifications", JSON.stringify(state.items));
-      },
-      prepare: (notification: Omit<NotificationsArgs, "id">) => ({
-        payload: {
-          ...notification,
-          id: nanoid(), // 🔥 automatische ID
-        },
-      }),
     },
     markAsRead: (state, action: PayloadAction<string>) => {
       const found = state.items.find(n => n.id === action.payload)
       if (found) {
         found.read = true;
+        state.items_archived.push(found)
       }
     },
     clearAll: (state) => {

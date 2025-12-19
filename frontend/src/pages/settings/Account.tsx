@@ -392,9 +392,10 @@ const Account = () => {
                 </div>
               </div>
 
+             
               <Button
-                type="submit"
-
+                onClick={revertChanges}
+                type="button"
                 className={
                   toRevert
                     ? "btn-main ml-2"
@@ -415,25 +416,7 @@ const Account = () => {
                 type="button"
                 className={
                   toRevert
-                    ? "btn-primary ml-2"
-                    : `
-                  ml-2 bg-white dark:bg-black border-violet-400 border-2 dark:border-0 black:text-white font-extrabold px-8 py-3
-                  transition-all duration-200
-                  hover:bg-violet-400 hover:text-white
-                  hover:shadow-md
-                  hover:scale-[1.02]
-                  active:scale-[0.98]
-                `
-                }
-              >
-                Save
-              </Button>
-              <Button
-                onClick={revertChanges}
-                type="button"
-                className={
-                  toRevert
-                    ? "btn-primary ml-2"
+                    ? "btn-main ml-2"
                     : `
                   ml-2 bg-white dark:bg-black border-violet-400 border-2 dark:border-0 black:text-white font-extrabold px-8 py-3
                   transition-all duration-200

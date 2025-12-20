@@ -1,6 +1,6 @@
-import {  useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import type { AppDispatch, RootState } from "../../redux/store";
+import type {  RootState } from "../../redux/store";
 import {
   Tabs,
   TabsContent,
@@ -8,8 +8,6 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import Balance from "../components/Balance";
-import { useEffect } from "react";
-import { clearAll, clearAllArchived, clearAllSettings } from "../../redux/slices/notificationsSlice";
 
 export type RidesStats = {
   day: string;
@@ -61,14 +59,6 @@ const monthlyWeekRidesData: MonthlyWeekStats[] = [
  */
 function Home() {
   const user = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    localStorage.clear();
-    dispatch(clearAll());
-    dispatch(clearAllArchived());
-    dispatch(clearAllSettings())
-  }, [])
 
   return (
     <div className="w-full flex flex-col justify-center items-center gap-4">

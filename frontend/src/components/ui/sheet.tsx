@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -63,6 +64,9 @@ const SheetContent = React.forwardRef<
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
+      <VisuallyHidden.Root>
+        <SheetPrimitive.Title>Sheet</SheetPrimitive.Title>
+      </VisuallyHidden.Root>
       {/* Das Standard-X wurde hier entfernt */}
       {children}
     </SheetPrimitive.Content>

@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 
 import { getAllRides } from "../../utils/rides/all-rides";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AllRide } from '../../../constants/AllRide';
 import RideAtDate from "./RideAtDate";
 import { ListFilter, ArrowUp, ArrowDown } from 'lucide-react';
@@ -16,11 +16,9 @@ import {
 import { getRidesToday, getRidesYesterday } from "../../utils/rides/getRides";
 import { useNavigate, useParams } from "react-router-dom";
 import SummaryRide from "./SummaryRide";
-import { useDispatch, useSelector } from "react-redux";
-import { type AppDispatch, type RootState } from "../../../redux/store";
-import { addNotification } from "../../../redux/slices/notificationsSlice"
-import { getDateNow } from "@/utils/rides/getDate";
-import { useNotificationCheck } from "@/hooks/useNotificationCheck";
+import { useSelector } from "react-redux";
+import { type RootState } from "../../../redux/store";
+import { useCheckForAchievements } from "../notifications/useAchievements";
 
 /**
  * Component that displays all rides for the logged-in user with filtering and sorting capabilities.
@@ -49,11 +47,6 @@ const AllRides = () => {
   const { id } = useParams();
   const user_id = useSelector((state: RootState) => state.user.id)
   const navigator = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-
-  const notifications = useSelector((state: RootState) =>
-    state.notificationsState.activeSettings.notifications);
-
 
   useEffect(() => {
     (async () => {
@@ -67,49 +60,7 @@ const AllRides = () => {
     })();
   }, []);
 
-  // This will track if the ride was already called, due to the safety of react.
-  const sentNotifications = useRef<Set<string>>(new Set());
-  const hasNotSendFirstRide = useNotificationCheck("first-ride");
-  const hasNotSendTwoStreak = useNotificationCheck("two-streak");
-
-  useEffect(() => {
-
-    if (!rides) return;
-
-    console.log(rides.length)
-    console.log("HasSend: ", hasNotSendFirstRide)
-    console.log("FirstRide: ", !sentNotifications.current.has("first-ride"))
-
-    console.log("achievements: ", notifications.achievements)
-
-    if (rides.length >= 79 && hasNotSendFirstRide &&
-      !sentNotifications.current.has("first-ride") && notifications.achievements) {
-      dispatch(addNotification({
-        id: "first-ride",
-        icon: "trophy",
-        title: "Your first ride ✅",
-        desc: "You successfully finished your first ride!",
-        date: getDateNow(),
-        read: false,
-        color: "amber"
-      }));
-      sentNotifications.current.add("first-ride");
-    }
-
-    if (rides.length >= 80 && hasNotSendTwoStreak &&
-      !sentNotifications.current.has("two-streak") && notifications.achievements) {
-      dispatch(addNotification({
-        id: "two-streak",
-        icon: "leaf",
-        title: "2-Rides Streak ⭐",
-        desc: "You successfully finished 2 rides!",
-        date: getDateNow(),
-        read: false,
-        color: "green"
-      }));
-      sentNotifications.current.add("two-streak");
-    }
-  }, [rides, dispatch, hasNotSendFirstRide, hasNotSendTwoStreak, notifications.achievements]);
+  useCheckForAchievements(rides);
 
   const ride_id = Number(id);
 

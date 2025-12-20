@@ -1,7 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Account from "./Account"
-import Notifications from "./Notifications"
+import Notifications from "../notifications/Notifications"
 import UiStyling from "./UiStyling"
 
 const Settings = () => {

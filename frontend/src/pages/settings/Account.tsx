@@ -35,6 +35,7 @@ import axios, { AxiosError } from "axios";
 import { AuthStorage } from "@/utils/secureStorage";
 import { updateUser } from "../../../redux/slices/userSlice";
 import { refreshAccessToken } from "@/utils/jwttokens";
+import { clearAll, clearAllArchived, clearAllSettings } from "../../../redux/slices/notificationsSlice";
 
 const Account = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -298,7 +299,7 @@ const Account = () => {
                 type="button"
                 className={
                   toRevert
-                    ? "btn-primary ml-2"
+                    ? "btn- ml-2"
                     : `
                   ml-2 bg-white dark:bg-black border-violet-400 border-2 dark:border-0 black:text-white font-extrabold px-8 py-3
                   transition-all duration-200
@@ -345,8 +346,17 @@ const Account = () => {
                         },
                         {
                           loading: "Abmelden...",
-                          success: async () => {
-                            await navigator("/register");
+                          success: () => {
+                              
+                            dispatch(clearAll());
+                            dispatch(clearAllArchived());
+                            dispatch(clearAllSettings())
+
+                            localStorage.removeItem("notifications");
+                            localStorage.removeItem("notifications_archived");
+                            localStorage.removeItem("notifications_settings");
+
+                            navigator("/register");
                             return toastMessages.logout.success.title;
                           },
                           error: (err) => handleLogoutError(err),

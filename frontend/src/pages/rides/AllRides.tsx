@@ -74,7 +74,7 @@ const AllRides = () => {
   if (!rides) return;
 
 
-  if (rides.length >= 60 && hasNotSendFirstRide && 
+  if (rides.length == 1 && hasNotSendFirstRide && 
   !sentNotifications.current.has("first-ride")) {
     dispatch(add({
       id: "first-ride",
@@ -88,7 +88,7 @@ const AllRides = () => {
      sentNotifications.current.add("first-ride");
   }
 
-  if (rides.length >= 2 && hasNotSendTwoStreak && 
+  if (rides.length == 2 && hasNotSendTwoStreak && 
   !sentNotifications.current.has("two-streak")) {
     dispatch(add({
        id: "two-streak",

@@ -7,6 +7,22 @@ import { getDateNow } from "@/utils/rides/getDate";
 import { useNotificationCheck } from "@/hooks/useNotificationCheck";
 import { useEffect } from "react";
 
+/**
+ * Custom hook for checking and dispatching achievement notifications.
+ * 
+ * Monitors the user's ride data to detect achievement milestones and automatically
+ * dispatches notifications when new achievements are unlocked. Achievements include:
+ * - First ride completion
+ * - 2-ride streak
+ * - First ride over 50 meters
+ * 
+ * The hook respects the user's notification preferences and only sends notifications
+ * if achievements are enabled. It also prevents duplicate notifications by checking
+ * if an achievement notification has already been sent.
+ * 
+ * @param {AllRide[] | null} rides - Array of user's completed rides or null if not loaded.
+ * @returns {void} This hook does not return a value; it dispatches notifications as side effects.
+ */
 export const useCheckForAchievements = (rides: AllRide[] | null) => {
   const dispatch = useDispatch<AppDispatch>();
 

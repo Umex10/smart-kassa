@@ -15,7 +15,8 @@ import Message from "./Message";
  * 
  * This component manages the notification sidebar, showing all user notifications
  * with visual indicators for unread messages. Users can mark messages as read,
- * delete individual notifications, or clear all notifications at once.
+ * delete individual notifications, or clear all notifications at once. The panel
+ * opens from the right side and includes a bell icon with a red badge for unread messages.
  * 
  * @returns {JSX.Element} A sheet component containing the notifications list.
  */

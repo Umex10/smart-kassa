@@ -4,6 +4,11 @@ import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../../redux/store";
 import { toggleSetting, type NotificationType } from "../../../redux/slices/notificationsSlice";
 
+/**
+ * Props interface for the SingleNotification component.
+ * 
+ * @template T - The notification section type (inlineSlider or emails).
+ */
 interface SingleNotificationArgs<T extends keyof NotificationType> {
   section: T;
   sectionKey: keyof NotificationType[T];
@@ -12,6 +17,23 @@ interface SingleNotificationArgs<T extends keyof NotificationType> {
   startValue: boolean;
 }
 
+/**
+ * Individual notification setting toggle component.
+ * 
+ * Renders a single notification preference with a title, description, and toggle switch.
+ * The component is fully interactive - users can click anywhere on the row to toggle the setting,
+ * or use the switch directly. Changes are immediately dispatched to Redux state.
+ * Includes hover effects and keyboard accessibility support.
+ * 
+ * @template T - The notification section type (inlineSlider or emails).
+ * @param {SingleNotificationArgs<T>} props - The notification setting properties.
+ * @param {T} props.section - The notification section category.
+ * @param {keyof NotificationType[T]} props.sectionKey - The specific setting key within the section.
+ * @param {string} props.title - Display title for the notification setting.
+ * @param {string} props.desc - Description text explaining what the setting controls.
+ * @param {boolean} props.startValue - Initial enabled/disabled state from Redux store.
+ * @returns {JSX.Element} An interactive notification toggle row.
+ */
 const SingleNotification = <T extends keyof NotificationType>({ section, sectionKey, title, desc, startValue }: 
   SingleNotificationArgs<T>) => {
 

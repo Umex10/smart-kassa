@@ -36,6 +36,18 @@ import { AuthStorage } from "@/utils/secureStorage";
 import { updateUser } from "../../../redux/slices/userSlice";
 import { refreshAccessToken } from "@/utils/jwttokens";
 
+/**
+ * Account settings page component.
+ * 
+ * Provides a comprehensive interface for managing user account information including
+ * profile details (first name, last name, email), avatar, and account actions.
+ * Users can update their profile information with real-time validation, revert unsaved changes,
+ * log out of their account, or permanently delete their account with password confirmation.
+ * The component includes form validation, optimistic updates to Redux state, and proper
+ * error handling with toast notifications.
+ * 
+ * @returns {JSX.Element} A settings page with profile management and account action controls.
+ */
 const Account = () => {
   const dispatch: AppDispatch = useDispatch();
 

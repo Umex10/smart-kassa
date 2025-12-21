@@ -3,7 +3,16 @@ import { NOTIFICATIONS } from "../../../../constants/Notifications"
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../redux/store";
 
-
+/**
+ * Notification settings page component.
+ * 
+ * Displays a settings interface for managing notification preferences across different categories.
+ * Users can toggle inline slider notifications (achievements, news) and email notifications
+ * (two-factor authentication). The component reads the current notification settings from Redux
+ * state and allows users to customize their notification experience.
+ * 
+ * @returns {JSX.Element} A settings page with notification toggle controls.
+ */
 const Notifications = () => {
 
   const notifications = useSelector((state: RootState) =>

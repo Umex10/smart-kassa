@@ -25,6 +25,17 @@ interface ZynqlyConfirmEmailProps {
 // ReSend at 10:30
 const baseUrl = 'http://localhost:5173';
 
+/**
+ * Email template component for Zynqly account confirmation.
+ * 
+ * Renders a branded email with a validation code that users receive when signing up.
+ * The email includes the Zynqly logo, confirmation instructions, social media links,
+ * and footer information. Built with React Email components and styled using Tailwind CSS.
+ * 
+ * @param {ZynqlyConfirmEmailProps} props - The email template properties.
+ * @param {string} props.validationCode - The validation code to display for account confirmation.
+ * @returns {JSX.Element} A fully formatted HTML email template.
+ */
 export const Email = ({
   validationCode,
 }: ZynqlyConfirmEmailProps) => (

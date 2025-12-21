@@ -6,8 +6,8 @@ import {
 } from "@/components/ui/sheet";
 import { Bell, X, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../redux/store";
-import { clearAll } from "../../../redux/slices/notificationsSlice"
+import type { AppDispatch, RootState } from "../../../../redux/store";
+import { clearAll } from "../../../../redux/slices/notificationsSlice"
 import Message from "./Message";
 
 /**

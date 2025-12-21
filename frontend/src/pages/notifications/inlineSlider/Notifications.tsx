@@ -1,7 +1,7 @@
-import SingleNotification from "./SingleNotification";
-import { NOTIFICATIONS } from "../../../constants/Notifications"
+import SingleNotification from "../SingleNotification";
+import { NOTIFICATIONS } from "../../../../constants/Notifications"
 import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
+import type { RootState } from "../../../../redux/store";
 
 
 const Notifications = () => {

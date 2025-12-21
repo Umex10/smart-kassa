@@ -142,7 +142,7 @@ export const Email = ({
             </Link>
             <Text className="text-xs leading-[15px] text-left mb-[50px] text-[#b7b7b7]">
               ©2025 Zynqly Inc. <br />
-              123 Innovation Street, Graz, Austria <br />
+              Werk-VI-Straße 46, 8605 Kapfenberg <br />
               <br />
               All rights reserved.
             </Text>

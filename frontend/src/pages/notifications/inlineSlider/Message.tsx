@@ -8,12 +8,12 @@ import {
 
 import clsx from "clsx";
 
-import type { NotificationsArgs } from "../../../redux/slices/notificationsSlice"
+import type { NotificationsArgs } from "../../../../redux/slices/notificationsSlice"
 
 import { Trophy, Flame, Frame, type LucideIcon, Leaf, Trash2, HandMetal } from "lucide-react";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../redux/store";
-import { markAsRead, deleteNotification } from "../../../redux/slices/notificationsSlice"
+import type { AppDispatch } from "../../../../redux/store";
+import { markAsRead, deleteNotification } from "../../../../redux/slices/notificationsSlice"
 import { formatTimeAgo } from "@/utils/rides/summaryMinutes";
 
 const iconMap = {

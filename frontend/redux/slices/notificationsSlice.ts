@@ -10,20 +10,33 @@ export interface NotificationsArgs {
   color: string
 }
 
-export interface SettingsArgs {
-  notifications: {
+export interface NotificationType {
+  inlineSlider: {
     achievements: boolean;
-    news: boolean
-  }
+    news: boolean;
+  };
+  emails: {
+    twoFactor: boolean;
+  };
 }
 
 interface NotificationsState {
   items: NotificationsArgs[];
   items_archived: NotificationsArgs[];
-  activeSettings: SettingsArgs;
+  activeSettings: NotificationType;
 }
 
-export type NotificationSettingKey = keyof SettingsArgs["notifications"];
+export type ToggleSettingPayload =
+   {
+    section: "inlineSlider";
+    sectionKey: keyof NotificationType["inlineSlider"];
+    value: boolean;
+  }
+  | {
+    section: "emails";
+    sectionKey: keyof NotificationType["emails"];
+    value: boolean;
+  };
 
 // Load from localstorage
 const loadNotifications = (): NotificationsArgs[] => {
@@ -48,24 +61,24 @@ const loadNotificationsArchiv = (): NotificationsArgs[] => {
   }
 };
 
-const loadNotificationsSettings = (): SettingsArgs => {
+const defaultSettings: NotificationType = {
+  inlineSlider: {
+    achievements: true,
+    news: true
+  },
+  emails: {
+    twoFactor: true
+  }
+}
+
+const loadNotificationsSettings = (): NotificationType => {
   try {
     const raw = localStorage.getItem("notifications_settings");
-    if (!raw) return {
-      notifications: {
-        achievements: true,
-        news: true
-      }
-    };
-    return JSON.parse(raw) as SettingsArgs;
+    if (!raw) return defaultSettings;
+    return JSON.parse(raw) as NotificationType;
   } catch (err) {
     console.error("Failed to load notifications from localStorage", err);
-    return {
-      notifications: {
-        achievements: true,
-        news: true
-      }
-    }
+    return defaultSettings;
   };
 }
 
@@ -97,31 +110,25 @@ const notificationsSlice = createSlice({
       state.items_archived = [];
     },
     clearAllSettings: (state) => {
-      state.activeSettings = {
-        notifications: {
-          achievements: true,
-          news: true
-        }
-      };
+      state.activeSettings = defaultSettings;
     },
-    deleteNotifications: (state, action: PayloadAction<string>) => {
+    deleteNotification: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter(ride => ride.id !== action.payload);
     },
-    enableSetting: (state, action: PayloadAction<NotificationSettingKey>) => {
-      const key = action.payload;
-      state.activeSettings.notifications[key] = true;
-      console.log(`Set key ${key} (from: false) tooooo: true `)
-      console.log("Value now:", state.activeSettings.notifications[key])
+    toggleSetting: (state, action: PayloadAction<ToggleSettingPayload>) => {
+      const { section, sectionKey, value } = action.payload;
+
+      if (section === "inlineSlider") {
+        state.activeSettings.inlineSlider[sectionKey] = value;
+      }
+
+      if (section === "emails") {
+        state.activeSettings.emails[sectionKey] = value;
+      }
     },
-    disableSetting: (state, action: PayloadAction<NotificationSettingKey>) => {
-      const key = action.payload;
-      state.activeSettings.notifications[key] = false;
-      console.log(`Set key ${key} (from: true) tooooo: false `)
-      console.log("Value now:", state.activeSettings.notifications[key])
-    }
   }
 })
 
-export const { addNotification, markAsRead, clearAll, deleteNotifications,
-  enableSetting, disableSetting, clearAllArchived, clearAllSettings } = notificationsSlice.actions;
+export const { addNotification, markAsRead, clearAll, deleteNotification,
+  toggleSetting, clearAllArchived, clearAllSettings } = notificationsSlice.actions;
 export default notificationsSlice.reducer;

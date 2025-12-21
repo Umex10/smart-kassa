@@ -20,13 +20,12 @@ export const store = configureStore({
    devTools: process.env.NODE_ENV !== "production",
 });
 
-// Use async function to handle SecureStorage properly
+
 store.subscribe(() =>  {
   const notifications = store.getState().notificationsState.items;
   const notifications_archived = store.getState().notificationsState.items_archived;
   const notifications_settings = store.getState().notificationsState.activeSettings;
   
-  // Use SecureStorage instead of localStorage to support both web and Capacitor
    localStorage.setItem("notifications", JSON.stringify(notifications));
    localStorage.setItem("notifications_archived", JSON.stringify(notifications_archived));
    localStorage.setItem("notifications_settings", JSON.stringify(notifications_settings));

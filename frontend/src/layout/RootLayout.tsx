@@ -100,7 +100,7 @@ export default function RootLayout() {
 
             <div className="flex flex-row gap-4 items-center text-lg flex-shrink">
               <NotificationsMessages></NotificationsMessages>
-              <CircleUser className="w-6 h-6 md:w-10 md:h-10"></CircleUser>
+              <CircleUser className="w-7 h-7 md:w-10 md:h-10"></CircleUser>
             </div>
           </header>
 

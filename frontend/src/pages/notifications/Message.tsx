@@ -13,7 +13,7 @@ import type { NotificationsArgs } from "../../../redux/slices/notificationsSlice
 import { Trophy, Flame, Frame, type LucideIcon, Leaf, Trash2, HandMetal } from "lucide-react";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../../redux/store";
-import { markAsRead, deleteNotifications } from "../../../redux/slices/notificationsSlice"
+import { markAsRead, deleteNotification } from "../../../redux/slices/notificationsSlice"
 import { formatTimeAgo } from "@/utils/rides/summaryMinutes";
 
 const iconMap = {
@@ -109,7 +109,7 @@ const Message = ({ id, icon, title, desc, date, read, color }: NotificationsArgs
 
       </div>
 
-      <button onClick={() => id && dispatch(deleteNotifications(id))}>
+      <button onClick={() => id && dispatch(deleteNotification(id))}>
         <Trash2 className={`w-5 h-5 ${!read ? "text-slate-700  dark:text-slate-700" :
            "text-slate-600  dark:text-slate-400"}`} />
       </button>

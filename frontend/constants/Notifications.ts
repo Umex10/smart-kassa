@@ -1,6 +1,13 @@
 export const NOTIFICATIONS = {
-  NOTIFICATIONS_ACHIEVEMENTS: "achievements",
-  NOTIFICATIONS_NEWS: "news",
+  INLINE_SLIDER: {
+  SECTION: "inlineSlider",
+  ACHIEVEMENTS: "achievements",
+  NEWS: "news",
+  },
+  EMAIL: {
+    SECTION: "emails",
+    TWO_FACTOR: "twoFactor"
+  },
 } as const;
 
 export const ACHIEVEMENTS = {
@@ -12,3 +19,4 @@ export const ACHIEVEMENTS = {
 export const NEWS = {
   REGISTER: "register"
 }
+

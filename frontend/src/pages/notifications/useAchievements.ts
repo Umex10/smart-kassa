@@ -11,7 +11,7 @@ export const useCheckForAchievements = (rides: AllRide[] | null) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const notifications = useSelector((state: RootState) =>
-    state.notificationsState.activeSettings.notifications);
+    state.notificationsState.activeSettings.inlineSlider);
 
   const hasNotSendFirstRide = useNotificationCheck(ACHIEVEMENTS.FIRST_RIDE);
   const hasNotSendTwoStreak = useNotificationCheck(ACHIEVEMENTS.TWO_STREAK);

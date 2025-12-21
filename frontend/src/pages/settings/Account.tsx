@@ -35,7 +35,6 @@ import axios, { AxiosError } from "axios";
 import { AuthStorage } from "@/utils/secureStorage";
 import { updateUser } from "../../../redux/slices/userSlice";
 import { refreshAccessToken } from "@/utils/jwttokens";
-import { clearAll, clearAllArchived, clearAllSettings } from "../../../redux/slices/notificationsSlice";
 
 const Account = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -346,15 +345,7 @@ const Account = () => {
                         },
                         {
                           loading: "Abmelden...",
-                          success: () => {
-                              
-                            dispatch(clearAll());
-                            dispatch(clearAllArchived());
-                            dispatch(clearAllSettings())
-
-                            localStorage.removeItem("notifications");
-                            localStorage.removeItem("notifications_archived");
-                            localStorage.removeItem("notifications_settings");
+                          success: () => {                       
 
                             navigator("/register");
                             return toastMessages.logout.success.title;

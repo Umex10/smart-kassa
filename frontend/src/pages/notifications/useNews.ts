@@ -9,14 +9,15 @@ import { useEffect } from "react";
 export const useCheckForNews = (trigger: boolean) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const notifications = useSelector((state: RootState) =>
-    state.notificationsState.activeSettings.notifications);
+  const inlineSlider = useSelector((state: RootState) =>
+    state.notificationsState.activeSettings.inlineSlider);
 
   const hasNotSendRegister = useNotificationCheck(NEWS.REGISTER);
 
   useEffect(() => {
-
-    if (!notifications.news) return;
+    
+    if (!inlineSlider.news) return;
+  
     if (!trigger) return;
 
     if (hasNotSendRegister) {
@@ -30,6 +31,6 @@ export const useCheckForNews = (trigger: boolean) => {
         color: "emerald"
       }))
     }
-  }, [notifications, trigger, hasNotSendRegister, dispatch])
+  }, [inlineSlider, trigger, hasNotSendRegister, dispatch])
 
 } 

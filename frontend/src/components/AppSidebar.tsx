@@ -29,7 +29,7 @@ export function AppSidebar() {
   const dispatch: AppDispatch = useDispatch();
 
   /**
-   * Important to not close Side Bar on Desktop
+   * Detects window resize events and updates the isMd state
    */
   useEffect(() => {
     const handleResize = () => {
@@ -37,7 +37,7 @@ export function AppSidebar() {
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initialen Zustand setzen
+    handleResize(); // Set initial state
 
     return () => {
       window.removeEventListener("resize", handleResize);

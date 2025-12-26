@@ -79,18 +79,18 @@ const Account = () => {
           } else if (isAuthError && !retryFetch) {
             // Second attempt failed - session expired
             setLoading(true);
-            toast.error("Session expired. Please log in again.");
+            toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
             return;
           } else {
             setLoading(true);
             toast.error(
-              "Could not load Ressources, check your Internet Connection"
+              "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
             );
             return;
           }
         } else {
           setLoading(true);
-          toast.error("An unexpected error occurred.");
+          toast.error("Ein unerwarteter Fehler ist aufgetreten.");
           return;
         }
       }
@@ -137,16 +137,16 @@ const Account = () => {
           return await changeAvatar(avatarFile, false);
         } else if (isAuthError && !retryFetch) {
           // Second attempt failed - session expired
-          toast.error("Session expired. Please log in again.");
+          toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
           return;
         } else {
           toast.error(
-            "Could not load Ressources, check your Internet Connection"
+            "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
           );
           return;
         }
       } else {
-        toast.error("An unexpected error occurred.");
+        toast.error("Ein unerwarteter Fehler ist aufgetreten.");
         return;
       }
     }
@@ -154,7 +154,7 @@ const Account = () => {
 
   const onSelectFile = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
-      toast.info("Select a File");
+      toast.info("Datei auswählen");
       return;
     }
 
@@ -193,7 +193,7 @@ const Account = () => {
         })
       );
 
-      toast.success("Profile updated successfully");
+      toast.success("Profil erfolgreich aktualisiert");
     } catch (error) {
       if (error instanceof AxiosError) {
         const isAuthError =
@@ -205,18 +205,18 @@ const Account = () => {
           await updateProfile(false);
         } else if (isAuthError && !retry) {
           // Second attempt failed - session expired
-          toast.error("Session expired. Please log in again.");
+          toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
         } else if (error.status === 409) {
           toast.error(
-            "This email is already in use. Please use a different email."
+            "Diese E-Mail-Adresse wird bereits verwendet. Bitte verwenden Sie eine andere E-Mail-Adresse."
           );
         } else if (error.status === 400) {
-          toast.error("Invalid input. Please check your information.");
+          toast.error("Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.");
         } else {
-          toast.error("Failed to update profile. Please try again.");
+          toast.error("Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.");
         }
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
       }
     }
   }
@@ -245,7 +245,7 @@ const Account = () => {
       form.setValue("email", user.email);
       form.setValue("firstName", user.firstName);
       form.setValue("lastName", user.lastName);
-      toast.success("Changes discarded.", {
+      toast.success("Änderungen verworfen.", {
         duration: 3000, // 3 Sekunden sind ideal
         icon: "🗑️",
         className: "text-black dark:text-white",
@@ -266,9 +266,9 @@ const Account = () => {
     <div className="settings-page-container">
       {/* Page Header */}
       <div className="page-header-container">
-        <h2 className="page-title">Account Settings</h2>
+        <h2 className="page-title">Kontoeinstellungen</h2>
         <p className="subheader">
-          Manage your account information, avatar, and email settings.
+          Verwalten Sie Ihre Kontoinformationen, Avatar und E-Mail-Einstellungen.
         </p>
       </div>
 
@@ -276,9 +276,9 @@ const Account = () => {
       <div className="section-container">
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Information</h3>
+          <h3 className="section-header">Informationen</h3>
           <p className="section-description">
-            Use an address where you can receive mail.
+            Verwenden Sie eine Adresse, unter der Sie E-Mails empfangen können.
           </p>
         </div>
 
@@ -292,7 +292,7 @@ const Account = () => {
                   preview ||
                   "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
                 }
-                alt="Profilce Picture"
+                alt="Profilbild"
                 className="rounded-full w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 object-cover"
               />
               <AvatarFallback>
@@ -305,7 +305,7 @@ const Account = () => {
                 htmlFor="AvatarChanger"
                 className="underline cursor-pointer"
               >
-                Choose a new Profile Picture
+                Neues Profilbild auswählen
               </Label>
               <input
                 type="file"
@@ -320,7 +320,7 @@ const Account = () => {
                 onChange={onSelectFile}
               />
 
-              <p className="text-xs font-light">JPG, GIF or PNG. 1MB max.</p>
+              <p className="text-xs font-light">JPG, GIF oder PNG. Max. 1MB.</p>
             </div>
           </div>
 
@@ -338,11 +338,11 @@ const Account = () => {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>Vorname</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="John"
+                          placeholder="Max"
                           className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
                         />
                       </FormControl>
@@ -352,16 +352,16 @@ const Account = () => {
                 />
 
                 {/* Last Name */}
-                <FormField
+<FormField
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel>Nachname</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Doe"
+                          placeholder="Mustermann"
                           className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
                         />
                       </FormControl>
@@ -377,11 +377,11 @@ const Account = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>E-Mail</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="example@mail.com"
+                            placeholder="beispiel@mail.com"
                             className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
                           />
                         </FormControl>
@@ -407,7 +407,7 @@ const Account = () => {
                 `
                 }
               >
-                Save
+                Speichern
               </Button>
               <Button
                 onClick={revertChanges}
@@ -425,7 +425,7 @@ const Account = () => {
                 `
                 }
               >
-                Revert Changes
+                Änderungen verwerfen
               </Button>
             </form>
           </Form>
@@ -437,21 +437,21 @@ const Account = () => {
         {/* Log Out Section */}
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="section-header">Log out</h3>
+            <h3 className="section-header">Abmelden</h3>
             <p className="section-description">
-              Log out of your account. You can log back in anytime.
+              Melden Sie sich von Ihrem Konto ab. Sie können sich jederzeit wieder anmelden.
             </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="btn-main-action">Log out</Button>
+              <Button className="btn-main-action">Abmelden</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Log out of your account?</DialogTitle>
+                <DialogTitle>Von Ihrem Konto abmelden?</DialogTitle>
                 <DialogDescription>
-                  You will be logged out of your account. You can log back in
-                  anytime with your credentials.
+                  Sie werden von Ihrem Konto abgemeldet. Sie können sich jederzeit
+                  mit Ihren Anmeldedaten wieder anmelden.
                   <br />
                   <Button
                     onClick={async () => {
@@ -472,7 +472,7 @@ const Account = () => {
                     }}
                     className="btn-main-action"
                   >
-                    Log out
+                    Abmelden
                   </Button>
                 </DialogDescription>
               </DialogHeader>
@@ -483,25 +483,25 @@ const Account = () => {
         {/* Delete Account Section */}
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="section-header-danger">Delete account</h3>
+            <h3 className="section-header-danger">Konto löschen</h3>
             <p className="section-description">
-              No longer want to use our service? This action is permanent and
-              cannot be undone.
+              Sie möchten unseren Service nicht mehr nutzen? Diese Aktion ist dauerhaft und
+              kann nicht rückgängig gemacht werden.
             </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="btn-danger">Delete my account</Button>
+              <Button className="btn-danger">Mein Konto löschen</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="text-red-600">
-                  Are you absolutely sure?
+                  Sind Sie absolut sicher?
                 </DialogTitle>
                 <DialogDescription className="flex flex-col gap-4">
                   <p>
-                    This action cannot be undone. This will permanently delete
-                    your account and remove your data from our servers.
+                    Diese Aktion kann nicht rückgängig gemacht werden. Ihr Konto wird dauerhaft gelöscht
+                    und Ihre Daten werden von unseren Servern entfernt.
                   </p>
 
                   <div className="flex flex-col gap-2">
@@ -509,12 +509,12 @@ const Account = () => {
                       htmlFor="delete-password"
                       className="text-sm font-semibold text-gray-900 dark:text-gray-100"
                     >
-                      Enter your password to confirm:
+                      Geben Sie Ihr Passwort ein, um zu bestätigen:
                     </label>
                     <Input
                       id="delete-password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Geben Sie Ihr Passwort ein"
                       value={deletePassword}
                       onChange={(e) => setDeletePassword(e.target.value)}
                       className="h-11 bg-gray-100 dark:bg-gray-700 border border-red-400 focus:ring-2 focus:ring-red-500"
@@ -561,7 +561,7 @@ const Account = () => {
               disabled:hover:scale-100
             "
                   >
-                    Delete my account
+                    Mein Konto löschen
                   </Button>
                 </DialogDescription>
               </DialogHeader>

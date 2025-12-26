@@ -63,11 +63,11 @@ const AllRides = () => {
   const ride_id = Number(id);
 
   if (loading) {
-    return <>Loading rides...</>
+    return <>Fahrten werden geladen...</>
   }
 
   if (!rides) {
-    return <>Unfortunately there are no rides yet...</>
+    return <>Leider gibt es noch keine Fahrten...</>
   }
 
   
@@ -98,18 +98,18 @@ const AllRides = () => {
         md:items-center">
 
           <div className="flex flex-col gap-1 text-center md:text-left">
-            <h2 data-testid="h2text" className="page-title">Rides</h2>
+            <h2 data-testid="h2text" className="page-title">Fahrten</h2>
             <p className="subheader">
-              Visit and sort every ride you took!
+              Sehen und sortieren Sie jede Fahrt, die Sie unternommen haben!
             </p>
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-3">
 
             <TabsList className="grid grid-cols-3 md:w-auto max-w-[400px] ">
-              <TabsTrigger value="today" data-testid="show-today">Today</TabsTrigger>
-              <TabsTrigger value="yesterday" data-testid="show-yesterday">Yesterday</TabsTrigger>
-              <TabsTrigger value="all" data-testid="show-all">All</TabsTrigger>
+              <TabsTrigger value="today" data-testid="show-today">Heute</TabsTrigger>
+              <TabsTrigger value="yesterday" data-testid="show-yesterday">Gestern</TabsTrigger>
+              <TabsTrigger value="all" data-testid="show-all">Alle</TabsTrigger>
             </TabsList>
             <div className="w-full md:w-auto flex flex-row justify-between
            items-center md:gap-6">
@@ -127,7 +127,7 @@ const AllRides = () => {
                       className="md:text-lg"
                       data-testid="date"
                     >
-                      Date
+                      Datum
                     </SelectItem>
                     <SelectItem
                       value="distance"
@@ -175,7 +175,7 @@ const AllRides = () => {
                     className="md:text-lg"
                     data-testid="only-all"
                   >
-                    All
+                    Alle
                   </SelectItem>
                   <SelectItem
                     value="botenfahrt"

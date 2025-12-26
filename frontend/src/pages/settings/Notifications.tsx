@@ -6,9 +6,9 @@ const Notifications = () => {
 
       {/* Page Header */}
       <div className="page-header-container">
-        <h2 className="page-title">Notification Settings</h2>
+        <h2 className="page-title">Benachrichtigungseinstellungen</h2>
         <p className="subheader">
-          Manage your notifications. Turn on or off the notifications you want to receive.
+          Verwalten Sie Ihre Benachrichtigungen. Aktivieren oder deaktivieren Sie die Benachrichtigungen, die Sie erhalten möchten.
         </p>
       </div>
 
@@ -17,9 +17,9 @@ const Notifications = () => {
 
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Email notifications</h3>
+          <h3 className="section-header">E-Mail-Benachrichtigungen</h3>
           <p className="section-description">
-            Get emails to find out what's going on when you're not online. You can turn these off.
+            Erhalten Sie E-Mails, um zu erfahren, was passiert, wenn Sie nicht online sind. Sie können diese deaktivieren.
           </p>
         </div>
 
@@ -38,9 +38,9 @@ const Notifications = () => {
 
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Second Notification Section</h3>
+          <h3 className="section-header">Weitere Benachrichtigungen</h3>
           <p className="section-description max-w-xs">
-            Set some notifications
+            Weitere Benachrichtigungseinstellungen
           </p>
         </div>
 

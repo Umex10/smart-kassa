@@ -1,8 +1,9 @@
 import axios, { AxiosError } from "axios";
-import { AuthStorage } from "./localStorageTokens";
+import { AuthStorage } from "./secureStorage";
 import type { AppDispatch } from "../../redux/store";
-import { signInUser } from "../../redux/slices/userSlice";
 import { getOrCreateDeviceId } from "./deviceId";
+import { signInUser, signOutUser } from "../../redux/slices/userSlice";
+import { refreshAccessToken } from "./jwttokens";
 
 export async function register(
   firstName: string,
@@ -10,7 +11,6 @@ export async function register(
   email: string,
   phoneNumber: string,
   password: string,
-  business: string,
   fn: string,
   atu: string,
   dispatch: AppDispatch
@@ -24,7 +24,6 @@ export async function register(
         email: email,
         phone_number: phoneNumber,
         password: password,
-        business: business,
         fn: fn,
         atu: atu,
         device_id: getOrCreateDeviceId(),
@@ -37,7 +36,10 @@ export async function register(
     if (!data) {
       throw new Error("Response is Empty");
     }
-    AuthStorage.setTokens(data.accessToken);
+
+    const accessToken = await data.accessToken;
+    await AuthStorage.setAccessToken(accessToken);
+
     dispatch(
       signInUser({
         id: data.id,
@@ -52,39 +54,62 @@ export async function register(
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {
-      if (error.response?.status === 500) {
-        throw new Error("Internal Server Error");
+      // Network errors (no response from server)
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error("Network Error");
       }
-      if (error.response?.status === 409) {
-        if (
-          error.response?.data.error === "User with this email already exists"
-        ) {
+
+      // Timeout errors
+      if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+        throw new Error("Timeout");
+      }
+
+      // Handle response status codes
+      const status = error.response?.status;
+
+      if (status === 400) {
+        throw new Error("Missing Fields");
+      } else if (status === 401) {
+        throw new Error("Unauthorized");
+      } else if (status === 409) {
+        // Handle conflict errors (already exists)
+        const errorMessage = error.response?.data.error;
+        if (errorMessage === "User with this email already exists") {
           throw new Error("Email already exists");
         }
         if (
-          error.response?.data.error ===
-          `Ein Account mit der FN '${fn}' existiert bereits.`
+          errorMessage === `Ein Account mit der FN '${fn}' existiert bereits.`
         ) {
           throw new Error("FN already exists");
         }
         if (
-          error.response?.data.error ===
+          errorMessage ===
           `Ein Account mit der Telefonnumer '${phoneNumber}' existiert bereits.`
         ) {
           throw new Error("Phonenumber already exists");
         }
         if (
-          error.response?.data.error ===
+          errorMessage ===
           `Ein Account mit der ATU-Nummer '${atu}' existiert bereits.`
         ) {
           throw new Error("ATU already exists");
         }
-      }
-      if (error.response?.status === 400) {
-        throw new Error("Missing Fields");
+        // Generic conflict error if specific error not matched
+        throw new Error("Conflict");
+      } else if (
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504
+      ) {
+        throw new Error("Internal Server Error");
+      } else {
+        // Catch any other HTTP error codes
+        throw new Error("Internal Server Error");
       }
     } else {
-      throw new Error("Unknown Error");
+      // Non-axios errors
+      throw new Error("Internal Server Error");
     }
   }
 }
@@ -99,7 +124,7 @@ export async function login(
   }
 
   try {
-    const { data } = await axios.post(
+    const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/login`,
       {
         email: email,
@@ -108,36 +133,237 @@ export async function login(
         user_agent: navigator.userAgent,
         device_name: navigator.platform + " " + navigator.appName,
       },
-      { withCredentials: true } // to set the refresh token in the Cookie
+      {
+        withCredentials: true,
+      }
     );
+    const data = await response.data;
+    const accessToken = await data.accessToken;
 
     if (!data) {
       throw new Error("Response is empty");
     }
 
-    AuthStorage.setTokens(data.accessToken);
+    await AuthStorage.setAccessToken(accessToken);
+
     const user = data.user;
     dispatch(
       signInUser({
-        id: user.id,
+        id: user.userId,
         firstName: user.name.split(" ")[0],
         lastName: user.name.split(" ")[1],
         email: user.email,
         phoneNumber: "phone number need implementation",
       })
     );
+
     return await data;
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {
-      if (error.response?.status === 401 || error.response?.status === 400) {
-        throw new Error("Wrong Email or Password");
+      // Network errors (no response from server)
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error("Network Error");
       }
-      if (error.response?.status === 500) {
+
+      // Timeout errors
+      if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+        throw new Error("Timeout");
+      }
+
+      // Handle response status codes
+      const status = error.response?.status;
+      const errorMessage = error.response?.data?.error;
+
+      if (status === 400) {
+        // Check the specific error message from backend
+        if (errorMessage === "User not found") {
+          throw new Error("User Not Found");
+        }
+        if (errorMessage === "Missing required fields") {
+          throw new Error("Missing Fields");
+        }
+        throw new Error("Missing Fields");
+      } else if (status === 401) {
+        // Wrong password
+        throw new Error("Wrong Email or Password");
+      } else if (
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504
+      ) {
+        throw new Error("Internal Server Error");
+      } else {
+        // Catch any other HTTP error codes
         throw new Error("Internal Server Error");
       }
     } else {
+      // Non-axios errors
       throw new Error("Internal Server Error");
+    }
+  }
+}
+
+export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
+  try {
+    let accessToken: string | null;
+    if (retry) {
+      accessToken = await AuthStorage.getAccessToken();
+    } else {
+      accessToken = await refreshAccessToken();
+    }
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/logout`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        withCredentials: true,
+      }
+    );
+
+    if (!response || !response.data) {
+      throw new Error("Empty Response");
+    }
+
+    await AuthStorage.clearAccessToken();
+    dispatch(signOutUser());
+  } catch (error) {
+    console.error(error);
+    if (error instanceof AxiosError) {
+      // Network errors (no response from server)
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error("Network Error");
+      }
+
+      // Timeout errors
+      if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+        throw new Error("Timeout");
+      }
+
+      // Handle response status codes
+      const status = error.response?.status;
+      const errorMessage = error.response?.data?.error;
+      const path = error.response?.data?.path;
+
+      // Check for auth errors and retry with refreshed token
+      const isAuthError =
+        status === 403 || status === 401 || path === "auth middleware";
+
+      if (isAuthError && retry) {
+        return await logOut(dispatch, false);
+      } else if (isAuthError && !retry) {
+        throw new Error("Session Expired");
+      }
+
+      if (status === 400) {
+        if (errorMessage === "Fields missing") {
+          throw new Error("Missing Fields");
+        }
+        if (errorMessage === "User not found") {
+          throw new Error("User Not Found");
+        }
+        throw new Error("Missing Fields");
+      } else if (
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504
+      ) {
+        throw new Error("Internal Server Error");
+      } else {
+        throw new Error("Logout Failed");
+      }
+    } else {
+      throw new Error("Logout Failed");
+    }
+  }
+}
+
+export async function deleteAccount(
+  password: string,
+  dispatch: AppDispatch,
+  retry: boolean = true
+) {
+  try {
+    let accessToken: string | null;
+    if (retry) {
+      accessToken = await AuthStorage.getAccessToken();
+    } else {
+      accessToken = await refreshAccessToken();
+    }
+
+    const response = await axios.delete(
+      `${import.meta.env.VITE_API_URL}/account`,
+      {
+        data: {
+          password: password,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+      }
+    );
+
+    if (!response || !response.data) {
+      throw new Error("Empty Response");
+    }
+
+    await AuthStorage.clearAccessToken();
+    dispatch(signOutUser());
+  } catch (error) {
+    console.error(error);
+    if (error instanceof AxiosError) {
+      // Network errors (no response from server)
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error("Network Error");
+      }
+
+      // Timeout errors
+      if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+        throw new Error("Timeout");
+      }
+
+      // Handle response status codes
+      const status = error.response?.status;
+      const errorMessage = error.response?.data?.error;
+      const path = error.response?.data?.path;
+
+      // Check for auth errors (except invalid password) and retry with refreshed token
+      const isAuthError =
+        (status === 403 || status === 401 || path === "auth middleware") &&
+        errorMessage !== "Invalid password";
+
+      if (isAuthError && retry) {
+        return await deleteAccount(password, dispatch, false);
+      } else if (isAuthError && !retry) {
+        throw new Error("Session Expired");
+      }
+
+      if (status === 400) {
+        if (errorMessage === "Fields missing") {
+          throw new Error("Missing Fields");
+        }
+        if (errorMessage === "User not found") {
+          throw new Error("User Not Found");
+        }
+        throw new Error("Invalid Request");
+      } else if (status === 401 && errorMessage === "Invalid password") {
+        throw new Error("Invalid Password");
+      } else if (
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504
+      ) {
+        throw new Error("Internal Server Error");
+      } else {
+        throw new Error("Delete Account Failed");
+      }
+    } else {
+      throw new Error("Delete Account Failed");
     }
   }
 }

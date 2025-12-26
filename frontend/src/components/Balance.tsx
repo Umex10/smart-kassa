@@ -4,7 +4,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "../components/ui/card"
 
 import {
   BarChart,
@@ -17,9 +17,9 @@ import {
   LabelList,
 } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
-import type { DailyStats, MonthlyWeekStats, RidesStats } from "@/pages/Home";
-import { barChartConfig, radialSeriesConfig, chartKeys, type Duration } from "@/content/balance/config";
-import { metrics, type Metric, chartData, driverShare, brutto, netto } from "@/content/balance/data";
+import type { DailyStats, MonthlyWeekStats, RidesStats } from "../pages/Home";
+import { barChartConfig, radialSeriesConfig, chartKeys, type Duration } from "../content/balance/config";
+import { metrics, type Metric, chartData, driverShare, brutto, netto } from "../content/balance/data";
 
 // configs & data moved to content/balance/*
 
@@ -42,7 +42,7 @@ const Balance = ({ entry, duration }: BalanceData) => {
           {metrics.map((data: Metric, index: number) => (
             <Card
               key={index}
-              className="w-full rounded-xl border border-border/40 bg-card
+              className="w-full rounded-xl border border-border/40 bg-sidebar
                shadow-sm hover:shadow-md transition-shadow"
             >
               <CardHeader className="flex flex-row justify-between
@@ -62,7 +62,7 @@ const Balance = ({ entry, duration }: BalanceData) => {
                 </span>
 
                 <span className="text-xs text-muted-foreground font-light">
-                  +25.1% last month
+                  +25.1% letzten Monat
                 </span>
               </CardContent>
             </Card>
@@ -71,27 +71,30 @@ const Balance = ({ entry, duration }: BalanceData) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="w-full lg:col-span-1 rounded-xl border border-border/40 bg-card
+        <Card className="w-full lg:col-span-1 rounded-xl border border-border/40 bg-sidebar
                shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-xl md:text-3xl">Balance</CardTitle>
+            <CardTitle className="text-xl md:text-3xl">Bilanz</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <ChartContainer
               config={radialSeriesConfig}
               className="mx-auto aspect-square max-h-[250px]"
+
             >
               <RadialBarChart
                 data={chartData}
-                startAngle={0}
-                endAngle={360}
-                innerRadius="40%"
+                startAngle={180}
+                endAngle={-180}
+                innerRadius="30%"
                 outerRadius="80%"
+
               >
                 <RadialBar
                   dataKey="value"
                   background
-                  isAnimationActive={true}>
+                  isAnimationActive={true}
+                >
                   <LabelList
                     dataKey="name"
                     position="insideStart"
@@ -100,14 +103,10 @@ const Balance = ({ entry, duration }: BalanceData) => {
                   />
                 </RadialBar>
 
-
-
-
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent nameKey="name" />}
                 />
-
 
               </RadialBarChart>
             </ChartContainer>
@@ -135,10 +134,10 @@ const Balance = ({ entry, duration }: BalanceData) => {
           </CardFooter>
         </Card>
 
-        <Card className="w-full lg:col-span-2 rounded-xl border border-border/40 bg-card
+        <Card className="w-full lg:col-span-2 rounded-xl border border-border/40 bg-sidebar
                shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-xl md:text-3xl">Overview</CardTitle>
+            <CardTitle className="text-xl md:text-3xl">Übersicht</CardTitle>
           </CardHeader>
           <CardContent className="w-full flex flex-col items-center justify-center">
             {/* Bar Chart */}

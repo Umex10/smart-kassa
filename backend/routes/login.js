@@ -89,7 +89,16 @@ router.post("/", async (req, res) => {
 
     // Update session record with new refresh token and expiration
     await pool.query(
-      `INSERT INTO SESSION (user_id, refresh_token, expires_at, user_agent, client_ip, device_name, device_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (device_id) DO UPDATE SET user_id = $1, refresh_token = $2, expires_at = $3, user_agent = $4, client_ip = $5, device_name = $6 WHERE device_id = $7`,
+      `INSERT INTO session (user_id, refresh_token, expires_at, user_agent, client_ip, device_name, device_id) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        ON CONFLICT (device_id) 
+        DO UPDATE SET 
+          user_id = EXCLUDED.user_id, 
+          refresh_token = EXCLUDED.refresh_token, 
+          expires_at = EXCLUDED.expires_at, 
+          user_agent = EXCLUDED.user_agent, 
+          client_ip = EXCLUDED.client_ip, 
+          device_name = EXCLUDED.device_name;`,
       [
         user.user_id,
         refreshToken,
@@ -105,7 +114,7 @@ router.post("/", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // Prevents XSS attacks
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "none", // // Protection via HTTPS
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: "/",
     });

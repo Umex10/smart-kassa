@@ -24,6 +24,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+// API-Routes
 import refreshRoutes from "./routes/refresh.js";
 import registerRoutes from "./routes/register.js";
 import loginRoutes from "./routes/login.js";
@@ -31,6 +32,10 @@ import verifyRoutes from "./routes/verify.js";
 import fahrtRoutes from "./routes/fahrten.js";
 import rideRoutes from "./routes/ride.js";
 import allridesRoutes from "./routes/all-rides.js";
+import logOutRoutes from "./routes/logout.js";
+import deleteAccountRoutes from "./routes/deleteAccount.js";
+import listBlobsRoutes from "./routes/list-blobs.js";
+import updateProfileRoutes from "./routes/updateProfile.js";
 
 /**
  * Middleware Configuration
@@ -41,11 +46,13 @@ import allridesRoutes from "./routes/all-rides.js";
 app.use(
   cors({
     origin: [
-      "http://localhost",
-      "https://localhost",
-      "capacitor://localhost",
       "https://smart-kassa.vercel.app",
-      process.env.DEBUG_URL,
+      "http://localhost", // Capacitor Android/iOS
+      "https://localhost",
+      "http://localhost:5173",
+      "capacitor://localhost",
+      "http://localhost:5173",
+      process.env.DEBUG_URL, // to test/debug
     ],
     credentials: true, // Allow cookies to be sent
   })
@@ -71,6 +78,10 @@ app.use("/verify", verifyRoutes);
 app.use("/fahrten", fahrtRoutes);
 app.use("/ride", rideRoutes);
 app.use("/all-rides", allridesRoutes);
+app.use("/logout", logOutRoutes);
+app.use("/account", deleteAccountRoutes);
+app.use("/account", updateProfileRoutes);
+app.use("/list-blobs", listBlobsRoutes);
 
 /**
  * Health Check Endpoint

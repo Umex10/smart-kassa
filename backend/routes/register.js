@@ -176,7 +176,7 @@ router.post("/", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // Prevents XSS attacks
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "none", // Protection via HTTPS
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: "/",
     });

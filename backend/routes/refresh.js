@@ -30,7 +30,10 @@ router.post("/", async (req, res) => {
   const device_id = req.body.device_id;
 
   if (!refreshToken) {
-    return res.status(401).json({ error: "Refresh token required" });
+    if (!req.body.refreshToken) {
+      return res.status(401).json({ error: "Refresh token required" });
+    }
+    refreshToken = req.body.refreshToken;
   }
 
   try {

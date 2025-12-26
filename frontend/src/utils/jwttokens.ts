@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { AuthStorage } from "./localStorageTokens";
+import { AuthStorage } from "./secureStorage";
 import { getOrCreateDeviceId } from "./deviceId";
 
 /**
@@ -8,7 +8,11 @@ import { getOrCreateDeviceId } from "./deviceId";
  */
 export async function verifyAccessToken() {
   try {
-    const accessToken = AuthStorage.getAccessToken();
+    const accessToken = await AuthStorage.getAccessToken();
+
+    if (!accessToken) {
+      throw new Error("No Access Token");
+    }
 
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/verify`, {
       headers: {
@@ -17,26 +21,40 @@ export async function verifyAccessToken() {
       withCredentials: true,
     });
 
+    if (!response || !response.data) {
+      throw new Error("Empty Response");
+    }
+
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError && error.response) {
-      AuthStorage.clearToken();
-      try {
-        const newAccessToken = await refreshAccessToken();
+    console.error("Verify access token error:", error);
 
-        const response = axios.get(`${import.meta.env.VITE_API_URL}/verify`, {
+    // For ANY other error (network, timeout, 401, 403, 500, etc.),
+    // always try to refresh the access token
+    await AuthStorage.clearAccessToken();
+
+    try {
+      const newAccessToken = await refreshAccessToken();
+
+      // Retry verification with the new access token
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/verify`,
+        {
           headers: {
             Authorization: `Bearer ${newAccessToken}`,
           },
-        });
+          withCredentials: true,
+        }
+      );
 
-        return (await response).data;
-      } catch {
-        AuthStorage.clearToken();
-        throw new Error("Session expired, please login again");
-      }
-    } else {
-      throw new Error("Unknown Error");
+      return response.data;
+    } catch (refreshError) {
+      // If refresh fails, clear access token and re-throw the specific error
+      await AuthStorage.clearAccessToken();
+      console.error("Token refresh failed:", refreshError);
+
+      // Re-throw the specific error from refresh for better error messages
+      throw refreshError;
     }
   }
 }
@@ -44,7 +62,7 @@ export async function verifyAccessToken() {
 /**
  * Refresh access token using refresh token from cookie
  */
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/refresh`,
@@ -52,17 +70,26 @@ async function refreshAccessToken() {
       { withCredentials: true }
     );
 
+    if (!response || !response.data) {
+      throw new Error("Empty Response");
+    }
+
     const { accessToken } = await response.data;
 
-    AuthStorage.setTokens(accessToken);
+    await AuthStorage.setAccessToken(accessToken);
     return accessToken;
   } catch (error) {
-    if (
-      error instanceof AxiosError &&
-      (error.response?.status === 401 || error.response?.status === 403)
-    ) {
-      throw new Error("Refresh token invalid or expired");
+    console.error(error);
+    if (error instanceof AxiosError) {
+      // Network errors (no response from server)
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error("Network Error");
+      }
+
+      // Timeout errors
+      if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+        throw new Error("Timeout");
+      }
     }
-    throw new Error("Failed to refresh token");
   }
 }

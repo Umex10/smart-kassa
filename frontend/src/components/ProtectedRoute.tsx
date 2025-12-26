@@ -3,9 +3,17 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { signInUser } from "../../redux/slices/userSlice";
 import type { USER_DTO } from "../../constants/User";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-import { setAuthenticated, setUnauthenticated } from "../../redux/slices/authSlice";
+import {
+  setAuthenticated,
+  setUnauthenticated,
+} from "../../redux/slices/authSlice";
+import { toast } from "sonner";
+import { isMobile } from "@/hooks/use-mobile";
+import { handleTokenError } from "../utils/errorHandling";
+import { setLink } from "../../redux/slices/footerLinksSlice";
+import StatusOverlay from "./StatusOverlay";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,17 +29,32 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Kann man später mit einem Auth-Context oder localStorage machen
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
+  const toastShownRef = useRef(false);
 
   // Check if the user is getting loaded currently
-  const {isLoading} = useSelector((state: RootState) => state.authState);
+  const { isLoading, isAuthenticated } = useSelector(
+    (state: RootState) => state.authState
+  );
 
-  useEffect(() => {
-    async function getJWTTokens() {
+  /**
+   * useCallback is used here to create a stable reference for the 'getJWTTokens' function across renders.
+   * This prevents an infinite loop, as the function is a dependency of the useEffect hook and must not change on every render.
+   */
+  const getJWTTokens = useCallback(async () => {
+    try {
+      if (isMobile && !toastShownRef.current && isAuthenticated) {
+        dispatch(setLink(0));
+        await navigator("/ride");
+      }
 
-      try {
+      if (!isAuthenticated) {
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
           throw new Error("User Data invalid");
+        }
+        if (isMobile && !toastShownRef.current) {
+          dispatch(setLink(0));
+          await navigator("/ride");
         }
         dispatch(
           signInUser({
@@ -42,21 +65,38 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             phoneNumber: userData.phoneNumber,
           })
         );
-       dispatch(setAuthenticated())
-      } catch {
-        navigator("/register");
-        dispatch(setUnauthenticated());
+        dispatch(setAuthenticated());
+
+        // Only show toast once per session
+        if (!toastShownRef.current) {
+          toast.success(`Welcome back ${userData.firstName || "User"}!`, {
+            className: "mt-5 md:mt-0",
+            position: "top-center",
+            closeButton: true,
+          });
+          toastShownRef.current = true;
+        }
       }
+    } catch (error) {
+      handleTokenError(error);
+      await navigator("/register");
+      dispatch(setUnauthenticated());
     }
+  }, [dispatch, isAuthenticated, navigator]);
+
+  useEffect(() => {
     getJWTTokens();
-  }, [dispatch, navigator]);
-
-
-  if (isLoading) {
-     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <p className="text-lg font-semibold">Loading...</p>
-      </div>
+  }, [getJWTTokens]);
+  // had to also use the authenticate value so it doesn't show home page for split second to non-loged in Users
+  if (!isAuthenticated || isLoading) {
+    return (
+      <StatusOverlay
+        text="Loading Service"
+        isLoading={true}
+        errorFallback={[
+          "Unser Service ist leider fehlgeschlagen, bitte versuchen sie es nacher erneut!",
+        ]}
+      />
     );
   }
 

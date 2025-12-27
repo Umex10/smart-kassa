@@ -2,6 +2,7 @@ import SingleNotification from "../SingleNotification";
 import { NOTIFICATIONS } from "../../../../constants/Notifications"
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../redux/store";
+import type { JSX } from "react";
 
 /**
  * Notification settings page component.
@@ -13,7 +14,7 @@ import type { RootState } from "../../../../redux/store";
  * 
  * @returns {JSX.Element} A settings page with notification toggle controls.
  */
-const Notifications = () => {
+const Notifications = (): JSX.Element => {
 
   const notifications = useSelector((state: RootState) =>
     state.notificationsState.activeSettings)
@@ -23,9 +24,9 @@ const Notifications = () => {
 
       {/* Page Header */}
       <div className="page-header-container">
-        <h2 className="page-title">Notification Settings</h2>
+        <h2 className="page-title break-words">Benachrichtigungseinstellungen</h2>
         <p className="subheader">
-          Manage your notifications. Turn on or off the notifications you want to receive.
+          Verwalten Sie Ihre Benachrichtigungen. Schalten Sie die Benachrichtigungen ein oder aus, die Sie erhalten möchten.
         </p>
       </div>
 
@@ -34,9 +35,9 @@ const Notifications = () => {
 
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Zynqly notifications</h3>
+          <h3 className="section-header">Zynqly-Benachrichtigungen</h3>
           <p className="section-description">
-            Get notifications to get information about new achievements and new features! You can turn these off.
+            Erhalten Sie Benachrichtigungen über neue Erfolge und neue Funktionen! Sie können diese deaktivieren.
           </p>
         </div>
 
@@ -44,13 +45,13 @@ const Notifications = () => {
         <div className="flex flex-col gap-6 w-full max-w-xl">
           <SingleNotification section={NOTIFICATIONS.INLINE_SLIDER.SECTION}
             sectionKey={NOTIFICATIONS.INLINE_SLIDER.ACHIEVEMENTS}
-            title="Achievements"
-            desc="Turn off achievements settings"
+            title="Erfolge"
+            desc="Erfolgs-Benachrichtigungen deaktivieren"
             startValue={notifications.inlineSlider.achievements} />
           <SingleNotification section={NOTIFICATIONS.INLINE_SLIDER.SECTION}
             sectionKey={NOTIFICATIONS.INLINE_SLIDER.NEWS}
-            title="News & Shout-OUTS"
-            desc="Receive news and Shout-OUTS"
+            title="Neuigkeiten & Shout-OUTS"
+            desc="Neuigkeiten und Shout-OUTS erhalten"
             startValue={notifications.inlineSlider.news} />
 
         </div>
@@ -61,9 +62,9 @@ const Notifications = () => {
 
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Email Notifications</h3>
+          <h3 className="section-header">E-Mail-Benachrichtigungen</h3>
           <p className="section-description max-w-xs">
-            Control which updates you receive via email!
+            Steuern Sie, welche Updates Sie per E-Mail erhalten!
           </p>
         </div>
 
@@ -71,8 +72,8 @@ const Notifications = () => {
         <div className="flex flex-col gap-6 w-full max-w-xl">
           <SingleNotification section={NOTIFICATIONS.EMAIL.SECTION}
             sectionKey={NOTIFICATIONS.EMAIL.TWO_FACTOR}
-            title="Email notifications"
-            desc="Receive emails"
+            title="E-Mail-Benachrichtigungen"
+            desc="E-Mails erhalten"
             startValue={notifications.emails.twoFactor} />
         </div>
       </div>

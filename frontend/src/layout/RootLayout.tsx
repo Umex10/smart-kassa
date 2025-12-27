@@ -90,7 +90,7 @@ export default function RootLayout() {
         h-16 backdrop-blur-md
         border-b border-zinc-300 dark:border-zinc-800 md:border-none
         flex items-center justify-between
-        px-4 z-40"
+        px-4 z-40 space-x-3"
           >
             <SidebarTrigger className="lg:hidden" />
 

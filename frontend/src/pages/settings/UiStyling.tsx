@@ -1,4 +1,5 @@
 import ModeSwitcherUi from "@/components/ui/mode-switcher.ui";
+import type { JSX } from "react";
 
 /**
  * UI styling settings page component.
@@ -10,7 +11,7 @@ import ModeSwitcherUi from "@/components/ui/mode-switcher.ui";
  * 
  * @returns {JSX.Element} A settings page for UI theme customization.
  */
-const UiStyling = () => {
+const UiStyling = (): JSX.Element => {
   return (
     <div className="settings-page-container">
       {/* Page Header */}

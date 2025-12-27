@@ -43,7 +43,7 @@ export const Email = ({
     <Head />
     <Tailwind config={tailwindConfig as any}>
       <Body className="bg-white font-slack mx-auto my-0">
-        <Preview>Confirm your Zynqly account</Preview>
+        <Preview>Bestätigen Sie Ihr Zynqly-Konto</Preview>
         <Container className="mx-auto my-0 py-0 px-5">
           <Section className="mt-8">
             <Img
@@ -54,11 +54,11 @@ export const Email = ({
             />
           </Section>
           <Heading className="text-[#1d1c1d] text-4xl font-bold my-[30px] mx-0 p-0 leading-[42px]">
-            Confirm Your Zynqly Account
+            Bestätigen Sie Ihr Zynqly-Konto
           </Heading>
           <Text className="text-xl mb-7.5">
-            Thanks for signing up! Use the confirmation code below to activate your Zynqly
-             account and start driving!.
+            Danke für die Anmeldung! Verwenden Sie den unten stehenden Bestätigungscode, um Ihr Zynqly-Konto
+             zu aktivieren und mit dem Fahren zu beginnen!
           </Text>
 
           <Section className="bg-[rgb(245,244,245)] rounded mb-[30px] py-10 px-[10px]">
@@ -68,7 +68,7 @@ export const Email = ({
           </Section>
 
           <Text className="text-black text-sm leading-6">
-            If you did not create a Zynqly account, you can safely ignore this email.
+            Wenn Sie kein Zynqly-Konto erstellt haben, können Sie diese E-Mail einfach ignorieren.
           </Text>
 
           <Section>
@@ -129,7 +129,7 @@ export const Email = ({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Rules
+              Regeln
             </Link>
             &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
             <Link
@@ -138,7 +138,7 @@ export const Email = ({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Help Center
+              Hilfezentrum
             </Link>
             &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
             <Link
@@ -155,7 +155,7 @@ export const Email = ({
               ©2025 Zynqly Inc. <br />
               Werk-VI-Straße 46, 8605 Kapfenberg <br />
               <br />
-              All rights reserved.
+              Alle Rechte vorbehalten.
             </Text>
           </Section>
         </Container>

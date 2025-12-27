@@ -68,7 +68,7 @@ export function NotificationsMessages() {
           <SheetClose asChild>
             <button className="flex flex-row items-center gap-6">
               <X className="h-4 w-4" />
-              <span className="text-lg font-bold">Notifications</span>
+              <span className="text-lg font-bold">Benachrichtigungen</span>
             </button>
           </SheetClose>
         </div>
@@ -86,7 +86,7 @@ export function NotificationsMessages() {
               ))}
 
             </div>
-          ) : <p className="h-full text-center mt-5">Unfortunately there are no notifications yet! Soon!</p>
+          ) : <p className="h-full text-center mt-5">Leider gibt es noch keine Benachrichtigungen! Bald!</p>
           }
 
           {/* Clear notifications */}
@@ -95,7 +95,7 @@ export function NotificationsMessages() {
                                 gap-4 rounded-xl border"
               onClick={() => dispatch(clearAll())}>
               <Trash2 className="w-5 h-5 -mt-1/2"></Trash2>
-              <span className="text-sm font-bold">Clear all notifications</span>
+              <span className="text-sm font-bold">Alle Benachrichtigungen löschen</span>
             </button>
           </div>
         </div>

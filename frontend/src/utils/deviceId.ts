@@ -2,7 +2,6 @@
  * Singleton Pattern to eiter create or return the unique_device_id
  * @returns unique_device_id which is used in the session table to identify refresh tokens depending on the type of device used by the user, so the user can log in on different devices
  */
-
 export function getOrCreateDeviceId() {
   let deviceId = localStorage.getItem("unique_device_id");
   if (!deviceId) {

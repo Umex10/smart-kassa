@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
     await pool.query(
       `INSERT INTO session (user_id, refresh_token, expires_at, user_agent, client_ip, device_name, device_id) 
         VALUES ($1, $2, $3, $4, $5, $6, $7) 
-        ON CONFLICT (device_id) 
+        ON CONFLICT (device_id, user_id) 
         DO UPDATE SET 
           user_id = EXCLUDED.user_id, 
           refresh_token = EXCLUDED.refresh_token, 

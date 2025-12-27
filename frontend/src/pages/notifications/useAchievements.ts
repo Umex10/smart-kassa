@@ -41,8 +41,8 @@ export const useCheckForAchievements = (rides: AllRide[] | null) => {
       dispatch(addNotification({
         id: ACHIEVEMENTS.FIRST_RIDE,
         icon: "trophy",
-        title: "Your first ride ✅",
-        desc: "You successfully finished your first ride!",
+        title: "Deine erste Fahrt ✅",
+        desc: "Du hast deine erste Fahrt erfolgreich abgeschlossen!",
         date: getDateNow(),
         read: false,
         color: "amber"
@@ -53,8 +53,8 @@ export const useCheckForAchievements = (rides: AllRide[] | null) => {
       dispatch(addNotification({
         id: ACHIEVEMENTS.TWO_STREAK,
         icon: "leaf",
-        title: "2-Rides Streak ⭐",
-        desc: "You successfully finished 2 rides!",
+        title: "2-Fahrten-Serie ⭐",
+        desc: "Du hast 2 Fahrten erfolgreich abgeschlossen!",
         date: getDateNow(),
         read: false,
         color: "green"
@@ -67,8 +67,8 @@ export const useCheckForAchievements = (rides: AllRide[] | null) => {
       dispatch(addNotification({
         id: ACHIEVEMENTS.DISTANCE_RIDE,
         icon: "flame",
-        title: "First ride over 50 meters 🔥",
-        desc: "You successfully finished a ride with over 50 meters!",
+        title: "Erste Fahrt über 50 Meter 🔥",
+        desc: "Du hast eine Fahrt mit über 50 Metern erfolgreich abgeschlossen!",
         date: getDateNow(),
         read: false,
         color: "yellow"

@@ -128,7 +128,7 @@ router.post("/", async (req, res) => {
 
       await pool.query(
         `INSERT INTO session (user_id, refresh_token, created_at, expires_at, user_agent, client_ip, device_name, device_id)
-       VALUES ($1, $2, NOW(), $3, $4, $5, $6)`,
+       VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)`,
         [
           userId,
           refreshToken,

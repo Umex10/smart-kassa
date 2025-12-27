@@ -36,8 +36,8 @@ export const useCheckForNews = (trigger: boolean) => {
       dispatch(addNotification({
         id: NEWS.REGISTER,
         icon: "handmetal",
-        title: "Welcome! 🧏‍♂️",
-        desc: "You successfully created an account!",
+        title: "Willkommen! 🧏‍♂️",
+        desc: "Du hast erfolgreich ein Konto erstellt!",
         date: getDateNow(),
         read: false,
         color: "emerald"

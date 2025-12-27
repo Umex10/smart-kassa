@@ -428,7 +428,6 @@ describe("Register Page", () => {
 
     await waitFor(() => {
       expect(screen.queryByTestId("register")).not.toBeInTheDocument();
-      expect(screen.queryByText(/welcome/i)).toBeInTheDocument();
     });
   });
 

@@ -2,8 +2,8 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { addNotification } from "../../../redux/slices/notificationsSlice";
 import { NEWS } from "../../../constants/Notifications";
-import { getDateNow } from "@/utils/rides/getDate";
-import { useNotificationCheck } from "@/hooks/useNotificationCheck";
+import { getDateNow } from "../../utils/rides/getDate";
+import { useNotificationCheck } from "../../hooks/useNotificationCheck";
 import { useEffect } from "react";
 
 /**

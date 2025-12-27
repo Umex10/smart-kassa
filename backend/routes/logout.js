@@ -7,6 +7,7 @@ const router = express.Router();
 router.post("/", authenticateToken, async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   const user_id = req.user.userId;
+  const device_id = req.body.device_id;
 
   if (!refreshToken || !user_id) {
     let missingFieldsMessage = "Refresh Token or User ID are not provided";
@@ -24,10 +25,18 @@ router.post("/", authenticateToken, async (req, res) => {
     });
   }
 
+  if (!device_id) {
+    return res.status(400).send({
+      error: "Device ID missing",
+      message:
+        "Missing the unique device id each device has in it's local storage",
+    });
+  }
+
   try {
     const result = await pool.query(
-      `UPDATE session SET refresh_token = '', expires_at = '1970-01-01 00:00:00'  WHERE refresh_token = $1 AND user_id = $2`,
-      [refreshToken, user_id]
+      `UPDATE session SET is_revoked = true, expires_at = '1970-01-01 00:00:00' WHERE refresh_token = $1 AND user_id = $2 AND device_id = $3`,
+      [refreshToken, user_id, device_id]
     );
 
     res.clearCookie("refreshToken", {

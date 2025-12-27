@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
     return res.status(400).send({ error: "Missing required fields" });
   }
 
+  // to check if device data is being sent
   if (!device_id || !user_agent || !device_name) {
     return res.status(400).send({
       error:
@@ -43,6 +44,7 @@ router.post("/", async (req, res) => {
     });
   }
 
+  // client ip for the session db
   const client_ip = req.socket.address();
 
   try {
@@ -87,10 +89,15 @@ router.post("/", async (req, res) => {
     // Calculate refresh token expiration (30 days from now)
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    // Update session record with new refresh token and expiration
+    /**
+     * Query to either update or insert a new row of data for user session
+     * each user has a session row, where info like device data and the refresh token and the expiration data is saved
+     * It also ensures that each device that the user is loged into has it's own refresh token to ensure that the user can be loged
+     * in on his account on many devices, it also provides the possibilty to show the user on which devices his account is loged in
+     */
     await pool.query(
-      `INSERT INTO session (user_id, refresh_token, expires_at, user_agent, client_ip, device_name, device_id) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      `INSERT INTO session (user_id, refresh_token, expires_at, user_agent, client_ip, device_name, device_id, is_revoked) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, false) 
         ON CONFLICT (device_id, user_id) 
         DO UPDATE SET 
           user_id = EXCLUDED.user_id, 
@@ -98,7 +105,8 @@ router.post("/", async (req, res) => {
           expires_at = EXCLUDED.expires_at, 
           user_agent = EXCLUDED.user_agent, 
           client_ip = EXCLUDED.client_ip, 
-          device_name = EXCLUDED.device_name;`,
+          device_name = EXCLUDED.device_name,
+          is_revoked = false`,
       [
         user.user_id,
         refreshToken,

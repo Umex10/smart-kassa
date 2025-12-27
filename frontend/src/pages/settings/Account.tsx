@@ -14,6 +14,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -38,14 +39,14 @@ import { User } from "lucide-react";
 
 /**
  * Account settings page component.
- * 
+ *
  * Provides a comprehensive interface for managing user account information including
  * profile details (first name, last name, email), avatar, and account actions.
  * Users can update their profile information with real-time validation, revert unsaved changes,
  * log out of their account, or permanently delete their account with password confirmation.
  * The component includes form validation, optimistic updates to Redux state, and proper
  * error handling with toast notifications.
- * 
+ *
  * @returns {JSX.Element} A settings page with profile management and account action controls.
  */
 const Account = (): JSX.Element => {
@@ -225,10 +226,14 @@ const Account = (): JSX.Element => {
         } else if (error.status === 400) {
           toast.error("Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.");
         } else {
-          toast.error("Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.");
+          toast.error(
+            "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+          );
         }
       } else {
-        toast.error("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+        toast.error(
+          "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+        );
       }
     }
   }
@@ -280,7 +285,8 @@ const Account = (): JSX.Element => {
       <div className="page-header-container">
         <h2 className="page-title">Kontoeinstellungen</h2>
         <p className="subheader">
-          Verwalten Sie Ihre Kontoinformationen, Avatar und E-Mail-Einstellungen.
+          Verwalten Sie Ihre Kontoinformationen, Avatar und
+          E-Mail-Einstellungen.
         </p>
       </div>
 
@@ -364,7 +370,7 @@ const Account = (): JSX.Element => {
                 />
 
                 {/* Last Name */}
-<FormField
+                <FormField
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
@@ -451,7 +457,8 @@ const Account = (): JSX.Element => {
           <div>
             <h3 className="section-header">Abmelden</h3>
             <p className="section-description">
-              Melden Sie sich von Ihrem Konto ab. Sie können sich jederzeit wieder anmelden.
+              Melden Sie sich von Ihrem Konto ab. Sie können sich jederzeit
+              wieder anmelden.
             </p>
           </div>
           <Dialog>
@@ -462,33 +469,33 @@ const Account = (): JSX.Element => {
               <DialogHeader>
                 <DialogTitle>Von Ihrem Konto abmelden?</DialogTitle>
                 <DialogDescription>
-                  Sie werden von Ihrem Konto abgemeldet. Sie können sich jederzeit
-                  mit Ihren Anmeldedaten wieder anmelden.
-                  <br />
-                  <Button
-                    onClick={async () => {
-                      toast.promise(
-                        async () => {
-                          await logOut(dispatch);
-                        },
-                        {
-                          loading: "Abmelden...",
-                          success: () => {                       
-
-                            navigator("/register");
-                            return toastMessages.logout.success.title;
-                          },
-                          error: (err) => handleLogoutError(err),
-                          className: "mt-5 md:mt-0",
-                        }
-                      );
-                    }}
-                    className="btn-main-action"
-                  >
-                    Abmelden
-                  </Button>
+                  Sie werden von Ihrem Konto abgemeldet. Sie können sich
+                  jederzeit mit Ihren Anmeldedaten wieder anmelden.
                 </DialogDescription>
               </DialogHeader>
+              <DialogFooter>
+                <Button
+                  onClick={async () => {
+                    toast.promise(
+                      async () => {
+                        await logOut(dispatch);
+                      },
+                      {
+                        loading: "Abmelden...",
+                        success: () => {
+                          navigator("/register");
+                          return toastMessages.logout.success.title;
+                        },
+                        error: (err) => handleLogoutError(err),
+                        className: "mt-5 md:mt-0",
+                      }
+                    );
+                  }}
+                  className="btn-main-action"
+                >
+                  Abmelden
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -498,8 +505,8 @@ const Account = (): JSX.Element => {
           <div>
             <h3 className="section-header-danger">Konto löschen</h3>
             <p className="section-description">
-              Sie möchten unseren Service nicht mehr nutzen? Diese Aktion ist dauerhaft und
-              kann nicht rückgängig gemacht werden.
+              Sie möchten unseren Service nicht mehr nutzen? Diese Aktion ist
+              dauerhaft und kann nicht rückgängig gemacht werden.
             </p>
           </div>
           <Dialog>
@@ -507,77 +514,84 @@ const Account = (): JSX.Element => {
               <Button className="btn-danger">Mein Konto löschen</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-red-600">
-                  Sind Sie absolut sicher?
-                </DialogTitle>
-                <DialogDescription className="flex flex-col gap-4">
-                  <p>
-                    Diese Aktion kann nicht rückgängig gemacht werden. Ihr Konto wird dauerhaft gelöscht
-                    und Ihre Daten werden von unseren Servern entfernt.
-                  </p>
-
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="delete-password"
-                      className="text-sm font-semibold text-gray-900 dark:text-gray-100"
-                    >
-                      Geben Sie Ihr Passwort ein, um zu bestätigen:
-                    </label>
-                    <Input
-                      id="delete-password"
-                      type="password"
-                      placeholder="Geben Sie Ihr Passwort ein"
-                      value={deletePassword}
-                      onChange={(e) => setDeletePassword(e.target.value)}
-                      className="h-11 bg-gray-100 dark:bg-gray-700 border border-red-400 focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={async () => {
-                      if (!deletePassword) {
-                        toast.error(
-                          "Bitte geben Sie Ihr Passwort ein, um zu bestätigen",
-                          {
-                            className: "mt-5 md:mt-0",
-                          }
-                        );
-                        return;
+              <form
+                name="Delete Form"
+                title="Delete Account Form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!deletePassword) {
+                    toast.error(
+                      "Bitte geben Sie Ihr Passwort ein, um zu bestätigen",
+                      {
+                        className: "mt-5 md:mt-0",
                       }
-                      toast.promise(
-                        async () => {
-                          await deleteAccount(deletePassword, dispatch);
-                        },
-                        {
-                          loading: "Konto wird gelöscht...",
-                          success: async () => {
-                            setDeletePassword("");
-                            await navigator("/register");
-                            return toastMessages.deleteAccount.success.title;
-                          },
-                          error: (err) => handleDeleteAccountError(err),
-                          className: "mt-5 md:mt-0",
-                        }
-                      );
-                    }}
-                    disabled={!deletePassword}
-                    className=" my-2
-              bg-red-500 text-white font-extrabold w-full md:w-56 py-3
-              transition-all duration-200
-              hover:bg-red-600
-              hover:shadow-md
-              hover:scale-[1.02]
-              active:scale-[0.98]
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              disabled:hover:scale-100
-            "
-                  >
-                    Mein Konto löschen
-                  </Button>
-                </DialogDescription>
-              </DialogHeader>
+                    );
+                    return;
+                  }
+                  toast.promise(
+                    async () => {
+                      await deleteAccount(deletePassword, dispatch);
+                    },
+                    {
+                      loading: "Konto wird gelöscht...",
+                      success: async () => {
+                        setDeletePassword("");
+                        await navigator("/register");
+                        return toastMessages.deleteAccount.success.title;
+                      },
+                      error: (err) => handleDeleteAccountError(err),
+                      className: "mt-5 md:mt-0",
+                    }
+                  );
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-red-600">
+                    Sind Sie absolut sicher?
+                  </DialogTitle>
+                  <DialogDescription className="flex flex-col gap-4">
+                    <p>
+                      Diese Aktion kann nicht rückgängig gemacht werden. Ihr
+                      Konto wird dauerhaft gelöscht und Ihre Daten werden von
+                      unseren Servern entfernt.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <label
+                        htmlFor="delete-password"
+                        className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                      >
+                        Geben Sie Ihr Passwort ein, um zu bestätigen:
+                      </label>
+                      <Input
+                        required
+                        id="delete-password"
+                        type="password"
+                        placeholder="Geben Sie Ihr Passwort ein"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="h-11 bg-gray-100 dark:bg-gray-700 border border-red-400 focus:ring-2 focus:ring-red-500"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={!deletePassword}
+                      className=" my-2
+                bg-red-500 text-white font-extrabold w-full md:w-56 py-3
+                transition-all duration-200
+                hover:bg-red-600
+                hover:shadow-md
+                hover:scale-[1.02]
+                active:scale-[0.98]
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+                disabled:hover:scale-100
+                            "
+                    >
+                      Mein Konto löschen
+                    </Button>
+                  </DialogDescription>
+                </DialogHeader>
+              </form>
             </DialogContent>
           </Dialog>
         </div>

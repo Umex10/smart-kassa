@@ -3,8 +3,8 @@ import type { AllRide } from "../../../constants/AllRide";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { addNotification } from "../../../redux/slices/notificationsSlice";
 import { ACHIEVEMENTS } from "../../../constants/Notifications";
-import { getDateNow } from "@/utils/rides/getDate";
-import { useNotificationCheck } from "@/hooks/useNotificationCheck";
+import { getDateNow } from "../../utils/rides/getDate";
+import { useNotificationCheck } from "../../hooks/useNotificationCheck";
 import { useEffect } from "react";
 
 /**

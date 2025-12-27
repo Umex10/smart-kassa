@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
     // Verify token exists in database and hasn't expired or been revoked
     const tokenRes = await pool.query(
       `SELECT * FROM session
-       WHERE refresh_token = $1 AND user_id = $2 AND expires_at > NOW() AND device_id = $3`,
+       WHERE refresh_token = $1 AND user_id = $2 AND expires_at > NOW() AND device_id = $3 AND is_revoked = false AND is_deleted = false`,
       [refreshToken, decoded.userId, device_id]
     );
 

@@ -126,9 +126,13 @@ router.post("/", async (req, res) => {
       // Insert account record with hashed password and refresh token
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
 
+      /**
+       * inserting data into the session table that is being used to store the refresh token, it's experation date, and also to ensure
+       * user's can be loged into their accounts on many devices (each device stores a device_id in it's local storage, to differentiate between devices the user uses )
+       */
       await pool.query(
-        `INSERT INTO session (user_id, refresh_token, created_at, expires_at, user_agent, client_ip, device_name, device_id)
-       VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)`,
+        `INSERT INTO session (user_id, refresh_token, created_at, expires_at, user_agent, client_ip, device_name, device_id, is_revoked)
+       VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7, FALSE)`,
         [
           userId,
           refreshToken,

@@ -216,7 +216,9 @@ export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
 
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/logout`,
-      {},
+      {
+        device_id: getOrCreateDeviceId(),
+      },
       {
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,

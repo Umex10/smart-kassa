@@ -66,7 +66,7 @@ export async function refreshAccessToken() {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/refresh`,
-      { device_id: getOrCreateDeviceId() },
+      { device_id: await getOrCreateDeviceId() },
       { withCredentials: true }
     );
 

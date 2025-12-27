@@ -26,7 +26,7 @@ export async function register(
         password: password,
         fn: fn,
         atu: atu,
-        device_id: getOrCreateDeviceId(),
+        device_id: await getOrCreateDeviceId(),
         user_agent: navigator.userAgent,
         device_name: navigator.platform + " " + navigator.appName,
       },
@@ -129,7 +129,7 @@ export async function login(
       {
         email: email,
         password: password,
-        device_id: getOrCreateDeviceId(),
+        device_id: await getOrCreateDeviceId(),
         user_agent: navigator.userAgent,
         device_name: navigator.platform + " " + navigator.appName,
       },
@@ -217,7 +217,7 @@ export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/logout`,
       {
-        device_id: getOrCreateDeviceId(),
+        device_id: await getOrCreateDeviceId(),
       },
       {
         headers: { Authorization: `Bearer ${accessToken}` },

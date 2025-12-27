@@ -106,6 +106,7 @@ router.post("/", async (req, res) => {
           user_agent = EXCLUDED.user_agent, 
           client_ip = EXCLUDED.client_ip, 
           device_name = EXCLUDED.device_name,
+          device_id = EXCLUDED.device_id,
           is_revoked = false`,
       [
         user.user_id,

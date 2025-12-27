@@ -32,10 +32,11 @@ import {
 import { toastMessages } from "@/content/auth/toastMessages";
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "@/utils/secureStorage";
-import { updateUser } from "../../../redux/slices/userSlice";
 import { refreshAccessToken } from "@/utils/jwttokens";
 import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
+import { updateProfile } from "@/utils/updateProfile";
+import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErrorHandler";
 
 /**
  * Account settings page component.
@@ -175,69 +176,6 @@ const Account = (): JSX.Element => {
     await changeAvatar(selectedFile);
   };
 
-  async function updateProfile(retry: boolean = true) {
-    let accessToken: string | null;
-    if (retry) {
-      accessToken = await AuthStorage.getAccessToken();
-    } else {
-      accessToken = await refreshAccessToken();
-    }
-
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/account/me`,
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      dispatch(
-        updateUser({
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-        })
-      );
-
-      toast.success("Profil erfolgreich aktualisiert");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        const isAuthError =
-          error.status === 403 ||
-          error.status === 401 ||
-          error.response?.data?.path === "auth middleware";
-
-        if (isAuthError && retry) {
-          await updateProfile(false);
-        } else if (isAuthError && !retry) {
-          // Second attempt failed - session expired
-          toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
-        } else if (error.status === 409) {
-          toast.error(
-            "Diese E-Mail-Adresse wird bereits verwendet. Bitte verwenden Sie eine andere E-Mail-Adresse."
-          );
-        } else if (error.status === 400) {
-          toast.error("Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.");
-        } else {
-          toast.error(
-            "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
-          );
-        }
-      } else {
-        toast.error(
-          "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
-        );
-      }
-    }
-  }
-
   const user = useSelector((state: RootState) => state.user);
 
   const form = useForm({
@@ -267,12 +205,6 @@ const Account = (): JSX.Element => {
         icon: "🗑️",
         className: "text-black dark:text-white",
       });
-    }
-  };
-
-  const onSubmit = async () => {
-    if (toRevert) {
-      await updateProfile();
     }
   };
 
@@ -345,7 +277,20 @@ const Account = (): JSX.Element => {
           {/* Form */}
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(async () => {
+                if (toRevert) {
+                  toast.promise(
+                    async () =>
+                      updateProfile(true, firstName, lastName, email, dispatch),
+                    {
+                      loading: "Änderungen speichern...",
+                      success: "Änderung erfolgreich gespeichert!",
+                      error: (err) => handleUpdateProfileError(err),
+                      className: "mt-5 md:mt-0",
+                    }
+                  );
+                }
+              })}
               className="space-y-6 w-full max-w-xl"
             >
               {/* 2 column grid on desktop */}

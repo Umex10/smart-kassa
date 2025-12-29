@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
 import { updateProfile } from "@/utils/updateProfile";
 import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErrorHandler";
+import { useInvalidEmail, useInvalidUsername } from "@/hooks/useValidator";
 
 /**
  * Account settings page component.
@@ -191,9 +192,15 @@ const Account = (): JSX.Element => {
 
   // Check if any field has changed from the original user values
   const toRevert =
-    user.email !== email.trim() ||
-    user.firstName !== firstName.trim() ||
-    user.lastName !== lastName.trim();
+    user.email.trim() !== email.trim() ||
+    user.firstName.trim() !== firstName.trim() ||
+    user.lastName.trim() !== lastName.trim();
+
+  const invalidFirstname = useInvalidUsername(firstName.trim());
+  const invalidLastname = useInvalidUsername(lastName.trim());
+  const invalidEmail = useInvalidEmail(email);
+
+  const formInvalid = invalidFirstname || invalidLastname || invalidEmail;
 
   const revertChanges = () => {
     if (toRevert) {
@@ -205,11 +212,20 @@ const Account = (): JSX.Element => {
         icon: "🗑️",
         className: "text-black dark:text-white",
       });
+    } else {
+      toast.info("Keine Änderungen zum verwerfen!");
     }
   };
 
   const navigator = useNavigate();
   const [deletePassword, setDeletePassword] = useState("");
+
+  // to show the user how to input valid data and in which input field
+  const [showHint, setShowHint] = useState({
+    FirstNameFocused: false,
+    LastNameFocused: false,
+    EmailFocused: false,
+  });
 
   return (
     <div className="settings-page-container">
@@ -278,6 +294,18 @@ const Account = (): JSX.Element => {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(async () => {
+                if (formInvalid) {
+                  toast.error("Bitte füllen Sie alle Felder korrekt aus", {
+                    className: "mt-5 md:mt-0",
+                  });
+                  return;
+                }
+                if (!toRevert) {
+                  toast.info("Keine Änderungen zum Speichern", {
+                    className: "mt-5 md:mt-0",
+                  });
+                  return;
+                }
                 if (toRevert) {
                   toast.promise(
                     async () =>
@@ -306,7 +334,23 @@ const Account = (): JSX.Element => {
                         <Input
                           {...field}
                           placeholder="Max"
-                          className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          onBlur={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              FirstNameFocused: true,
+                            }))
+                          }
+                          onFocus={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              FirstNameFocused: false,
+                            }))
+                          }
+                          className={
+                            invalidFirstname && showHint.FirstNameFocused
+                              ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                              : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -325,7 +369,23 @@ const Account = (): JSX.Element => {
                         <Input
                           {...field}
                           placeholder="Mustermann"
-                          className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          onBlur={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              LastNameFocused: true,
+                            }))
+                          }
+                          onFocus={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              LastNameFocused: false,
+                            }))
+                          }
+                          className={
+                            invalidLastname && showHint.LastNameFocused
+                              ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                              : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -345,7 +405,23 @@ const Account = (): JSX.Element => {
                           <Input
                             {...field}
                             placeholder="beispiel@mail.com"
-                            className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                            onBlur={() =>
+                              setShowHint((prev) => ({
+                                ...prev,
+                                EmailFocused: true,
+                              }))
+                            }
+                            onFocus={() =>
+                              setShowHint((prev) => ({
+                                ...prev,
+                                EmailFocused: false,
+                              }))
+                            }
+                            className={
+                              invalidEmail && showHint.EmailFocused
+                                ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                                : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                            }
                           />
                         </FormControl>
                         <FormMessage />

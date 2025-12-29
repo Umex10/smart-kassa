@@ -65,7 +65,7 @@ router.delete("/", authenticateToken, async (req, res) => {
     }
 
     const result = await pool.query(
-      `UPDATE users SET email = null, phone_number = NULL, first_name = 'Deleted', last_name = 'User', password_hash = '', is_deleted = true, deleted_at = NOW() WHERE user_id = $1`,
+      `UPDATE users SET email = null, phone_number = NULL, first_name = 'Deleted', last_name = 'User', password_hash = NULL, is_deleted = true, deleted_at = NOW() WHERE user_id = $1`,
       [user_id]
     );
 

@@ -39,6 +39,16 @@ router.post("/", authenticateToken, async (req, res) => {
       [refreshToken, user_id, device_id]
     );
 
+    if (result.rowCount === 0) {
+      return res
+        .status(404)
+        .send({
+          error: "No Session found",
+          message:
+            "No Session found to log out user, check if the provided values are correct",
+        });
+    }
+
     res.clearCookie("refreshToken", {
       httpOnly: true, // Prevents XSS attacks
       secure: process.env.NODE_ENV === "production", // HTTPS only in production

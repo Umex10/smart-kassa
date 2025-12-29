@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
     // Verify token exists in database and hasn't expired or been revoked
     const tokenRes = await pool.query(
       `SELECT * FROM session
-       WHERE refresh_token = $1 AND user_id = $2 AND expires_at > NOW() AND device_id = $3 AND is_revoked = false AND is_deleted = false`,
+       WHERE refresh_token = $1 AND user_id = $2 AND expires_at > NOW() AND device_id = $3 AND is_revoked = false`,
       [refreshToken, decoded.userId, device_id]
     );
 
@@ -59,9 +59,18 @@ router.post("/", async (req, res) => {
     // Fetch current user information for the new access token
     const userRes = await pool.query(
       `SELECT user_id, first_name, last_name, email FROM users
-       WHERE user_id = $1`,
+       WHERE user_id = $1 AND is_deleted = FALSE`,
       [decoded.userId]
     );
+
+    if (userRes.rowCount === 0) {
+      return res
+        .status(404)
+        .send({
+          error: "No User found",
+          message: "Either User does not exist anymore or User was deleted",
+        });
+    }
 
     const user = userRes.rows[0];
 

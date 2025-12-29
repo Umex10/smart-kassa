@@ -58,7 +58,7 @@ router.post("/", async (req, res) => {
         users.first_name,
         users.last_name
       FROM users
-      WHERE users.email = $1`,
+      WHERE users.email = $1 AND users.is_deleted = false`,
       [email]
     );
 
@@ -67,8 +67,8 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "User not found" });
     }
 
+    
     const user = result.rows[0];
-
     // Verify password against stored Argon2 hash
     const valid = await argon2.verify(user.password_hash, password);
     if (!valid) {

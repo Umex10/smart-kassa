@@ -49,7 +49,7 @@ router.delete("/", authenticateToken, async (req, res) => {
       console.error("Delete Account Error: User not found");
       return res
         .status(400)
-        .json({ error: "User not found", path: "/deleteacount, line: 43" });
+        .json({ error: "User not found", path: "/deleteacount, line: 52" });
     }
 
     const validPassword = await argon2.verify(
@@ -58,25 +58,26 @@ router.delete("/", authenticateToken, async (req, res) => {
     );
 
     if (!validPassword) {
+      console.error("Delete Account Error: Invalid Password");
       return res
         .status(401)
         .json({ error: "Invalid password", path: "/delete/acount" });
     }
 
-    const sessionResult = await pool.query(
-      `UPDATE session SET is_deleted = true, deleted_at = NOW() WHERE user_id = $1`,
+    const result = await pool.query(
+      `UPDATE users SET email = null, phone_number = NULL, first_name = 'Deleted', last_name = 'User', password_hash = '', is_deleted = true, deleted_at = NOW() WHERE user_id = $1`,
       [user_id]
     );
 
-    if (sessionResult.rowCount === 0) {
+    if (result.rowCount === 0) {
       console.error("Delete Account Error: User not found");
       return res
-        .status(400)
-        .json({ error: "User not found", path: "/delete/acount, line: 54" });
+        .status(404)
+        .send({ error: "User not found", path: "/deleteacount, line: 74" });
     }
 
     await pool.query(
-      `UPDATE users SET email = null, phone_number = NULL, first_name = 'Deleted', last_name = 'User' WHERE user_id = $1`,
+      `UPDATE session SET user_agent = NULL, client_ip = NULL, device_name = NULL where user_id = $1`,
       [user_id]
     );
 

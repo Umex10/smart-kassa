@@ -83,3 +83,17 @@ server:
 now you can use the server on your phone and have live refresh (so when changing UI, you see the changes live)
 
 There are some changes you will not see on the live refresh, like .env file changes or chores changes (new packages, libaries, etc.), the main use of the live refresh is to see UI Changes and JS Functionality on your phone
+
+### Debugging
+
+### Android
+1. Connect phone via USB
+2. Enable USB-Debugging on your phone (see Google)
+3. Run the App on your Physical Device (most recommanded)
+4. Open Chrome: `chrome://inspect`
+5. Select your device and click "inspect" (this might take a while)
+
+Now you can see your app in the **Dev-Tools** like a web app. You can access things like the **console**, **cookies**, **network** tab, etc. Some things won't work or won't be displayed because the mobile device handles them differently than a browser (e.g. local storage), but it's **perfect** for **logging** in the **console**.
+
+### iOS
+Use Safari Developer Tools

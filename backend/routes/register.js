@@ -117,6 +117,7 @@ router.post("/", async (req, res) => {
         userId: userId,
         email: email,
         name: `${first_name} ${last_name}`,
+        companyId: companyId
       };
 
       // Generate both access and refresh tokens

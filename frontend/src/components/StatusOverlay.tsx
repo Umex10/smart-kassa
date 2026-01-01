@@ -50,7 +50,7 @@ const StatusOverlay: React.FC<StatusOverlayProps> = ({
       if (isLoading) {
         setStillLoading(true);
       }
-    }, 5000)
+    }, 10000)
 
     return () => {
       clearInterval(interval);

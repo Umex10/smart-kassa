@@ -58,7 +58,7 @@ router.post("/", async (req, res) => {
 
     // Fetch current user information for the new access token
     const userRes = await pool.query(
-      `SELECT user_id, first_name, last_name, email FROM users
+      `SELECT user_id, first_name, last_name, email, company_id FROM users
        WHERE user_id = $1 AND is_deleted = FALSE`,
       [decoded.userId]
     );
@@ -79,6 +79,7 @@ router.post("/", async (req, res) => {
       userId: user.user_id,
       email: user.email,
       name: `${user.first_name} ${user.last_name}`,
+      companyId: user.company_id,
     });
 
     // Return new access token to client

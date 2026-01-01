@@ -38,6 +38,7 @@ import { User } from "lucide-react";
 import { updateProfile } from "@/utils/updateProfile";
 import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErrorHandler";
 import { useInvalidEmail, useInvalidUsername } from "@/hooks/useValidator";
+import { fetchAvatar } from "@/utils/getAvatar";
 
 /**
  * Account settings page component.
@@ -55,63 +56,10 @@ const Account = (): JSX.Element => {
   const dispatch: AppDispatch = useDispatch();
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
 
   useEffect(() => {
-    async function fetchAvatar(retryFetch: boolean = true) {
-      try {
-        let accessToken: string | null;
-        if (retryFetch) {
-          accessToken = await AuthStorage.getAccessToken();
-        } else {
-          accessToken = await refreshAccessToken();
-        }
-
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/list-blobs/avatar`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        retryFetch = true;
-        const incomingPreview = await response.data.actualFiles[0].url;
-        setPreview(incomingPreview);
-        setLoading(true);
-        return;
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          const isAuthError =
-            error.status === 403 ||
-            error.status === 401 ||
-            error.response?.data?.path === "auth middleware";
-
-          if (isAuthError && retryFetch) {
-            // First retry with refreshed token
-            retryFetch = false;
-            return await fetchAvatar(false);
-          } else if (isAuthError && !retryFetch) {
-            // Second attempt failed - session expired
-            setLoading(true);
-            toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
-            return;
-          } else {
-            setLoading(true);
-            toast.error(
-              "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
-            );
-            return;
-          }
-        } else {
-          setLoading(true);
-          toast.error("Ein unerwarteter Fehler ist aufgetreten.");
-          return;
-        }
-      }
-    }
-
-    fetchAvatar();
+    fetchAvatar(true, setLoading, setPreview, setPreviewError);
   }, []);
 
   async function changeAvatar(avatarFile: File, retryFetch: boolean = true) {
@@ -140,6 +88,7 @@ const Account = (): JSX.Element => {
       setPreview(response.data.url);
       return;
     } catch (error) {
+      console.error(error);
       if (error instanceof AxiosError) {
         const isAuthError =
           error.status === 403 ||
@@ -152,29 +101,39 @@ const Account = (): JSX.Element => {
           return await changeAvatar(avatarFile, false);
         } else if (isAuthError && !retryFetch) {
           // Second attempt failed - session expired
-          toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
-          return;
+          throw new Error(
+            "Sitzung abgelaufen. Bitte melden Sie sich erneut an."
+          );
         } else {
-          toast.error(
+          throw new Error(
             "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
           );
-          return;
         }
       } else {
-        toast.error("Ein unerwarteter Fehler ist aufgetreten.");
-        return;
+        throw new Error("Ein unerwarteter Fehler ist aufgetreten.");
       }
     }
   }
 
   const onSelectFile = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
-      toast.info("Datei auswählen");
+      toast.info("Datei auswählen", { className: "mt-5 md:mt-0" });
       return;
     }
 
     const selectedFile = e.target.files[0];
-    await changeAvatar(selectedFile);
+
+    toast.promise(
+      async () => {
+        await changeAvatar(selectedFile);
+      },
+      {
+        success: "Profilbild aktualisiert!",
+        error: "Ein unerwarteter Fehler ist aufgetreten.",
+        loading: "Profilbild wird aktualisiert",
+        className: "mt-5 md:mt-0",
+      }
+    );
   };
 
   const user = useSelector((state: RootState) => state.user);
@@ -210,10 +169,12 @@ const Account = (): JSX.Element => {
       toast.success("Änderungen verworfen.", {
         duration: 3000, // 3 Sekunden sind ideal
         icon: "🗑️",
-        className: "text-black dark:text-white",
+        className: "text-black dark:text-white mt-5 md:mt-0",
       });
     } else {
-      toast.info("Keine Änderungen zum verwerfen!");
+      toast.info("Keine Änderungen zum verwerfen!", {
+        className: "mt-5 md:mt-0",
+      });
     }
   };
 
@@ -255,8 +216,9 @@ const Account = (): JSX.Element => {
             <Avatar>
               <AvatarImage
                 src={
-                  preview ||
-                  "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
+                  preview && !previewError
+                    ? preview
+                    : "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
                 }
                 alt="Profilbild"
                 className="rounded-full w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 object-cover"

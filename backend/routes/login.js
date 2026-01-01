@@ -51,12 +51,13 @@ router.post("/", async (req, res) => {
     await pool.query("BEGIN");
     // Query database for user by email
     const result = await pool.query(
-      `SELECT 
+      `SELECT
         users.user_id,
         users.password_hash,
         users.email,
         users.first_name,
-        users.last_name
+        users.last_name,
+        users.company_id
       FROM users
       WHERE users.email = $1 AND users.is_deleted = false`,
       [email]
@@ -80,6 +81,7 @@ router.post("/", async (req, res) => {
       userId: user.user_id,
       email: user.email,
       name: `${user.first_name} ${user.last_name}`,
+      companyId: user.company_id
     };
 
     // Generate both access and refresh tokens

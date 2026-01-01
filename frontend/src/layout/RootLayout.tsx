@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { CircleUser } from "lucide-react";
+import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -10,6 +10,8 @@ import type { AppDispatch, RootState } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setLink } from "../../redux/slices/footerLinksSlice";
 import { NotificationsMessages } from "../pages/notifications/inlineSlider/NotificationsMessages";
+import { fetchAvatar } from "@/utils/getAvatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface IfooterLinks {
   name: string;
@@ -38,6 +40,9 @@ interface IfooterLinks {
 export default function RootLayout() {
   // to know which path is active for the underline in the footer
   const [active, setActive] = useState(true);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [loadingAvatar, setLoadingAvatar] = useState(false);
+  const [errorAvatar, setErrorAvatar] = useState(false);
   const dispatch: AppDispatch = useDispatch();
   const footerLinksIndex = useSelector(
     (state: RootState) => state.setFooterLink.linkIndex
@@ -53,6 +58,7 @@ export default function RootLayout() {
   ];
 
   useEffect(() => {
+    fetchAvatar(true, setLoadingAvatar, setAvatar, setErrorAvatar);
     dispatch(setLink(isMobile ? 0 : 1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,7 +106,20 @@ export default function RootLayout() {
 
             <div className="flex flex-row gap-4 items-center text-lg flex-shrink">
               <NotificationsMessages></NotificationsMessages>
-              <CircleUser className="w-7 h-7 md:w-10 md:h-10"></CircleUser>
+              <Avatar>
+                <AvatarImage
+                  src={
+                    avatar && !errorAvatar
+                      ? avatar
+                      : "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
+                  }
+                  alt="Profilbild"
+                  className="rounded-full object-fill"
+                />
+                <AvatarFallback>
+                  <User className={loadingAvatar ? "" : "animate-pulse"} />
+                </AvatarFallback>
+              </Avatar>
             </div>
           </header>
 

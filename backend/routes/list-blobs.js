@@ -15,9 +15,16 @@ const router = express.Router();
  */
 router.get("/invoices", authenticateToken, async (req, res) => {
   try {
+    /**
+     * @todo in the future use user id to identify if user is company owner or not, if owner, change prfix to
+     * `Bills/${company_id}`, for employees: `Bills/${company_id}/${user_id}`
+     */
+    const user_id = req.user.userId;
+    const company_id = req.user.companyId;
+
     const response = await list({
       token: process.env.BLOB_READ_WRITE_TOKEN,
-      prefix: "Bills/",
+      prefix: `Bills/${company_id}/${user_id}`,
     });
 
     const actualFiles = response.blobs.filter((blob) => blob.size > 0);
@@ -31,6 +38,49 @@ router.get("/invoices", authenticateToken, async (req, res) => {
     res.status(500).send({ error: "Internal Server Error", path: "invoices" });
   }
 });
+
+router.post(
+  "/invoices",
+  authenticateToken,
+  upload.single("newInvoice"),
+  async (req, res) => {
+    try {
+      const user_id = req.user.userId;
+      const company_id = req.user.companyId;
+
+      const newInvoice = req.file;
+
+      if (!newInvoice) {
+        return res.status(400).send({
+          error: "No File for the invoice provided",
+          path: "invoices",
+        });
+      }
+
+      const fileExtension = newInvoice.originalname
+        .split(".")
+        .pop()
+        .toLocaleLowerCase();
+      const filename = `Bills/${company_id}/${user_id}/${newInvoice.originalname}.${fileExtension}`;
+
+      const response = await put(filename, newInvoice.buffer, {
+        addRandomSuffix: true,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+        access: "public",
+        allowOverwrite: false,
+      });
+
+      return res
+        .status(200)
+        .send({ response: response, newInvoice: newInvoice });
+    } catch (error) {
+      console.error("Error appending new Bill", error);
+      res
+        .status(500)
+        .send({ error: "Internal Server Error", path: "invoices" });
+    }
+  }
+);
 
 router.get("/avatar", authenticateToken, async (req, res) => {
   try {

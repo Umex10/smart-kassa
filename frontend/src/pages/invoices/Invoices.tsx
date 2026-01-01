@@ -1,5 +1,11 @@
 import { type ListBlobResultBlob } from "@vercel/blob";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setBills } from "../../../redux/slices/invoices";
 import type { AppDispatch, RootState } from "../../../redux/store";
@@ -34,6 +40,8 @@ import { AuthStorage } from "../../utils/secureStorage";
 import axios, { AxiosError } from "axios";
 import { refreshAccessToken } from "../../utils/jwttokens";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 // import { QRCodeSVG } from "qrcode.react";
 
 const Invoices = () => {
@@ -82,7 +90,9 @@ const Invoices = () => {
             // Second attempt failed - session expired
             toast.error("Sitzung abgelaufen. Bitte melden Sie sich erneut an.");
           } else {
-            toast.error("Rechnungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.");
+            toast.error(
+              "Rechnungen konnten nicht geladen werden. Bitte versuchen Sie es erneut."
+            );
           }
         } else {
           toast.error("Ein unerwarteter Fehler ist aufgetreten.");
@@ -96,7 +106,83 @@ const Invoices = () => {
 
   useEffect(() => {
     fetchBills();
-  }, [fetchBills]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const appendNewBill = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      toast.info("Datei auswählen", { className: "mt-5 md:mt-0" });
+      return;
+    }
+
+    const selectedFile = e.target.files[0];
+
+    toast.promise(appendNewBillController(true, selectedFile), {
+      success: "Rechnung manuell hinzugefügt",
+      error: "Ein unerwarteter Fehler ist aufgetreten.",
+      loading: "Rechnung wird hinzugefügt",
+      className: "mt-5 md:mt-0",
+    });
+  };
+
+  const appendNewBillController = async (
+    retry: boolean = true,
+    InvoiceFile: File
+  ) => {
+    try {
+      let accessToken: string | null;
+
+      if (retry) {
+        accessToken = await AuthStorage.getAccessToken();
+      } else {
+        accessToken = await refreshAccessToken();
+      }
+
+      const formData = new FormData();
+      formData.append("newInvoice", InvoiceFile);
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/list-blobs/invoices`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      await fetchBills();
+      retry = true;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const tokenError =
+          error.status === 403 ||
+          error.status === 401 ||
+          error.response?.data?.path === "auth middleware";
+
+        if (tokenError && retry) {
+          // First retry with refreshed token
+          retry = false;
+          return await appendNewBillController(false, InvoiceFile);
+        } else if (tokenError && !retry) {
+          // Second attempt failed - session expired
+          console.error(error);
+          throw new Error(
+            "Sitzung abgelaufen. Bitte melden Sie sich erneut an."
+          );
+        } else {
+          console.error(error);
+          throw new Error(
+            "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
+          );
+        }
+      } else {
+        console.error(error);
+        throw new Error("Ein unerwarteter Fehler ist aufgetreten.");
+      }
+    }
+  };
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -111,7 +197,7 @@ const Invoices = () => {
   };
 
   return (
-    <section className="flex flex-col w-full">
+    <section className="flex flex-col w-full min-h-screen">
       <div className="flex flex-col gap-1 pb-4">
         <h2 className="page-title">Rechnungen</h2>
         <p className="subheader">
@@ -182,7 +268,7 @@ const Invoices = () => {
         </div>
 
         {blobs.length === 0 && !loading && (
-          <Empty className="justify-self-center md:scale-150">
+          <Empty className="justify-self-center">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <FolderOpen />
@@ -193,8 +279,9 @@ const Invoices = () => {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Button
+                  className="col-span-2 sm:col-span-1 shadow-xl bg-gray-300 dark:bg-black"
                   onClick={() => {
                     if (isMobile) {
                       navigator("/ride");
@@ -205,10 +292,27 @@ const Invoices = () => {
                 >
                   {isMobile ? "Fahrt starten" : "Statistiken prüfen"}
                 </Button>
-                <Button variant="outline" onClick={() => navigator("/")}>
+                <Button
+                  className="col-span-2 sm:col-span-1"
+                  variant="outline"
+                  onClick={() => navigator("/")}
+                >
                   Zurück zur Startseite
                 </Button>
               </div>
+              <Label htmlFor="InvoiceAdder" className="underline">
+                Eigene Rechnung hinzufügen
+              </Label>
+              <Input
+                type="file"
+                alt="Add invoice"
+                accept=".pdf, .txt"
+                id="InvoiceAdder"
+                className="
+                text-xs hidden
+                "
+                onChange={appendNewBill}
+              />
             </EmptyContent>
             <Button
               variant="link"

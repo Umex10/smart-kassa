@@ -4,7 +4,8 @@ import userSlice from "./slices/userSlice";
 import authSlice from "./slices/authSlice";
 import footerLinkSlice from "./slices/footerLinksSlice";
 import invoicesSlice from "./slices/invoices";
-import notificationsSlice from "./slices/notificationsSlice"; 
+import notificationsSlice from "./slices/notificationsSlice";
+import avatarSlice from "./slices/avatarSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,20 +14,28 @@ export const store = configureStore({
     authState: authSlice,
     setFooterLink: footerLinkSlice,
     setBills: invoicesSlice,
-    notificationsState: notificationsSlice
+    notificationsState: notificationsSlice,
+    avatarState: avatarSlice,
   },
-   devTools: process.env.NODE_ENV !== "production",
+  devTools: import.meta.env.NODE_ENV !== "production",
 });
 
-
-store.subscribe(() =>  {
+store.subscribe(() => {
   const notifications = store.getState().notificationsState.items;
-  const notifications_archived = store.getState().notificationsState.items_archived;
-  const notifications_settings = store.getState().notificationsState.activeSettings;
-  
-   localStorage.setItem("notifications", JSON.stringify(notifications));
-   localStorage.setItem("notifications_archived", JSON.stringify(notifications_archived));
-   localStorage.setItem("notifications_settings", JSON.stringify(notifications_settings));
+  const notifications_archived =
+    store.getState().notificationsState.items_archived;
+  const notifications_settings =
+    store.getState().notificationsState.activeSettings;
+
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+  localStorage.setItem(
+    "notifications_archived",
+    JSON.stringify(notifications_archived)
+  );
+  localStorage.setItem(
+    "notifications_settings",
+    JSON.stringify(notifications_settings)
+  );
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

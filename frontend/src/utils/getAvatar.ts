@@ -2,6 +2,8 @@ import axios, { AxiosError } from "axios";
 import { refreshAccessToken } from "./jwttokens";
 import { AuthStorage } from "./secureStorage";
 import type { Dispatch, SetStateAction } from "react";
+import { setAvatarState } from "../../redux/slices/avatarSlice";
+import type { AppDispatch } from "../../redux/store";
 
 /**
  * Function to fetch the Avatar and dispaly it using a useState Hook (setPreview). The setPreview useState SetStateAction will set the
@@ -17,7 +19,8 @@ export async function fetchAvatar(
   retryFetch: boolean = true,
   setLoading: Dispatch<SetStateAction<boolean>>,
   setPreview: Dispatch<SetStateAction<string | null>>,
-  setError: Dispatch<SetStateAction<boolean>>
+  setError: Dispatch<SetStateAction<boolean>>,
+  dispatch: AppDispatch
 ) {
   try {
     let accessToken: string | null;
@@ -37,8 +40,9 @@ export async function fetchAvatar(
     );
 
     retryFetch = true;
-    const incomingPreview = response.data.actualFiles[0].url;
+    const incomingPreview = response.data.files[0].url;
     setPreview(incomingPreview);
+    dispatch(setAvatarState(incomingPreview));
     setLoading(true);
     return;
   } catch (error) {
@@ -51,7 +55,13 @@ export async function fetchAvatar(
       if (isAuthError && retryFetch) {
         // First retry with refreshed token
         retryFetch = false;
-        return await fetchAvatar(false, setLoading, setPreview, setError);
+        return await fetchAvatar(
+          false,
+          setLoading,
+          setPreview,
+          setError,
+          dispatch
+        );
       } else if (isAuthError && !retryFetch) {
         // Second attempt failed - session expired
         setLoading(true);

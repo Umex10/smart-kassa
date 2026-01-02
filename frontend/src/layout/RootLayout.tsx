@@ -1,6 +1,6 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -12,6 +12,7 @@ import { setLink } from "../../redux/slices/footerLinksSlice";
 import { NotificationsMessages } from "../pages/notifications/inlineSlider/NotificationsMessages";
 import { fetchAvatar } from "@/utils/getAvatar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { setAvatarState } from "../../redux/slices/avatarSlice";
 
 interface IfooterLinks {
   name: string;
@@ -37,16 +38,25 @@ interface IfooterLinks {
  *
  * @returns {JSX.Element} The root layout with sidebar, header, footer, and content area.
  */
-export default function RootLayout() {
+export default function RootLayout(): JSX.Element {
   // to know which path is active for the underline in the footer
   const [active, setActive] = useState(true);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [errorAvatar, setErrorAvatar] = useState(false);
+  const navigator = useNavigate();
   const dispatch: AppDispatch = useDispatch();
   const footerLinksIndex = useSelector(
     (state: RootState) => state.setFooterLink.linkIndex
   );
+  const avatarState = useSelector((state: RootState) => state.avatarState.url);
+  const getAvatar = (): string | null => {
+    if ((!avatarState && !avatar) || errorAvatar) {
+      return null;
+    }
+
+    return !avatarState || avatarState === "" ? avatar : avatarState;
+  };
   const footerLinks: IfooterLinks[] = [
     {
       name: "Start Ride",
@@ -58,8 +68,9 @@ export default function RootLayout() {
   ];
 
   useEffect(() => {
-    fetchAvatar(true, setLoadingAvatar, setAvatar, setErrorAvatar);
+    fetchAvatar(true, setLoadingAvatar, setAvatar, setErrorAvatar, dispatch);
     dispatch(setLink(isMobile ? 0 : 1));
+    dispatch(setAvatarState(avatar));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -106,12 +117,17 @@ export default function RootLayout() {
 
             <div className="flex flex-row gap-4 items-center text-lg flex-shrink">
               <NotificationsMessages></NotificationsMessages>
-              <Avatar>
+              <Avatar
+                onClick={() => {
+                  navigator("/settings");
+                  dispatch(setLink(2));
+                }}
+                className="cursor-pointer"
+              >
                 <AvatarImage
                   src={
-                    avatar && !errorAvatar
-                      ? avatar
-                      : "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
+                    getAvatar() ||
+                    "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
                   }
                   alt="Profilbild"
                   className="rounded-full object-fill"

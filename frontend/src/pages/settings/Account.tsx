@@ -39,6 +39,7 @@ import { updateProfile } from "@/utils/updateProfile";
 import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErrorHandler";
 import { useInvalidEmail, useInvalidUsername } from "@/hooks/useValidator";
 import { fetchAvatar } from "@/utils/getAvatar";
+import { setAvatarState } from "../../../redux/slices/avatarSlice";
 
 /**
  * Account settings page component.
@@ -59,8 +60,8 @@ const Account = (): JSX.Element => {
   const [previewError, setPreviewError] = useState(false);
 
   useEffect(() => {
-    fetchAvatar(true, setLoading, setPreview, setPreviewError);
-  }, []);
+    fetchAvatar(true, setLoading, setPreview, setPreviewError, dispatch);
+  }, [dispatch]);
 
   async function changeAvatar(avatarFile: File, retryFetch: boolean = true) {
     try {
@@ -86,6 +87,7 @@ const Account = (): JSX.Element => {
 
       retryFetch = true;
       setPreview(response.data.url);
+      dispatch(setAvatarState(response.data.url));
       return;
     } catch (error) {
       console.error(error);

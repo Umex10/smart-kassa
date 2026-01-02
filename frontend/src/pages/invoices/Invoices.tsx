@@ -1,4 +1,3 @@
-import { type ListBlobResultBlob } from "@vercel/blob";
 import {
   useCallback,
   useEffect,
@@ -44,11 +43,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { QRCodeSVG } from "qrcode.react";
 
+interface Files {
+  key: string | undefined;
+  size: number | undefined;
+  lastModified: Date | undefined;
+  url: string;
+}
+
 const Invoices = () => {
   const dispatch: AppDispatch = useDispatch();
   const bills = useSelector((state: RootState) => state.setBills.bills);
   const [loading, setLoading] = useState(true);
-  const [blobs, setBlobs] = useState<ListBlobResultBlob[]>([]);
+  const [files, setFiles] = useState<Files[]>([]);
   const navigator = useNavigate();
   const retryRef = useRef(true);
 
@@ -70,8 +76,8 @@ const Invoices = () => {
             },
           }
         );
-        dispatch(setBills(data.actualFiles));
-        setBlobs(data.actualFiles);
+        dispatch(setBills(data.files));
+        setFiles(data.files);
         setLoading(false);
         retryRef.current = true; // Reset retry flag on success
       } catch (error) {
@@ -99,7 +105,7 @@ const Invoices = () => {
         }
       }
     } else {
-      setBlobs(bills);
+      setFiles(bills);
       setLoading(false);
     }
   }, [dispatch, bills]);
@@ -207,11 +213,12 @@ const Invoices = () => {
 
       <div className="flex flex-col min-h-[70vh] mt-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {blobs.length !== 0 &&
+          {files &&
+            files.length !== 0 &&
             !loading &&
-            blobs.map((blob) => (
+            files.map((file, index) => (
               <Card
-                key={blob.pathname}
+                key={index}
                 className="rounded-xl border border-border/40 bg-sidebar dark:bg-sidebar shadow-sm hover:shadow-md transition-shadow"
               >
                 <CardHeader className="flex flex-row justify-between items-start pb-2">
@@ -226,29 +233,27 @@ const Invoices = () => {
                     </div>
                   </div>
                 </CardHeader>
-
                 <CardContent className="py-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>{formatDate(blob.uploadedAt.toString())}</span>
+                    <span>
+                      {formatDate(file.lastModified?.toString() || "Unknown")}
+                    </span>
                   </div>
-
                   <CardDescription className="card-description-small">
-                    {blob.pathname.split("/")[1]}
+                    {file.key?.split("/").pop()}
                   </CardDescription>
-
                   {/* <div className="my-4 flex space-y-4 flex-col items-center">
-                    <p className="text-sm text-muted-foreground font-bold">
-                      Scan To see online
-                    </p>
-                    <QRCodeSVG value={blob.url} />
-                  </div> */}
+                      <p className="text-sm text-muted-foreground font-bold">
+                        Scan To see online
+                      </p>
+                      <QRCodeSVG value={blob.url} />
+                    </div> */}
                 </CardContent>
-
                 <CardFooter className="flex flex-col gap-2 pt-2">
                   <Button asChild className="w-full" variant="link">
                     <a
-                      href={blob.url}
+                      href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -257,7 +262,7 @@ const Invoices = () => {
                     </a>
                   </Button>
                   <Button asChild className="w-full" variant="outline">
-                    <a href={blob.downloadUrl} download>
+                    <a href={file.url} download>
                       <Download className="w-4 h-4 mr-2" />
                       Herunterladen
                     </a>
@@ -267,7 +272,7 @@ const Invoices = () => {
             ))}
         </div>
 
-        {blobs.length === 0 && !loading && (
+        {(!files || files.length === 0) && !loading && (
           <Empty className="justify-self-center">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -300,19 +305,6 @@ const Invoices = () => {
                   Zurück zur Startseite
                 </Button>
               </div>
-              <Label htmlFor="InvoiceAdder" className="underline">
-                Eigene Rechnung hinzufügen
-              </Label>
-              <Input
-                type="file"
-                alt="Add invoice"
-                accept=".pdf, .txt"
-                id="InvoiceAdder"
-                className="
-                text-xs hidden
-                "
-                onChange={appendNewBill}
-              />
             </EmptyContent>
             <Button
               variant="link"
@@ -371,6 +363,19 @@ const Invoices = () => {
             ))}
           </div>
         )}
+        <Label htmlFor="InvoiceAdder" className="underline mt-5 cursor-pointer">
+          Eigene Rechnung hinzufügen
+        </Label>
+        <Input
+          type="file"
+          alt="Add invoice"
+          accept=".pdf, .txt"
+          id="InvoiceAdder"
+          className="
+                text-xs hidden
+                "
+          onChange={appendNewBill}
+        />
       </div>
     </section>
   );

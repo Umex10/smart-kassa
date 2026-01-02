@@ -26,8 +26,8 @@ export async function verifyAccessToken() {
     }
 
     return response.data;
-  } catch (error) {
-    console.error("Verify access token error:", error);
+  } catch {
+    
 
     // For ANY other error (network, timeout, 401, 403, 500, etc.),
     // always try to refresh the access token

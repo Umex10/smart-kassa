@@ -122,6 +122,8 @@ router.post(
         message: "Invoice uploaded successfully",
         key: filename,
         url: url,
+        size: newInvoice.size,
+        lastModified: new Date(timestamp),
       });
     } catch (error) {
       console.error("Error uploading invoice to S3:", error);

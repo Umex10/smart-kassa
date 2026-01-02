@@ -72,7 +72,7 @@ export default function RootLayout(): JSX.Element {
     dispatch(setLink(isMobile ? 0 : 1));
     dispatch(setAvatarState(avatar));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [avatarState]);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");

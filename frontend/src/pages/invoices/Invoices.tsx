@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setBills } from "../../../redux/slices/invoices";
+import { appendBillState, setBills } from "../../../redux/slices/invoices";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import {
   Empty,
@@ -43,7 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { QRCodeSVG } from "qrcode.react";
 
-interface Files {
+export interface Files {
   key: string | undefined;
   size: number | undefined;
   lastModified: Date | undefined;
@@ -76,6 +76,7 @@ const Invoices = () => {
             },
           }
         );
+
         dispatch(setBills(data.files));
         setFiles(data.files);
         setLoading(false);
@@ -148,7 +149,7 @@ const Invoices = () => {
       const formData = new FormData();
       formData.append("newInvoice", InvoiceFile);
 
-      await axios.post(
+      const { data } = await axios.post(
         `${import.meta.env.VITE_API_URL}/list-blobs/invoices`,
         formData,
         {
@@ -158,7 +159,23 @@ const Invoices = () => {
         }
       );
 
-      await fetchBills();
+      dispatch(
+        appendBillState({
+          key: data.key,
+          url: data.url,
+          size: data.size,
+          lastModified: data.lastModified,
+        } as Files)
+      );
+      setFiles((prev) => [
+        ...prev,
+        {
+          key: data.key,
+          url: data.url,
+          size: data.size,
+          lastModified: data.lastModified,
+        },
+      ]);
       retry = true;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -202,6 +219,36 @@ const Invoices = () => {
     });
   };
 
+  const fetchDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl);
+
+      if (!response.ok) {
+        toast.error(
+          "Ein Fehler beim herunterladen von der Rechnung ist aufgetreten."
+        );
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        "Ein unerwarteter Fehler beim herunterladen von der Rechnung ist aufgetreten."
+      );
+    }
+  };
+
   return (
     <section className="flex flex-col w-full min-h-screen">
       <div className="flex flex-col gap-1 pb-4">
@@ -240,8 +287,12 @@ const Invoices = () => {
                       {formatDate(file.lastModified?.toString() || "Unknown")}
                     </span>
                   </div>
-                  <CardDescription className="card-description-small">
-                    {file.key?.split("/").pop()}
+                  <CardDescription className="card-description-small truncate">
+                    <p>{file.key?.split("/").pop()}</p>
+                    <p>{`Filetype: ${file.key
+                      ?.split(".")
+                      .pop()
+                      ?.toUpperCase()}`}</p>
                   </CardDescription>
                   {/* <div className="my-4 flex space-y-4 flex-col items-center">
                       <p className="text-sm text-muted-foreground font-bold">
@@ -261,8 +312,20 @@ const Invoices = () => {
                       Online ansehen
                     </a>
                   </Button>
-                  <Button asChild className="w-full" variant="outline">
-                    <a href={file.url} download>
+                  <Button
+                    asChild
+                    className="w-full cursor-pointer"
+                    variant="outline"
+                  >
+                    <a
+                      onClick={() =>
+                        fetchDownload(
+                          file.url,
+                          file.key?.split("/").pop() || "Invoice"
+                        )
+                      }
+                      download
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Herunterladen
                     </a>

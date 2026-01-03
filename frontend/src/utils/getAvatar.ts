@@ -23,6 +23,7 @@ export async function fetchAvatar(
   dispatch: AppDispatch
 ) {
   try {
+
     let accessToken: string | null;
     if (retryFetch) {
       accessToken = await AuthStorage.getAccessToken();

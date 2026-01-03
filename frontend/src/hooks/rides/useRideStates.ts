@@ -89,7 +89,7 @@ export const useRideStates = (isRideActive: boolean,
 
   // timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
 
     if (isRideActive) {
       interval = setInterval(() => {

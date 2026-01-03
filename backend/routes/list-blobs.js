@@ -29,6 +29,8 @@ const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 /**
  * To get the .pdf files of the bills
+ * The CORS.json file is used also for the data provided by this api endpoint, so the frontend can send a request to the url's, which results
+ * in the frontend being able to take the blob values out of the response and create a way to being able to download the file (no download URL provided like in vercel storage)
  */
 router.get("/invoices", authenticateToken, async (req, res) => {
   try {
@@ -42,12 +44,12 @@ router.get("/invoices", authenticateToken, async (req, res) => {
 
     const response = await s3Client.send(listCommand);
 
-    // Filter nur echte Files (keine Ordner-Marker)
+    // Only actual files (no markers)
     const actualFiles = (response.Contents || []).filter(
       (item) => item.Size > 0
     );
 
-    // Presigned URLs generieren (7 Tage für RKSV Compliance)
+    // generate Presigned URLs (7 days for RKSV Compliance)
     const filesWithUrls = await Promise.all(
       actualFiles.map(async (file) => {
         const url = await getSignedUrl(
@@ -56,7 +58,7 @@ router.get("/invoices", authenticateToken, async (req, res) => {
             Bucket: BUCKET_NAME,
             Key: file.Key,
           }),
-          { expiresIn: 7 * 24 * 60 * 60 } // 7 Tage
+          { expiresIn: 7 * 24 * 60 * 60 } // 7 Days
         );
 
         return {
@@ -95,7 +97,7 @@ router.post(
         });
       }
 
-      // Zeitstempel für unique filename
+      // Timestamp for unique file names
       const timestamp = Date.now();
       const filename = `Bills/${company_id}/${user_id}/${timestamp}_${newInvoice.originalname}`;
 
@@ -108,7 +110,7 @@ router.post(
 
       await s3Client.send(putCommand);
 
-      // Presigned URL für Response
+      // Presigned URL for Response
       const url = await getSignedUrl(
         s3Client,
         new GetObjectCommand({
@@ -148,7 +150,7 @@ router.get("/avatar", authenticateToken, async (req, res) => {
       (item) => item.Size > 0
     );
 
-    // Presigned URLs generieren (1 Stunde für Avatare)
+    // generate Presigned URLs (1 Hour for Avatars)
     const filesWithUrls = await Promise.all(
       actualFiles.map(async (file) => {
         const url = await getSignedUrl(
@@ -157,7 +159,7 @@ router.get("/avatar", authenticateToken, async (req, res) => {
             Bucket: BUCKET_NAME,
             Key: file.Key,
           }),
-          { expiresIn: 3600 } // 1 Stunde
+          { expiresIn: 3600 } // 1 Hour
         );
 
         return {
@@ -194,7 +196,7 @@ router.put(
           .send({ error: "Keine Datei im Request gefunden." });
       }
 
-      // Alte Avatare fetchen
+      // fetching old avatars
       const listCommand = new ListObjectsV2Command({
         Bucket: BUCKET_NAME,
         Prefix: `Profile_Picture/${user_id}/`,
@@ -202,7 +204,7 @@ router.put(
 
       const existingBlobs = await s3Client.send(listCommand);
 
-      // Alte Avatare löschen
+      // deleting old avatars
       if (existingBlobs.Contents && existingBlobs.Contents.length > 0) {
         await Promise.all(
           existingBlobs.Contents.map(async (file) => {
@@ -222,7 +224,7 @@ router.put(
         .toLowerCase();
       const filename = `Profile_Picture/${user_id}/avatar_${timeStamp}.${fileExtension}`;
 
-      // Neuen Avatar hochladen
+      // Upload new Avatar
       const putCommand = new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: filename,
@@ -232,7 +234,7 @@ router.put(
 
       await s3Client.send(putCommand);
 
-      // Presigned URL generieren
+      // generate Presigned URL 
       const url = await getSignedUrl(
         s3Client,
         new GetObjectCommand({

@@ -1,4 +1,4 @@
-import type { Files } from "@/pages/invoices/Invoices";
+import type { Files } from "@/types/InvoiceFile";
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {

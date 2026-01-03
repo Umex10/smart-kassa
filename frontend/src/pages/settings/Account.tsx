@@ -40,6 +40,7 @@ import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErr
 import { useInvalidEmail, useInvalidUsername } from "@/hooks/useValidator";
 import { fetchAvatar } from "@/utils/getAvatar";
 import { setAvatarState } from "../../../redux/slices/avatarSlice";
+import { setLink } from "../../../redux/slices/footerLinksSlice";
 
 /**
  * Account settings page component.
@@ -58,10 +59,18 @@ const Account = (): JSX.Element => {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
+  const avatarState = useSelector((state: RootState) => state.avatarState.url);
 
   useEffect(() => {
+    if (avatarState) {
+      setPreview(avatarState);
+      return;
+    }
+
     fetchAvatar(true, setLoading, setPreview, setPreviewError, dispatch);
-  }, [dispatch]);
+    dispatch(setLink(2));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function changeAvatar(avatarFile: File, retryFetch: boolean = true) {
     try {

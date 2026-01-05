@@ -6,12 +6,9 @@
         href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,700;1,400&display=swap"
         rel="stylesheet">
 
+    {{!-- style block has to be written exactly like this --> {{{styleContent}}} <-- Auto formatting will destroy css integration --}}
     <style>
-        {
-                {
-                style
-            }
-        }
+        {{{styleContent}}}
     </style>
 
 </head>
@@ -26,8 +23,7 @@
                     <span class="invoice-type child">
                         Rechnung
                     </span>
-                    <img class="invoice-logo child" src="/backend/resources/templates/invoice/Logo.svg"
-                        alt="Zynqly Logo" width="auto" height="100">
+                    <img class="invoice-logo child" src="{{logoSrc}}" alt="Zynqly Logo" width="auto" height="100">
                 </div>
 
                 <div class="parent parent-invoice-table-address">
@@ -45,7 +41,7 @@
                             <td></td>
                         </tr>
                         <tr>
-                            <td>{{company_address}}</td>
+                            <td>{{company_street}} {{street_addition}}</td>
                             <td></td>
                         </tr>
                         <tr>
@@ -53,7 +49,7 @@
                             <td></td>
                         </tr>
                         <tr>
-                            <td>{{user_phone_number}}</td>
+                            <td>0699 147852369</td>
                             <td></td>
                         </tr>
 
@@ -65,15 +61,17 @@
 
                         <tr class="table-row-border">
                             <th>ANZAHL</th>
+                            <th>ZAHLART</th>
                             <th>FAHRTEN-TYP</th>
                             <th>STEUER</th>
                             <th>PREIS</th>
                         </tr>
                         <tr>
                             <td>1</td>
+                            <td>{{billing_payment_method}}</td>
                             <td>{{ride_type}}</td>
-                            <td>{{billing_tax_rate}}</td>
-                            <td>€ {{billing_amount_gross}}</td>
+                            <td>{{billing_tax_rate}} %</td>
+                            <td>€ {{billing_amount_net}}</td>
                         </tr>
                     </table>
                 </div>

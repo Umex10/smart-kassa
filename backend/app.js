@@ -36,6 +36,7 @@ import logOutRoutes from "./routes/logout.js";
 import deleteAccountRoutes from "./routes/deleteAccount.js";
 import listBlobsRoutes from "./routes/list-blobs.js";
 import updateProfileRoutes from "./routes/updateProfile.js";
+import invoiceRoutes from "./routes/invoice.js";
 
 /**
  * Middleware Configuration
@@ -82,6 +83,7 @@ app.use("/logout", logOutRoutes);
 app.use("/account", deleteAccountRoutes);
 app.use("/account", updateProfileRoutes);
 app.use("/list-blobs", listBlobsRoutes);
+app.use("/invoice", invoiceRoutes);
 
 /**
  * Health Check Endpoint

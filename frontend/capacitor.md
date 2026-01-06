@@ -1,5 +1,9 @@
 # Capacitor
 
+## Offical Docs
+
+Visit [https://capacitorjs.com](https://capacitorjs.com) for offical Documentation
+
 ## Set Up
 
 Go to the frontend folder

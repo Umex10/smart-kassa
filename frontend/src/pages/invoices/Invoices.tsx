@@ -50,6 +50,7 @@ import { Worker } from "@react-pdf-viewer/core";
 import { Viewer, SpecialZoomLevel } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { QRCodeSVG } from "qrcode.react";
+import { setLink } from "../../../redux/slices/footerLinksSlice";
 
 const Invoices = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -183,12 +184,9 @@ const Invoices = () => {
                       </DialogTrigger>
                       <DialogContent className="p-3 flex flex-col items-center">
                         <DialogTitle className="section-header">
-                          Scan to See Online
+                          Scanne um Online zu sehen
                         </DialogTitle>
-                        <QRCodeSVG
-                          size={260}
-                          value={file.url}
-                        />
+                        <QRCodeSVG size={260} value={file.url} />
                       </DialogContent>
                     </Dialog>
                   </div>
@@ -266,6 +264,8 @@ const Invoices = () => {
                     } else {
                       navigator("/statistics");
                     }
+
+                    dispatch(setLink(0));
                   }}
                 >
                   {isMobile ? "Fahrt starten" : "Statistiken prüfen"}
@@ -273,7 +273,10 @@ const Invoices = () => {
                 <Button
                   className="col-span-2 sm:col-span-1"
                   variant="outline"
-                  onClick={() => navigator("/")}
+                  onClick={() => {
+                    navigator("/");
+                    dispatch(setLink(1));
+                  }}
                 >
                   Zurück zur Startseite
                 </Button>

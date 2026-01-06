@@ -1,9 +1,23 @@
 /**
- * Used to identify attributes to show of in the invoices section. Information like size of the 
- * File (Bill) and when it was modified etc. 
+ * Used to identify attributes to show of in the invoices section. Information like size of the
+ * File (Bill) and when it was modified etc.
  * @author Casper Zielinski
  */
 export interface Files {
+  billingData?: {
+    billing_id: string;
+    amount_gross: string;
+    amount_net: string;
+    amount_tax: string;
+    payment_method: string;
+    tax_rate: string;
+    tip_amount: string;
+  };
+  driverData?: {
+    email: string;
+    name: string;
+    phonenumber: string;
+  };
   key: string | undefined;
   size: number | undefined;
   lastModified: Date | undefined;

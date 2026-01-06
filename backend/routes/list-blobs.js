@@ -9,6 +9,8 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import invoicePDFService from "../services/invoicePDF.service.js";
+import pool from "../db.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -61,7 +63,39 @@ router.get("/invoices", authenticateToken, async (req, res) => {
           { expiresIn: 7 * 24 * 60 * 60 } // 7 Days
         );
 
+        /**
+         * @todo in the future, check if the driver/user is company owner or not (check role), so company owner sees
+         * every invoice of company, employee only it's own
+         */
+        const driverDataResult = await pool.query(
+          `SELECT first_name, last_name, email, phone_number from users where user_id = $1`,
+          [user_id]
+        );
+
+        const driverData = driverDataResult.rows[0];
+
+        const billing_id = file.Key.match(/_([^_]+)\.pdf$/)?.[1];
+        const billingDataResult = await pool.query(
+          `SELECT amount_net, tax_rate, amount_tax, amount_gross, tip_amount, payment_method FROM billing WHERE billing_id = $1`,
+          [billing_id]
+        );
+        const billingData = billingDataResult.rows[0];
+
         return {
+          driverData: {
+            name: `${driverData.first_name} ${driverData.last_name}`,
+            email: driverData.email,
+            phonenumber: driverData.phone_number,
+          },
+          billingData: {
+            billing_id: billing_id,
+            amount_net: billingData.amount_net,
+            tax_rate: billingData.tax_rate,
+            amount_tax: billingData.amount_tax,
+            amount_gross: billingData.amount_gross,
+            tip_amount: billingData.tip_amount,
+            payment_method: billingData.payment_method,
+          },
           key: file.Key,
           size: file.Size,
           lastModified: file.LastModified,
@@ -73,6 +107,7 @@ router.get("/invoices", authenticateToken, async (req, res) => {
     res.status(200).send({
       files: filesWithUrls,
       count: filesWithUrls.length,
+      message: "Fetched Invoices Successfully",
     });
   } catch (error) {
     console.error("Error fetching invoices from S3:", error);
@@ -88,7 +123,8 @@ router.post(
     try {
       const user_id = req.user.userId;
       const company_id = req.user.companyId;
-      const newInvoice = req.file;
+      const billing_id = req.body.billingId;
+      const newInvoice = await invoicePDFService.generateInvoicePdf(billing_id);
 
       if (!newInvoice) {
         return res.status(400).send({
@@ -99,12 +135,12 @@ router.post(
 
       // Timestamp for unique file names
       const timestamp = Date.now();
-      const filename = `Bills/${company_id}/${user_id}/${timestamp}_${newInvoice.originalname}`;
+      const filename = `Bills/${company_id}/${user_id}/${timestamp}_${billing_id}.pdf`;
 
       const putCommand = new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: filename,
-        Body: newInvoice.buffer,
+        Body: newInvoice,
         ContentType: newInvoice.mimetype,
       });
 
@@ -120,7 +156,33 @@ router.post(
         { expiresIn: 7 * 24 * 60 * 60 }
       );
 
+      const driverDataResult = await pool.query(
+        `SELECT first_name, last_name, email, phone_number from users where user_id = $1`,
+        [user_id]
+      );
+      const driverData = driverDataResult.rows[0];
+
+      const billingDataResult = await pool.query(
+        `SELECT amount_net, tax_rate, amount_tax, amount_gross, tip_amount, payment_method FROM billing WHERE billing_id = $1`,
+        [billing_id]
+      );
+      const billingData = billingDataResult.rows[0];
+
       return res.status(200).send({
+        driverData: {
+          name: `${driverData.first_name} ${driverData.last_name}`,
+          email: driverData.email,
+          phonenumber: driverData.phone_number,
+        },
+        billingData: {
+          billing_id: billing_id,
+          amount_net: billingData.amount_net,
+          tax_rate: billingData.tax_rate,
+          amount_tax: billingData.amount_tax,
+          amount_gross: billingData.amount_gross,
+          tip_amount: billingData.tip_amount,
+          payment_method: billingData.payment_method,
+        },
         message: "Invoice uploaded successfully",
         key: filename,
         url: url,
@@ -234,7 +296,7 @@ router.put(
 
       await s3Client.send(putCommand);
 
-      // generate Presigned URL 
+      // generate Presigned URL
       const url = await getSignedUrl(
         s3Client,
         new GetObjectCommand({

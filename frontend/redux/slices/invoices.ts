@@ -15,9 +15,12 @@ const invoices = createSlice({
     appendBillState: (state, action) => {
       state.bills.push(action.payload);
     },
+    clearBillState: (state) => {
+      state.bills = [];
+    }
   },
 });
 
-export const { setBills, appendBillState } = invoices.actions;
+export const { setBills, appendBillState, clearBillState } = invoices.actions;
 
 export default invoices.reducer;

@@ -1,6 +1,6 @@
 import type { Files } from "@/types/InvoiceFile";
 import axios, { AxiosError } from "axios";
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import { appendBillState } from "../../../redux/slices/invoices";
 import { refreshAccessToken } from "../jwttokens";
@@ -15,36 +15,25 @@ import type { AppDispatch } from "../../../redux/store";
  * @returns
  */
 export const appendNewBill = (
-  e: ChangeEvent<HTMLInputElement>,
-  setFiles: Dispatch<SetStateAction<Files[]>>,
-  dispatch: AppDispatch
+  dispatch: AppDispatch,
+  setFiles?: Dispatch<SetStateAction<Files[]>>
 ) => {
-  if (!e.target.files || e.target.files.length === 0) {
-    toast.info("Datei auswählen", { className: "mt-5 md:mt-0" });
-    return;
-  }
-
-  const selectedFile = e.target.files[0];
-
-  toast.promise(
-    appendNewBillController(true, selectedFile, setFiles, dispatch),
-    {
-      success: "Rechnung manuell hinzugefügt",
-      error: "Ein unerwarteter Fehler ist aufgetreten.",
-      loading: "Rechnung wird hinzugefügt",
-      className: "mt-5 md:mt-0",
-    }
-  );
+  toast.promise(appendNewBillController(true, dispatch, setFiles), {
+    success: "Rechnung manuell hinzugefügt",
+    error: "Ein unerwarteter Fehler ist aufgetreten.",
+    loading: "Rechnung wird hinzugefügt",
+    className: "mt-5 md:mt-0",
+  });
 };
 
 const appendNewBillController = async (
   retry: boolean = true,
-  InvoiceFile: File,
-  setFiles: Dispatch<SetStateAction<Files[]>>,
-  dispatch: AppDispatch
+  dispatch: AppDispatch,
+  setFiles?: Dispatch<SetStateAction<Files[]>>
 ) => {
   try {
     let accessToken: string | null;
+    const billingId = 1; // update in the future!!!, inject via parameter!
 
     if (retry) {
       accessToken = await AuthStorage.getAccessToken();
@@ -52,12 +41,9 @@ const appendNewBillController = async (
       accessToken = await refreshAccessToken();
     }
 
-    const formData = new FormData();
-    formData.append("newInvoice", InvoiceFile);
-
     const { data } = await axios.post(
       `${import.meta.env.VITE_API_URL}/list-blobs/invoices`,
-      formData,
+      { billingId: billingId },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -65,23 +51,12 @@ const appendNewBillController = async (
       }
     );
 
-    dispatch(
-      appendBillState({
-        key: data.key,
-        url: data.url,
-        size: data.size,
-        lastModified: data.lastModified,
-      } as Files)
-    );
-    setFiles((prev) => [
-      ...prev,
-      {
-        key: data.key,
-        url: data.url,
-        size: data.size,
-        lastModified: data.lastModified,
-      },
-    ]);
+    dispatch(appendBillState(data as Files));
+
+    if (setFiles) {
+      setFiles((prev) => [...prev, data as Files]);
+    }
+
     retry = true;
   } catch (error) {
     if (error instanceof AxiosError) {
@@ -93,12 +68,7 @@ const appendNewBillController = async (
       if (tokenError && retry) {
         // First retry with refreshed token
         retry = false;
-        return await appendNewBillController(
-          false,
-          InvoiceFile,
-          setFiles,
-          dispatch
-        );
+        return await appendNewBillController(false, dispatch, setFiles);
       } else if (tokenError && !retry) {
         // Second attempt failed - session expired
         console.error(error);

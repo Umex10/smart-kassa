@@ -19,6 +19,7 @@ import {
   Calendar,
   Info,
   QrCode,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
@@ -50,7 +51,7 @@ import { Worker } from "@react-pdf-viewer/core";
 import { Viewer, SpecialZoomLevel } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { QRCodeSVG } from "qrcode.react";
-import { setLink } from "../../../redux/slices/footerLinksSlice";
+import { appendNewBill } from "@/utils/invoices/appendBills";
 
 const Invoices = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -154,7 +155,9 @@ const Invoices = () => {
                       </DialogTrigger>
                       <DialogContent
                         className={`p-0  ${
-                          mobileView ? "X-hidden h-[70vh]" : "h-[90vh]"
+                          mobileView
+                            ? "X-hidden h-[70vh]"
+                            : "h-[80vh] lg:h-[70vh]"
                         }`}
                       >
                         <DialogHeader className="pt-2">
@@ -167,7 +170,7 @@ const Invoices = () => {
                         <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                           <DialogDescription
                             className={`${
-                              mobileView ? "h-[65vh]" : "h-[85vh]"
+                              mobileView ? "h-[70vh]" : "h-[80vh] lg:h-[70vh]"
                             } overflow-scroll`}
                           >
                             <Viewer
@@ -184,14 +187,31 @@ const Invoices = () => {
                       </DialogTrigger>
                       <DialogContent className="p-3 flex flex-col items-center">
                         <DialogTitle className="section-header">
-                          Scanne um Online zu sehen
+                          Scan to See Online
                         </DialogTitle>
                         <QRCodeSVG size={260} value={file.url} />
                       </DialogContent>
                     </Dialog>
                   </div>
                 </CardHeader>
-                <CardContent className="py-2">
+                <CardContent className="py-2 my-6">
+                  <p className="font-bold text-base">
+                    Beleg Nr: {file.billingData?.billing_id}
+                  </p>
+                  <p className="font-bold text-base mb-2">
+                    Betrag: {file.billingData?.amount_gross}€
+                  </p>
+                  <p className="text-sm">{`davon ${
+                    file.billingData?.tax_rate.split(".00")[0]
+                  }% Mwst: €${file.billingData?.amount_tax}`}</p>
+                  <p className="text-sm mb-2">{`Netto: ${file.billingData?.amount_net}€`}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="w-4 h-4" />
+                    <span>
+                      {file.driverData?.name ||
+                        "Fahrer konnte nicht geladen werden"}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>
@@ -199,15 +219,6 @@ const Invoices = () => {
                         "Datum konnte nicht geladen werden"}
                     </span>
                   </div>
-                  <CardDescription className="card-description-small truncate">
-                    <p title={file.key?.split("/").pop()}>
-                      {file.key?.split("/").pop()}
-                    </p>
-                    <p>{`Datentyp: ${file.key
-                      ?.split(".")
-                      .pop()
-                      ?.toUpperCase()}`}</p>
-                  </CardDescription>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 pt-2">
                   <Button asChild className="w-full" variant="link">
@@ -264,8 +275,6 @@ const Invoices = () => {
                     } else {
                       navigator("/statistics");
                     }
-
-                    dispatch(setLink(0));
                   }}
                 >
                   {isMobile ? "Fahrt starten" : "Statistiken prüfen"}
@@ -273,10 +282,7 @@ const Invoices = () => {
                 <Button
                   className="col-span-2 sm:col-span-1"
                   variant="outline"
-                  onClick={() => {
-                    navigator("/");
-                    dispatch(setLink(1));
-                  }}
+                  onClick={() => navigator("/")}
                 >
                   Zurück zur Startseite
                 </Button>
@@ -340,6 +346,9 @@ const Invoices = () => {
           </div>
         )}
       </div>
+      <Button onClick={() => appendNewBill(dispatch, setFiles)}>
+        Append new Bill
+      </Button>
     </section>
   );
 };

@@ -4,6 +4,7 @@ import type { AppDispatch } from "../../redux/store";
 import { getOrCreateDeviceId } from "./deviceId";
 import { signInUser, signOutUser } from "../../redux/slices/userSlice";
 import { refreshAccessToken } from "./jwttokens";
+import { clearBillState } from "../../redux/slices/invoices";
 
 export async function register(
   firstName: string,
@@ -231,6 +232,7 @@ export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
 
     await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
+    dispatch(clearBillState());
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {
@@ -315,6 +317,7 @@ export async function deleteAccount(
 
     await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
+    dispatch(clearBillState());
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {

@@ -51,7 +51,6 @@ import { Worker } from "@react-pdf-viewer/core";
 import { Viewer, SpecialZoomLevel } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { QRCodeSVG } from "qrcode.react";
-import { appendNewBill } from "@/utils/invoices/appendBills";
 
 const Invoices = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -346,9 +345,6 @@ const Invoices = () => {
           </div>
         )}
       </div>
-      <Button onClick={() => appendNewBill(dispatch, setFiles)}>
-        Append new Bill
-      </Button>
     </section>
   );
 };

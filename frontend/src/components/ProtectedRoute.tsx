@@ -9,10 +9,9 @@ import {
   setAuthenticated,
   setUnauthenticated,
 } from "../../redux/slices/authSlice";
-import { isMobile } from "@/hooks/use-mobile";
 import { handleTokenError } from "../utils/errorHandling";
-import { setLink } from "../../redux/slices/footerLinksSlice";
 import StatusOverlay from "./StatusOverlay";
+import { setLink } from "../../redux/slices/footerLinksSlice";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -40,20 +39,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
    */
   const getJWTTokens = useCallback(async () => {
     try {
-      if (isMobile && isAuthenticated) {
-        dispatch(setLink(0));
-        await navigator("/ride");
-      }
-
       if (!isAuthenticated) {
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
           throw new Error("User Data invalid");
         }
-        if (isMobile ) {
-          dispatch(setLink(0));
-          await navigator("/ride");
-        }
+
         dispatch(
           signInUser({
             id: userData.id,
@@ -64,7 +55,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           })
         );
         dispatch(setAuthenticated());
-
+        dispatch(setLink(1));
       }
     } catch (error) {
       handleTokenError(error);

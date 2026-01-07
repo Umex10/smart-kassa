@@ -69,7 +69,7 @@ export default function RootLayout(): JSX.Element {
 
   useEffect(() => {
     fetchAvatar(true, setLoadingAvatar, setAvatar, setErrorAvatar, dispatch);
-    dispatch(setLink(isMobile ? 0 : 1));
+    dispatch(setLink(1));
     dispatch(setAvatarState(avatar));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarState]);

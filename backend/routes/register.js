@@ -93,9 +93,30 @@ router.post("/", async (req, res) => {
       await pool.query("BEGIN");
 
       // Insert company into company table and return the generated company_id
+
+      // DUMMY DATA FOR COMPANY RECORD IN DATABASE
       const companyRes = await pool.query(
-        `INSERT INTO company (fn, atu)
-        VALUES($1, $2)
+        `
+        INSERT INTO company 
+        (
+        fn,
+        atu,
+        company_name,
+        street,
+        postal_code,
+        city,
+        country
+        )
+        VALUES
+        (
+        $1,
+        $2,
+        'Taxi Drive GmbH',
+        'Rechbauerstraße 67',
+        '8010',
+        'Graz',
+        'Österreich'
+        )
         RETURNING company_id`,
         [fn, atu]
       );

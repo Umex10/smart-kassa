@@ -45,7 +45,13 @@ router.post("/", async (req, res) => {
         duration,
         distance,
         ride_type,
-        whole_ride
+        whole_ride,
+        amount_net,
+        tax_rate,
+        amount_tax,
+        amount_gross,
+        tip_amount,
+        payment_method
     } = req.body;
 
     if (
@@ -61,7 +67,13 @@ router.post("/", async (req, res) => {
         !duration ||
         !distance ||
         !ride_type ||
-        !whole_ride
+        !whole_ride ||
+        !amount_net ||
+        !tax_rate ||
+        !amount_tax ||
+        !amount_gross ||
+        !tip_amount ||
+        !payment_method
     ) {
         return res.status(400).json({
             status: "error",
@@ -74,6 +86,24 @@ router.post("/", async (req, res) => {
     try {
         // Begin of database transaction, if an operation fails, all queries roll back
         await pool.query("BEGIN");
+
+        const userRes = await pool.query(
+            `
+            SELECT company_id FROM users WHERE user_id = $1
+            `,
+            [user_id]
+
+        )
+
+        if (userRes.rows.length === 0) {
+            throw new Error(`User with ID ${user_id} not found`);
+        }
+
+        const company_id = userRes.rows[0].company_id;
+
+        if (!company_id) {
+            throw new Error(`User with ID ${user_id} is not assigned to a company. Billing cannot be created.`);
+        }
 
         // Random vehicle id for test purposes, when vehicle_id gets implemented refactor the code!
         const vehicle_id = Math.floor(Math.random() * 100 + 1);
@@ -105,16 +135,45 @@ router.post("/", async (req, res) => {
 
         const ride_id = rideRes.rows[0].ride_id;
 
+        await pool.query(
+            `
+            INSERT INTO billing 
+                (
+                    ride_id,
+                    company_id,
+                    amount_net,
+                    tax_rate,
+                    amount_tax,
+                    amount_gross,
+                    tip_amount,
+                    payment_method
+                )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `,
+            [
+                ride_id,
+                company_id,
+                amount_net,
+                tax_rate,
+                amount_tax,
+                amount_gross,
+                tip_amount,
+                payment_method
+            ]
+        );
+
+
+        await pool.query("COMMIT");
+
         res.json({
             status: "success",
-            message: "Ride successfully saved",
+            message: "Ride and invoice successfully saved",
             ride_info: {
                 ride_id: ride_id,
                 vehicle_id: vehicle_id,
             },
         });
 
-        await pool.query("COMMIT");
     } catch (error) {
         await pool.query("ROLLBACK");
         return res.status(500).send({

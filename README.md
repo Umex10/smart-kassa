@@ -700,6 +700,13 @@ Delete user account (soft delete)
 Authorization: Bearer <access_token>
 ```
 
+**Request Body:**
+```json
+{
+  "password": "userPassword123"
+}
+```
+
 **Response:** `200 OK`
 ```json
 {
@@ -707,11 +714,21 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Note:** Personal data is anonymized, business records retained for 7 years (Austrian tax law)
+**Errors:**
+- `400` - Missing fields (password, refresh token, or user ID)
+- `401` - Invalid password
+- `404` - User not found
+
+**Note:**
+- Requires password confirmation for safety
+- Personal data is anonymized (email, phone, name → NULL, is_deleted → true)
+- Session data (user_agent, client_ip, device_name) is cleared
+- Company data is marked as deleted if user is owner
+- Business records retained for 7 years (Austrian tax law)
 
 ---
 
-#### PUT `/account/profile`
+#### PUT `/account/me`
 Update user profile
 
 **Headers:**
@@ -722,8 +739,8 @@ Authorization: Bearer <access_token>
 **Request Body:**
 ```json
 {
-  "firstName": "Jane",
-  "lastName": "Smith",
+  "first_name": "Jane",
+  "last_name": "Smith",
   "email": "newemail@example.com"
 }
 ```
@@ -733,18 +750,24 @@ Authorization: Bearer <access_token>
 {
   "message": "Profile updated successfully",
   "user": {
-    "id": "123",
-    "email": "newemail@example.com",
-    "name": "Jane Smith"
+    "user_id": "123",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "newemail@example.com"
   }
 }
 ```
+
+**Errors:**
+- `400` - No data provided
+- `404` - User not found
+- `409` - Email already in use
 
 ---
 
 ### Ride Management Endpoints
 
-#### POST `/fahrten`
+#### POST `/ride`
 Create a new ride
 
 **Headers:**
@@ -755,20 +778,23 @@ Authorization: Bearer <access_token>
 **Request Body:**
 ```json
 {
-  "startLocation": {
-    "lat": 47.0707,
-    "lng": 15.4395,
-    "address": "Graz, Austria"
-  },
-  "endLocation": {
-    "lat": 47.0707,
-    "lng": 15.4395,
-    "address": "Vienna, Austria"
-  },
-  "distance": 200.5,
-  "price": 150.00,
-  "passengerName": "John Doe",
-  "notes": "Optional notes"
+  "user_id": 123,
+  "start_address": "Graz, Austria",
+  "start_time": "2025-01-07T10:00:00Z",
+  "start_lat": 47.0707,
+  "start_lng": 15.4395,
+  "end_address": "Vienna, Austria",
+  "end_time": "2025-01-07T12:30:00Z",
+  "end_lat": 48.2082,
+  "end_lng": 16.3738,
+  "duration": "02:30:00",
+  "distance": 200500,
+  "ride_type": "taxifahrt",
+  "whole_ride": [
+    [47.0707, 15.4395],
+    [47.5000, 15.8000],
+    [48.2082, 16.3738]
+  ]
 }
 ```
 
@@ -777,14 +803,20 @@ Authorization: Bearer <access_token>
 {
   "message": "Ride created successfully",
   "ride": {
-    "id": "ride-123",
-    "startLocation": "Graz, Austria",
-    "endLocation": "Vienna, Austria",
-    "price": 150.00,
-    "createdAt": "2025-01-07T12:00:00Z"
+    "ride_id": "123",
+    "user_id": "123",
+    "start_address": "Graz, Austria",
+    "end_address": "Vienna, Austria",
+    "distance": 200500,
+    "duration": "02:30:00",
+    "ride_type": "taxifahrt"
   }
 }
 ```
+
+**Errors:**
+- `400` - Missing required fields
+- `400` - Invalid user_id (NaN or <= 0)
 
 ---
 
@@ -799,21 +831,24 @@ Authorization: Bearer <access_token>
 **Response:** `200 OK`
 ```json
 {
-  "id": "ride-123",
-  "startLocation": {
-    "lat": 47.0707,
-    "lng": 15.4395,
-    "address": "Graz, Austria"
-  },
-  "endLocation": {
-    "lat": 47.0707,
-    "lng": 15.4395,
-    "address": "Vienna, Austria"
-  },
-  "distance": 200.5,
-  "price": 150.00,
-  "passengerName": "John Doe",
-  "createdAt": "2025-01-07T12:00:00Z"
+  "ride_id": "123",
+  "user_id": "123",
+  "start_address": "Graz, Austria",
+  "start_time": "2025-01-07T10:00:00Z",
+  "start_lat": 47.0707,
+  "start_lng": 15.4395,
+  "end_address": "Vienna, Austria",
+  "end_time": "2025-01-07T12:30:00Z",
+  "end_lat": 48.2082,
+  "end_lng": 16.3738,
+  "duration": "02:30:00",
+  "distance": 200500,
+  "ride_type": "taxifahrt",
+  "whole_ride": [
+    [47.0707, 15.4395],
+    [47.5000, 15.8000],
+    [48.2082, 16.3738]
+  ]
 }
 ```
 
@@ -836,16 +871,18 @@ Authorization: Bearer <access_token>
 {
   "rides": [
     {
-      "id": "ride-123",
-      "startLocation": "Graz, Austria",
-      "endLocation": "Vienna, Austria",
-      "price": 150.00,
-      "createdAt": "2025-01-07T12:00:00Z"
+      "ride_id": "123",
+      "user_id": "123",
+      "start_address": "Graz, Austria",
+      "end_address": "Vienna, Austria",
+      "start_time": "2025-01-07T10:00:00Z",
+      "end_time": "2025-01-07T12:30:00Z",
+      "distance": 200500,
+      "duration": "02:30:00",
+      "ride_type": "taxifahrt"
     }
   ],
-  "total": 42,
-  "page": 1,
-  "limit": 10
+  "message": "Rides retrieved successfully"
 }
 ```
 
@@ -853,22 +890,58 @@ Authorization: Bearer <access_token>
 
 ### Invoice Endpoints
 
-#### POST `/invoice/:rideId`
-Generate invoice PDF for a ride
+#### POST `/invoice`
+Generate invoice PDF for a ride and upload to S3
 
 **Headers:**
 ```
 Authorization: Bearer <access_token>
 ```
 
+**Request Body:**
+```json
+{
+  "ride_id": "123",
+  "amount_net": 136.36,
+  "tax_rate": 0.1,
+  "amount_tax": 13.64,
+  "amount_gross": 150.00,
+  "tip_amount": 5.00,
+  "payment_method": "card"
+}
+```
+
 **Response:** `200 OK`
 ```json
 {
-  "message": "Invoice generated successfully",
-  "invoiceUrl": "https://storage.railway.app/bucket/invoice-123.pdf",
-  "invoiceId": "invoice-123"
+  "message": "Invoice created successfully",
+  "files": {
+    "key": "invoices/user-123/invoice-456.pdf",
+    "url": "https://storage.railway.app/bucket/invoice-456.pdf",
+    "size": 45678,
+    "lastModified": "2025-01-07T12:00:00Z",
+    "billingData": {
+      "billing_id": "456",
+      "amount_net": "136.36",
+      "amount_tax": "13.64",
+      "amount_gross": "150.00",
+      "tax_rate": "0.10",
+      "tip_amount": "5.00",
+      "payment_method": "card"
+    },
+    "driverData": {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phonenumber": "+43123456789"
+    }
+  }
 }
 ```
+
+**Errors:**
+- `400` - No File for the invoice provided (PDF generation failed)
+- `409` - Invoice already exists for this ride
+- `500` - Railway Bucket Error (S3 upload failed)
 
 ---
 
@@ -889,6 +962,80 @@ Authorization: Bearer <access_token>
       "url": "https://storage.railway.app/bucket/invoice-123.pdf",
       "size": 45678,
       "lastModified": "2025-01-07T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### Dashboard Analytics Endpoints
+
+#### GET `/rides/daily`
+Get daily ride statistics for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "daily": [
+    {
+      "date": "2025-01-07",
+      "total_rides": 15,
+      "total_distance": 450.5,
+      "total_revenue": 750.00
+    }
+  ]
+}
+```
+
+---
+
+#### GET `/rides/weekly`
+Get weekly ride statistics for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "weekly": [
+    {
+      "week": "2025-W01",
+      "total_rides": 85,
+      "total_distance": 2500.0,
+      "total_revenue": 4200.00
+    }
+  ]
+}
+```
+
+---
+
+#### GET `/rides/monthly`
+Get monthly ride statistics for authenticated user
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "monthly": [
+    {
+      "month": "2025-01",
+      "total_rides": 350,
+      "total_distance": 10500.0,
+      "total_revenue": 17500.00
     }
   ]
 }

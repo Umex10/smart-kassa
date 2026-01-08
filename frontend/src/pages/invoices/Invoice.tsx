@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -29,7 +29,10 @@ import { toast } from "sonner";
  */
 const Invoice = () => {
   const navigate = useNavigate();
+  //const { id } = useParams();
+  const startAddressParagraph = useRef<HTMLParagraphElement>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [lineheight, setLineheight] = useState(2.75);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Hardcoded values for now - will be replaced with actual ride data
@@ -54,6 +57,33 @@ const Invoice = () => {
   const estimatedGross = (
     parseFloat(estimatedNet) + parseFloat(estimatedTax)
   ).toFixed(2);
+
+  // ResizeObserver to automatically update line height when paragraph size changes
+  useEffect(() => {
+    const element = startAddressParagraph.current;
+    if (!element) return;
+
+    const updateLineHeight = () => {
+      const startaddr =
+        Math.floor((element.offsetHeight || 20) / 20 - 1) * 1.25;
+      setLineheight(2.75 + startaddr);
+    };
+
+    // Initial calculation
+    updateLineHeight();
+
+    // Create ResizeObserver to watch for size changes
+    const resizeObserver = new ResizeObserver(() => {
+      updateLineHeight();
+    });
+
+    resizeObserver.observe(element);
+
+    // Cleanup observer on unmount
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [rideData.start_address]); // Re-run when address changes
 
   const handleSubmit = () => {
     if (!selectedPayment) {
@@ -104,9 +134,12 @@ const Invoice = () => {
                 <div className="p-2 rounded-lg bg-green-50 dark:bg-green-950">
                   <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 max-w-[120%]">
                   <Label className="text-xs text-muted-foreground">Start</Label>
-                  <p className="text-sm font-medium">
+                  <p
+                    ref={startAddressParagraph}
+                    className="text-sm font-medium w-[70%] break-words"
+                  >
                     {rideData.start_address}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -115,7 +148,10 @@ const Invoice = () => {
                 </div>
               </div>
 
-              <div className="absolute left-[0.875rem] top-5 border-l-4 border-dashed border-black dark:border-white h-11"></div>
+              <div
+                style={{ height: `${lineheight}rem` }}
+                className={`absolute left-[0.875rem] top-5 border-l-4 border-dashed border-black dark:border-white`}
+              ></div>
 
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-red-50 dark:bg-red-950">
@@ -123,7 +159,7 @@ const Invoice = () => {
                 </div>
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground">Ziel</Label>
-                  <p className="text-sm font-medium">{rideData.end_address}</p>
+                  <p className="text-sm font-medium w-[70%] break-words">{rideData.end_address}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatDate(rideData.end_time)}
                   </p>

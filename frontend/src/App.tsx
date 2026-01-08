@@ -47,7 +47,9 @@ function App() {
             <Route path=":id" element={<AllRides />} />
           </Route>
           <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoice" element={<Invoice />} />
+          <Route path="/invoice" element={<Invoice />}>
+            <Route path=":id" element={<Invoice />} />
+          </Route>
         </Route>
 
         <Route path="/register" element={<Register />} />

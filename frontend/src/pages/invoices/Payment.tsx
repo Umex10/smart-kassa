@@ -91,7 +91,6 @@ const Invoice = () => {
   // Get ride data from navigation state
   //location.state;
   const rideData: RideInfo = location.state;
-  console.log(rideData);
 
   if (!rideData) {
     return <NoRideDataWarning />;

@@ -84,13 +84,6 @@ const NoRideDataWarning = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück
           </Button>
-          <Button
-            onClick={() => navigate("/ride")}
-            className="w-full sm:flex-1"
-          >
-            <Car className="w-4 h-4 mr-2" />
-            Zur Fahrten-Seite
-          </Button>
         </CardFooter>
       </Card>
     </section>

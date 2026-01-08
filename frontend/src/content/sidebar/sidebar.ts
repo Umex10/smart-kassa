@@ -1,7 +1,12 @@
-import { Home, BarChart, Wallet, BookOpen, Settings,
-  Car, Receipt, List, UserSquare, Truck, CalendarClock,
-  BadgePercent, Download, Info
- } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  Settings,
+  Car,
+  Receipt,
+  List,
+  Info,
+} from "lucide-react";
 
 export interface SidebarItem {
   label: string;
@@ -25,21 +30,10 @@ export const sidebarSections: SidebarSection[] = [
         icon: Home,
       },
       {
-        label: "Analysen",
-        path: "/analytics",
-        icon: BarChart,
-      },
-      {
-        label: "Finanzen",
-        path: "/finances",
-        icon: Wallet,
-      },
-      {
         label: "Dokumentation",
         path: "/documentation",
         icon: BookOpen,
       },
-
     ],
   },
 
@@ -50,9 +44,9 @@ export const sidebarSections: SidebarSection[] = [
         label: "Fahrt starten",
         path: "/ride",
         icon: Car,
-        onlyMobile: true
+        onlyMobile: true,
       },
-       {
+      {
         label: "Alle Fahrten",
         path: "/all-rides",
         icon: List,
@@ -62,42 +56,9 @@ export const sidebarSections: SidebarSection[] = [
         path: "/invoices",
         icon: Receipt,
       },
-      {
-        label: "Fahrer",
-        path: "/drivers",
-        icon: UserSquare,
-      },
-      {
-        label: "Fahrzeuge",
-        path: "/vehicles",
-        icon: Truck,
-      },
     ],
   },
-
   {
-    title: "Administration",
-    items: [
-      {
-        label: "Dienstplan",
-        path: "/shift-plan",
-        icon: CalendarClock,
-      },
-      {
-        label: "Tarife",
-        path: "/pricing",
-        icon: BadgePercent,
-      },
-
-      {
-        label: "Transfer",
-        path: "/transfer",
-        icon: Download,
-      },
-    ],
-  },
-
-   {
     title: "Weitere",
     items: [
       {
@@ -113,4 +74,3 @@ export const sidebarSections: SidebarSection[] = [
     ],
   },
 ];
-

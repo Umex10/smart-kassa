@@ -12,6 +12,8 @@ import { isMobile } from "./hooks/use-mobile";
 import Invoices from "./pages/invoices/Invoices";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Payment from "./pages/invoices/Payment";
+import Documentation from "./pages/Documentation";
+import Help from "./pages/Help";
 
 /**
  * The Routes are all declared here
@@ -41,6 +43,8 @@ function App() {
           }
         >
           <Route path="/" element={<Home />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/ride" element={<Ride />} />
           <Route path="/all-rides" element={<AllRides />}>

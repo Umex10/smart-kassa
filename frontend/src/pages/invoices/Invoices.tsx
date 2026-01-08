@@ -20,6 +20,8 @@ import {
   Info,
   QrCode,
   User,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
@@ -137,7 +139,7 @@ const Invoices = () => {
             files.map((file, index) => (
               <Card
                 key={index}
-                className="relative rounded-xl border border-border/40 bg-sidebar dark:bg-sidebar shadow-sm hover:shadow-md transition-shadow"
+                className="relative rounded-xl border border-border/40 bg-sidebar dark:bg-sidebar shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg cursor-pointer"
               >
                 <CardHeader className="flex flex-row justify-between items-start pb-2">
                   <div className="flex items-center gap-2">
@@ -240,30 +242,81 @@ const Invoices = () => {
                     </Dialog>
                   </div>
                 </CardHeader>
-                <CardContent className="py-2 my-6">
-                  <p className="font-bold text-base">
-                    Beleg Nr: {file.billingData?.billing_id}
-                  </p>
-                  <p className="font-bold text-base mb-2">
-                    Betrag: {file.billingData?.amount_gross}€
-                  </p>
-                  <p className="text-sm">{`davon ${
-                    file.billingData?.tax_rate.split(".00")[0]
-                  }% Mwst: €${file.billingData?.amount_tax}`}</p>
-                  <p className="text-sm mb-2">{`Netto: ${file.billingData?.amount_net}€`}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="w-4 h-4" />
-                    <span>
-                      {file.driverData?.name ||
-                        "Fahrer konnte nicht geladen werden"}
-                    </span>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-col gap-2">
+                    <p className="font-bold text-lg text-violet-600 dark:text-violet-400">
+                      €{file.billingData?.amount_gross}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Beleg #{file.billingData?.billing_id}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
-                    <span>
-                      {formatDate(file.lastModified?.toString()) ||
-                        "Datum konnte nicht geladen werden"}
-                    </span>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Netto</p>
+                      <p className="font-medium">€{file.billingData?.amount_net}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">
+                        MwSt ({file.billingData?.tax_rate.split(".00")[0]}%)
+                      </p>
+                      <p className="font-medium">€{file.billingData?.amount_tax}</p>
+                    </div>
+                  </div>
+
+                  {file.billingData?.tip_amount && Number(file.billingData.tip_amount) > 0 && (
+                    <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                      <div className="p-1.5 rounded-lg bg-green-50 dark:bg-green-950">
+                        <span className="text-green-600 dark:text-green-400 text-xs">💶</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Trinkgeld</p>
+                        <p className="font-medium">€{file.billingData.tip_amount}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                    <div className={`p-1.5 rounded-lg ${
+                      file.billingData?.payment_method === "card"
+                        ? "bg-violet-50 dark:bg-violet-950"
+                        : "bg-green-50 dark:bg-green-950"
+                    }`}>
+                      {file.billingData?.payment_method === "card" ? (
+                        <CreditCard className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                      ) : (
+                        <Banknote className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Zahlungsmethode</p>
+                      <p className="font-medium capitalize">{file.billingData?.payment_method === "card" ? "Karte" : "Bargeld"}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                    <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950">
+                      <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Fahrer</p>
+                      <p className="font-medium text-sm">
+                        {file.driverData?.name || "Nicht verfügbar"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                    <div className="p-1.5 rounded-lg bg-orange-50 dark:bg-orange-950">
+                      <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Datum</p>
+                      <p className="font-medium text-sm">
+                        {formatDate(file.lastModified?.toString()) || "Nicht verfügbar"}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 pt-2">

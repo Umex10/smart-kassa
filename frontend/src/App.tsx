@@ -11,6 +11,7 @@ import AllRides from "./pages/rides/AllRides";
 import { isMobile } from "./hooks/use-mobile";
 import Invoices from "./pages/invoices/Invoices";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import Invoice from "./pages/invoices/Invoice";
 
 /**
  * The Routes are all declared here
@@ -35,10 +36,8 @@ function App() {
         <Route
           element={
             <ProtectedRoute>
-               <RootLayout />
+              <RootLayout />
             </ProtectedRoute>
-             
-         
           }
         >
           <Route path="/" element={<Home />} />
@@ -48,6 +47,7 @@ function App() {
             <Route path=":id" element={<AllRides />} />
           </Route>
           <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoice" element={<Invoice />} />
         </Route>
 
         <Route path="/register" element={<Register />} />

@@ -21,5 +21,5 @@ export interface Files {
   key: string | undefined;
   size: number | undefined;
   lastModified: Date | undefined;
-  url: string;
+  url: string | null;
 }

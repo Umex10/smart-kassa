@@ -135,33 +135,6 @@ router.post("/", async (req, res) => {
 
         const ride_id = rideRes.rows[0].ride_id;
 
-        await pool.query(
-            `
-            INSERT INTO billing 
-                (
-                    ride_id,
-                    company_id,
-                    amount_net,
-                    tax_rate,
-                    amount_tax,
-                    amount_gross,
-                    tip_amount,
-                    payment_method
-                )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            `,
-            [
-                ride_id,
-                company_id,
-                amount_net,
-                tax_rate,
-                amount_tax,
-                amount_gross,
-                tip_amount,
-                payment_method
-            ]
-        );
-
 
         await pool.query("COMMIT");
 

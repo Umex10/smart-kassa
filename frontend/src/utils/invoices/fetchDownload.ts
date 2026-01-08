@@ -1,7 +1,15 @@
 import { toast } from "sonner";
 
-export const fetchDownload = async (fileUrl: string, fileName: string) => {
+export const fetchDownload = async (
+  fileUrl: string | null,
+  fileName: string
+) => {
   try {
+    if (!fileUrl) {
+      toast.error("file url could not load", { className: "mt-5 md:mt-0" });
+      return;
+    }
+
     const response = await fetch(fileUrl);
 
     if (!response.ok) {

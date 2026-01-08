@@ -154,40 +154,88 @@ const Invoices = () => {
                         <Info className="absolute top-4 right-4" />
                       </DialogTrigger>
                       <DialogContent
-                        className={`p-0  ${
+                        className={`${
                           mobileView ? "h-[70vh]" : "h-[80vh] lg:h-[70vh]"
-                        }`}
+                        } ${!file.url ? "p-6" : "p-0"}`}
                       >
-                        <DialogHeader className="pt-2">
-                          <DialogTitle className="text-left pl-2 section-header break-words">
-                            {`Rechnung vom ` +
-                              formatDate(file.lastModified?.toString()) ||
-                              "Rechnung"}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                          <DialogDescription
-                            className={`${
-                              mobileView ? "h-[70vh]" : "h-[80vh] lg:h-[70vh]"
-                            } overflow-scroll`}
-                          >
-                            <Viewer
-                              fileUrl={file.url}
-                              defaultScale={SpecialZoomLevel.PageFit}
-                            />
-                          </DialogDescription>
-                        </Worker>
+                        {file.url ? (
+                          <>
+                            <DialogHeader className="pt-2">
+                              <DialogTitle className="text-left pl-2 section-header break-words">
+                                {`Rechnung vom ` +
+                                  formatDate(file.lastModified?.toString()) ||
+                                  "Rechnung"}
+                              </DialogTitle>
+                            </DialogHeader>
+                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                              <DialogDescription
+                                className={`${
+                                  mobileView
+                                    ? "h-[70vh]"
+                                    : "h-[80vh] lg:h-[70vh]"
+                                } overflow-scroll`}
+                              >
+                                <Viewer
+                                  fileUrl={file.url}
+                                  defaultScale={SpecialZoomLevel.PageFit}
+                                />
+                              </DialogDescription>
+                            </Worker>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full gap-4">
+                            <div className="p-4 rounded-full bg-red-50 dark:bg-red-950">
+                              <FileText className="w-12 h-12 text-red-600 dark:text-red-400" />
+                            </div>
+                            <DialogHeader className="text-center">
+                              <DialogTitle className="text-lg font-semibold">
+                                PDF nicht verfügbar
+                              </DialogTitle>
+                              <DialogDescription className="text-sm text-muted-foreground mt-2">
+                                Die Vorschau-URL für diese Rechnung konnte nicht
+                                generiert werden. Die Datei ist jedoch in unserem
+                                System gespeichert.
+                              </DialogDescription>
+                            </DialogHeader>
+                          </div>
+                        )}
                       </DialogContent>
                     </Dialog>
                     <Dialog>
                       <DialogTrigger>
                         <QrCode className="absolute top-12 right-4" />
                       </DialogTrigger>
-                      <DialogContent className="p-3 flex flex-col items-center">
-                        <DialogTitle className="section-header">
-                          Scan to See Online
-                        </DialogTitle>
-                        <QRCodeSVG size={260} value={file.url} />
+                      <DialogContent className="p-6 flex flex-col items-center gap-4">
+                        {file.url ? (
+                          <>
+                            <DialogHeader className="text-center">
+                              <DialogTitle className="section-header">
+                                Scan to See Online
+                              </DialogTitle>
+                              <DialogDescription className="text-sm text-muted-foreground">
+                                Scannen Sie den QR-Code mit Ihrem Smartphone
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="p-4 bg-white rounded-lg">
+                              <QRCodeSVG size={260} value={file.url} />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="p-4 rounded-full bg-amber-50 dark:bg-amber-950">
+                              <QrCode className="w-12 h-12 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <DialogHeader className="text-center">
+                              <DialogTitle className="text-lg font-semibold">
+                                QR-Code nicht verfügbar
+                              </DialogTitle>
+                              <DialogDescription className="text-sm text-muted-foreground">
+                                Für diese Rechnung konnte kein QR-Code erstellt werden,
+                                da keine Vorschau-URL verfügbar ist.
+                              </DialogDescription>
+                            </DialogHeader>
+                          </div>
+                        )}
                       </DialogContent>
                     </Dialog>
                   </div>
@@ -219,34 +267,59 @@ const Invoices = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 pt-2">
-                  <Button asChild className="w-full" variant="link">
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {file.url ? (
+                    <Button asChild className="w-full" variant="link">
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Online ansehen
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled
+                      className="w-full"
+                      variant="link"
+                      title="Vorschau-URL nicht verfügbar"
                     >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Online ansehen
-                    </a>
-                  </Button>
-                  <Button
-                    asChild
-                    className="w-full cursor-pointer"
-                    variant="outline"
-                  >
-                    <a
-                      onClick={() =>
-                        fetchDownload(
-                          file.url,
-                          file.key?.split("/").pop() || "Invoice"
-                        )
-                      }
-                      download
+                      <ExternalLink className="w-4 h-4 mr-2 opacity-50" />
+                      <span className="opacity-50">Nicht verfügbar</span>
+                    </Button>
+                  )}
+
+                  {file.url ? (
+                    <Button
+                      asChild
+                      className="w-full cursor-pointer"
+                      variant="outline"
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Herunterladen
-                    </a>
-                  </Button>
+                      <a
+                        onClick={() =>
+                          fetchDownload(
+                            file.url,
+                            file.key?.split("/").pop() || "Invoice"
+                          )
+                        }
+                        download
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Herunterladen
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled
+                      className="w-full"
+                      variant="outline"
+                      title="Download-URL nicht verfügbar"
+                    >
+                      <Download className="w-4 h-4 mr-2 opacity-50" />
+                      <span className="opacity-50">Download nicht möglich</span>
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}

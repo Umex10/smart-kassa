@@ -1,30 +1,187 @@
 import express from "express";
-import InvoiceService from "../services/invoicePDF.service.js";
-import fs from "fs";
-import path from "path";
+import { authenticateToken } from "../middleware/auth.js";
+import multer from "multer";
+import pool from "../db.js";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import invoicePDFService from "../services/invoicePDF.service.js";
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 
-// http://localhost:3000/invoice/test/1
-router.get('/test/:id', async (req, res) => {
-    try {
-        const invoiceID = req.params.id;
-
-        const pdfBuffer = await InvoiceService.generateInvoicePdf(invoiceID);
-
-        const fileName = `Rechnung_${invoiceID}.pdf`;
-        const filePath = path.join(process.cwd(), fileName);
-
-        fs.writeFileSync(filePath, pdfBuffer);
-
-        console.log(`PDF saved in: ${filePath}`);
-        
-        res.send(`PDF created: ${fileName}`);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Internal Server Error: " + error.message);
-    }
+const s3Client = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+  forcePathStyle: false, // Railway nutzt virtual-hosted style
 });
+
+const BUCKET_NAME = process.env.S3_BUCKET_NAME;
+
+router.post(
+  "/",
+  authenticateToken,
+  upload.single("newInvoice"),
+  async (req, res) => {
+    try {
+      const { companyId, userId } = req.user;
+      const {
+        ride_id,
+        amount_net,
+        tax_rate,
+        amount_tax,
+        amount_gross,
+        payment_method,
+      } = req.body;
+      const tip_amount = 0;
+
+      if (
+        !companyId ||
+        !userId ||
+        !ride_id ||
+        !amount_net ||
+        !tax_rate ||
+        !amount_tax ||
+        !amount_gross ||
+        !payment_method ||
+        !tip_amount
+      ) {
+        return res.status(400).send("Missing required fields");
+      }
+
+      // Start database transaction - must commit or rollback before returning
+      await pool.query("BEGIN");
+
+      const billingQuery = await pool.query(
+        `
+            INSERT INTO billing 
+                (
+                    ride_id,
+                    company_id,
+                    amount_net,
+                    tax_rate,
+                    amount_tax,
+                    amount_gross,
+                    tip_amount,
+                    payment_method
+                )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING billing_id;
+            `,
+        [
+          ride_id,
+          companyId,
+          amount_net,
+          tax_rate,
+          amount_tax,
+          amount_gross,
+          tip_amount,
+          payment_method,
+        ]
+      );
+
+      const billing_id = billingQuery.rows[0].billing_id;
+
+      const newInvoice = await invoicePDFService.generateInvoicePdf(billing_id);
+
+      if (!newInvoice) {
+        await pool.query("ROLLBACK");
+        return res.status(400).send({
+          error: "No File for the invoice provided",
+          path: "invoices",
+        });
+      }
+
+      // Timestamp for unique file names
+      const timestamp = Date.now();
+      const filename = `Bills/${companyId}/${userId}/${timestamp}_${billing_id}.pdf`;
+
+      const putCommand = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: filename,
+        Body: newInvoice,
+        ContentType: newInvoice.mimetype,
+      });
+
+      // Upload PDF to S3 - rollback DB if upload fails
+      try {
+        await s3Client.send(putCommand);
+      } catch (error) {
+        console.error("S3 upload error:", error);
+        await pool.query("ROLLBACK");
+        return res
+          .status(500)
+          .send({ message: "Railway Bucket Error", error: error });
+      }
+
+      // Generate presigned URL for file access - continue without URL if this fails
+      let url = null;
+      try {
+        url = await getSignedUrl(
+          s3Client,
+          new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: filename,
+          }),
+          { expiresIn: 7 * 24 * 60 * 60 }
+        );
+      } catch (error) {
+        console.error("Error generating presigned URL (continuing without URL):", error);
+        // File is uploaded successfully, just no temporary URL available
+      }
+
+      const driverDataResult = await pool.query(
+        `SELECT first_name, last_name, email, phone_number from users where user_id = $1`,
+        [userId]
+      );
+      const driverData = driverDataResult.rows[0];
+
+      const billingDataResult = await pool.query(
+        `SELECT amount_net, tax_rate, amount_tax, amount_gross, tip_amount, payment_method FROM billing WHERE billing_id = $1`,
+        [billing_id]
+      );
+      const billingData = billingDataResult.rows[0];
+
+      await pool.query("COMMIT");
+
+      return res.status(200).send({
+        driverData: {
+          name: `${driverData.first_name} ${driverData.last_name}`,
+          email: driverData.email,
+          phonenumber: driverData.phone_number,
+        },
+        billingData: {
+          billing_id: billing_id,
+          amount_net: billingData.amount_net,
+          tax_rate: billingData.tax_rate,
+          amount_tax: billingData.amount_tax,
+          amount_gross: billingData.amount_gross,
+          tip_amount: billingData.tip_amount,
+          payment_method: billingData.payment_method,
+        },
+        message: "Invoice uploaded successfully",
+        key: filename,
+        url: url,
+        size: newInvoice.size,
+        lastModified: new Date(timestamp),
+      });
+    } catch (error) {
+      await pool.query("ROLLBACK");
+      console.error("Creating new Invoice Error: \n", error);
+      return res.status(500).send({
+        message: "Error when appending new invoice and creating invoice pdf",
+        error: error,
+      });
+    }
+  }
+);
 
 export default router;

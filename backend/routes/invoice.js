@@ -123,10 +123,16 @@ router.post(
 
       const billing_id = billingQuery.rows[0].billing_id;
 
+      // Commit transaction before PDF generation so the data is visible
+      await pool.query("COMMIT");
+
       const newInvoice = await invoicePDFService.generateInvoicePdf(billing_id);
 
       if (!newInvoice) {
-        await pool.query("ROLLBACK");
+        // Delete billing entry if PDF generation fails
+        await pool.query("DELETE FROM billing WHERE billing_id = $1", [
+          billing_id,
+        ]);
         return res.status(400).send({
           error: "No File for the invoice provided",
           path: "invoices",
@@ -144,12 +150,14 @@ router.post(
         ContentType: newInvoice.mimetype,
       });
 
-      // Upload PDF to S3 - rollback DB if upload fails
+      // Upload PDF to S3 - delete billing entry if upload fails
       try {
         await s3Client.send(putCommand);
       } catch (error) {
         console.error("S3 upload error:", error);
-        await pool.query("ROLLBACK");
+        await pool.query("DELETE FROM billing WHERE billing_id = $1", [
+          billing_id,
+        ]);
         return res
           .status(500)
           .send({ message: "Railway Bucket Error", error: error });
@@ -186,8 +194,6 @@ router.post(
       );
       const billingData = billingDataResult.rows[0];
 
-      await pool.query("COMMIT");
-
       return res.status(200).send({
         files: {
           driverData: {
@@ -213,7 +219,12 @@ router.post(
         message: "Invoice uploaded successfully",
       });
     } catch (error) {
-      await pool.query("ROLLBACK");
+      // Try to rollback if we're still in a transaction
+      try {
+        await pool.query("ROLLBACK");
+      } catch {
+        // Transaction may have already been committed, ignore rollback errors
+      }
       console.error("Creating new Invoice Error: \n", error);
       return res.status(500).send({
         message: "Error when appending new invoice and creating invoice pdf",

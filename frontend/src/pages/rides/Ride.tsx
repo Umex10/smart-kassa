@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import StatusOverlay from "../../components/StatusOverlay";
 import { ROUTING_CONFIG } from "../../utils/config";
 import { driverIcon, locationIcon } from "../../utils/icons";
+import type { RideInfo } from "@/types/RideInfoForBill";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -372,7 +373,7 @@ const Ride = () => {
           reInitialize();
 
           // Navigate to invoice page with ride data
-          navigator(`/invoice/${ride_id}`, {
+          navigator(`/payment/${ride_id}`, {
             state: {
               start_address: startAddress ?? "",
               end_address: endAddress ?? "",
@@ -381,11 +382,7 @@ const Ride = () => {
               duration: formatTime(timer),
               distance: distance,
               ride_type: rideType,
-              start_lat: driverLocation[0],
-              start_lng: driverLocation[1],
-              end_lat: destinationCoords[0],
-              end_lng: destinationCoords[1],
-            }
+            } satisfies RideInfo
           });
         } catch (error) {
           console.error(error);

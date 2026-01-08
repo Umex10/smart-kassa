@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-//useLocation,
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -32,16 +31,16 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/utils/formatDate";
 import { toast } from "sonner";
-// import NoRideDataWarning from "@/components/NoRideDataWarning";
+import NoRideDataWarning from "@/components/NoRideDataWarning";
 import { useForm } from "react-hook-form";
 import { AuthStorage } from "@/utils/secureStorage";
 import axios, { AxiosError } from "axios";
-// import { appendNewBill } from "@/utils/invoices/appendBills";
 import type { AppDispatch } from "../../../redux/store";
 import { useDispatch } from "react-redux";
 import { appendBillState } from "../../../redux/slices/invoices";
 import type { Files } from "@/types/InvoiceFile";
 import { refreshAccessToken } from "@/utils/jwttokens";
+import type { RideInfo } from "@/types/RideInfoForBill";
 
 /**
  * Invoice page where drivers can review ride details and select payment method
@@ -49,7 +48,7 @@ import { refreshAccessToken } from "@/utils/jwttokens";
  */
 const Invoice = () => {
   const navigate = useNavigate();
-  // const location = useLocation();
+  const location = useLocation();
   const { id } = useParams();
   const form = useForm({
     defaultValues: {
@@ -91,17 +90,12 @@ const Invoice = () => {
 
   // Get ride data from navigation state
   //location.state;
-  const rideData = {
-    ride_id: 12345,
-    start_address: "Mariahilfer Straße 120, 1070 Wien",
-    end_address: "Stephansplatz 1, 1010 Wien",
-    start_time: "2024-01-08 14:30:00",
-    end_time: "2024-01-08 15:15:00",
-    duration: "00:45:00",
-    distance: 5.2, // km
-    ride_type: "Taxifahrt",
-    driver_name: "Max Mustermann",
-  };
+  const rideData: RideInfo = location.state;
+  console.log(rideData);
+
+  if (!rideData) {
+    return <NoRideDataWarning />;
+  }
 
   const BASE_FEE = 3.5;
   const RATE_PER_KM = 1.5;
@@ -114,7 +108,7 @@ const Invoice = () => {
   const tipAmount = parseFloat(form.watch("tip")?.toString() || "0") || 0;
 
   const tax_rate = rideData.ride_type === "Taxifahrt" ? 0.1 : 0.2; // 10% for Taxi, 20% for Boten
-  const ride_price_gross = rideData.distance * RATE_PER_KM + BASE_FEE;
+  const ride_price_gross = Number(distanceInKm) * RATE_PER_KM + BASE_FEE;
   const amount_gross = ride_price_gross + tipAmount;
   const amount_net = amount_gross / (1 + tax_rate);
   const amount_tax = amount_gross - amount_net;
@@ -189,7 +183,7 @@ const Invoice = () => {
       {
         className: "mt-5 md:mt-0",
         success: async () => {
-          await navigate(`/all-rides/${id}`);
+          await navigate(`/invoices`);
           return "Rechnung erflogreich erstellt";
         },
         error: (err) => {
@@ -197,6 +191,7 @@ const Invoice = () => {
             return err.message;
           } else return "Fehler beim erstellen der rechnung";
         },
+        loading: "Rechnung wird erstellt",
       }
     );
   };
@@ -219,7 +214,8 @@ const Invoice = () => {
               Fahrtdetails
             </CardTitle>
             <CardDescription>
-              Fahrt #{rideData.ride_id} - {rideData.ride_type}
+              Fahrt #{id || "ID Konnte nicht geladen werden"} -{" "}
+              {rideData.ride_type}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

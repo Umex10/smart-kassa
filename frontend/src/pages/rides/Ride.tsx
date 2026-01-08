@@ -370,7 +370,23 @@ const Ride = () => {
           const ride_id = data.ride_info.ride_id;
 
           reInitialize();
-          navigator(`/all-rides/${ride_id}`);
+
+          // Navigate to invoice page with ride data
+          navigator(`/invoice/${ride_id}`, {
+            state: {
+              start_address: startAddress ?? "",
+              end_address: endAddress ?? "",
+              start_time: startTime,
+              end_time: endTime,
+              duration: formatTime(timer),
+              distance: distance,
+              ride_type: rideType,
+              start_lat: driverLocation[0],
+              start_lng: driverLocation[1],
+              end_lat: destinationCoords[0],
+              end_lng: destinationCoords[1],
+            }
+          });
         } catch (error) {
           console.error(error);
         } finally {

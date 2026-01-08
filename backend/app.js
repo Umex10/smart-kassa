@@ -87,8 +87,6 @@ app.use("/list-blobs", listBlobsRoutes);
 app.use("/invoice", invoiceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-
-
 /**
  * Health Check Endpoint
  * Used to verify the server is running

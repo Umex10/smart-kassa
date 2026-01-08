@@ -26,13 +26,23 @@ const s3Client = new S3Client({
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
+/**
+ * amount_net,
+   tax_rate,
+   amount_tax,
+   amount_gross,
+   tip_amount,
+   payment_method
+ */
+
 router.post(
   "/",
   authenticateToken,
   upload.single("newInvoice"),
   async (req, res) => {
     try {
-      const { companyId, userId } = req.user;
+      const userId = req.user.userId;
+      const companyId = req.user.companyId;
       const {
         ride_id,
         amount_net,
@@ -41,7 +51,12 @@ router.post(
         amount_gross,
         payment_method,
       } = req.body;
-      const tip_amount = 0;
+
+      let tip_amount = req.body.tip_amount;
+
+      if (!tip_amount) {
+        tip_amount = 0;
+      }
 
       if (
         !companyId ||
@@ -51,14 +66,32 @@ router.post(
         !tax_rate ||
         !amount_tax ||
         !amount_gross ||
-        !payment_method ||
-        !tip_amount
+        !payment_method
       ) {
-        return res.status(400).send("Missing required fields");
+        return res.status(400).send({
+          message: "Missing required fields",
+          companyId,
+          userId,
+          ride_id,
+          amount_net,
+          tax_rate,
+          amount_tax,
+          amount_gross,
+          payment_method,
+          tip_amount,
+        });
       }
 
       // Start database transaction - must commit or rollback before returning
       await pool.query("BEGIN");
+
+      const checkDupe = await pool.query(
+        "SELECT * FROM billing WHERE ride_id = $1",
+        [ride_id]
+      );
+      if (checkDupe.rowCount > 0) {
+        return res.status(409).send({ message: "Bill already exists" });
+      }
 
       const billingQuery = await pool.query(
         `
@@ -134,7 +167,10 @@ router.post(
           { expiresIn: 7 * 24 * 60 * 60 }
         );
       } catch (error) {
-        console.error("Error generating presigned URL (continuing without URL):", error);
+        console.error(
+          "Error generating presigned URL (continuing without URL):",
+          error
+        );
         // File is uploaded successfully, just no temporary URL available
       }
 
@@ -153,25 +189,28 @@ router.post(
       await pool.query("COMMIT");
 
       return res.status(200).send({
-        driverData: {
-          name: `${driverData.first_name} ${driverData.last_name}`,
-          email: driverData.email,
-          phonenumber: driverData.phone_number,
+        files: {
+          driverData: {
+            name: `${driverData.first_name} ${driverData.last_name}`,
+            email: driverData.email,
+            phonenumber: driverData.phone_number,
+          },
+          billingData: {
+            billing_id: billing_id,
+            amount_net: billingData.amount_net,
+            tax_rate: billingData.tax_rate,
+            amount_tax: billingData.amount_tax,
+            amount_gross: billingData.amount_gross,
+            tip_amount: billingData.tip_amount,
+            payment_method: billingData.payment_method,
+          },
+          key: filename,
+          url: url,
+          size: newInvoice.size,
+          lastModified: new Date(timestamp),
         },
-        billingData: {
-          billing_id: billing_id,
-          amount_net: billingData.amount_net,
-          tax_rate: billingData.tax_rate,
-          amount_tax: billingData.amount_tax,
-          amount_gross: billingData.amount_gross,
-          tip_amount: billingData.tip_amount,
-          payment_method: billingData.payment_method,
-        },
+
         message: "Invoice uploaded successfully",
-        key: filename,
-        url: url,
-        size: newInvoice.size,
-        lastModified: new Date(timestamp),
       });
     } catch (error) {
       await pool.query("ROLLBACK");

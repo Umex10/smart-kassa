@@ -46,12 +46,6 @@ router.post("/", async (req, res) => {
         distance,
         ride_type,
         whole_ride,
-        amount_net,
-        tax_rate,
-        amount_tax,
-        amount_gross,
-        tip_amount,
-        payment_method
     } = req.body;
 
     if (
@@ -67,13 +61,7 @@ router.post("/", async (req, res) => {
         !duration ||
         !distance ||
         !ride_type ||
-        !whole_ride ||
-        !amount_net ||
-        !tax_rate ||
-        !amount_tax ||
-        !amount_gross ||
-        !tip_amount ||
-        !payment_method
+        !whole_ride
     ) {
         return res.status(400).json({
             status: "error",

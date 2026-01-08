@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import StatusOverlay from "../../components/StatusOverlay";
 import { ROUTING_CONFIG } from "../../utils/config";
 import { driverIcon, locationIcon } from "../../utils/icons";
+import type { RideInfo } from "@/types/RideInfoForBill";
 
 /**
  * The Rides page, where a driver can start/end a Ride
@@ -350,8 +351,16 @@ const Ride = () => {
           reverseGeocode(driverLocation[0], driverLocation[1]),
           reverseGeocode(destinationCoords[0], destinationCoords[1]),
         ]);
+        // Validate user_id before sending
+        const userIdNumber = Number(user_id);
+        if (!user_id || isNaN(userIdNumber) || userIdNumber <= 0) {
+          toast.error("Fehler: Benutzer-ID ungültig. Bitte melden Sie sich erneut an.");
+          setIsLoading(false);
+          return;
+        }
+
         const newRide = {
-          user_id: Number(user_id),
+          user_id: userIdNumber,
           start_address: startAddress ?? "",
           start_time: startTime,
           start_lat: driverLocation[0],
@@ -370,9 +379,27 @@ const Ride = () => {
           const ride_id = data.ride_info.ride_id;
 
           reInitialize();
-          navigator(`/all-rides/${ride_id}`);
+
+          // Navigate to invoice page with ride data
+          navigator(`/payment/${ride_id}`, {
+            state: {
+              start_address: startAddress ?? "",
+              end_address: endAddress ?? "",
+              start_time: startTime,
+              end_time: endTime,
+              duration: formatTime(timer),
+              distance: distance,
+              ride_type: rideType,
+            } satisfies RideInfo
+          });
         } catch (error) {
           console.error(error);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Fehler beim Speichern der Fahrt. Bitte versuchen Sie es erneut."
+          );
+          setIsLoading(false);
         } finally {
           setTimeout(() => setIsLoading(false), 200); // Needed so navigator has enough time to switch
         }

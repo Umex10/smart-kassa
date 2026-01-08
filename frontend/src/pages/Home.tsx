@@ -8,6 +8,7 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import Balance from "../components/Balance";
+import type { JSX } from "react";
 
 export type RidesStats = {
   day: string;
@@ -57,7 +58,7 @@ const monthlyWeekRidesData: MonthlyWeekStats[] = [
  * 
  * @returns {JSX.Element} The home dashboard with statistics and user greeting.
  */
-function Home() {
+function Home(): JSX.Element {
   const user = useSelector((state: RootState) => state.user);
 
   return (

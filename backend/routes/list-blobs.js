@@ -104,9 +104,14 @@ router.get("/invoices", authenticateToken, async (req, res) => {
       })
     );
 
+    // Sort by lastModified date, newest first
+    const sortedFiles = filesWithUrls.sort((a, b) => {
+      return new Date(b.lastModified) - new Date(a.lastModified);
+    });
+
     res.status(200).send({
-      files: filesWithUrls,
-      count: filesWithUrls.length,
+      files: sortedFiles,
+      count: sortedFiles.length,
       message: "Fetched Invoices Successfully",
     });
   } catch (error) {
@@ -115,6 +120,9 @@ router.get("/invoices", authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @warning DO NOT USE! OLD FUNCTION!
+ */
 router.post(
   "/invoices",
   authenticateToken,

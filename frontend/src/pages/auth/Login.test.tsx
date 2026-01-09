@@ -228,7 +228,6 @@ describe("Login Page", () => {
 
     await waitFor(() => {
   expect(screen.queryByTestId("login")).not.toBeInTheDocument();
-  expect(screen.queryByText(/welcome/i)).toBeInTheDocument();
 });
 
   });

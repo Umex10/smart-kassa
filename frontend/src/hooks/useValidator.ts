@@ -1,5 +1,5 @@
 export const useInvalidUsername = (username: string) => {
-  const usernameIsInvalid = username === "";
+  const usernameIsInvalid = username.trim() === "";
   return usernameIsInvalid;
 };
 

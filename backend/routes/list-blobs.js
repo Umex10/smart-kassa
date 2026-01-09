@@ -1,71 +1,263 @@
 import express from "express";
 import { authenticateToken } from "../middleware/auth.js";
-import { list, put } from "@vercel/blob";
 import multer from "multer";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import invoicePDFService from "../services/invoicePDF.service.js";
+import pool from "../db.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = express.Router();
 
+// S3 Client für Railway Buckets
+const s3Client = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+  forcePathStyle: false, // Railway nutzt virtual-hosted style
+});
+
+const BUCKET_NAME = process.env.S3_BUCKET_NAME;
+
 /**
  * To get the .pdf files of the bills
- * @returns {Object} response - the whole response Object containing Information and all files (Also the Bills Marker)
- * @returns {Array} actualFiles - the pdf. files that are the bills (without marker File/Object)
- * @author Casper Zielinski
+ * The CORS.json file is used also for the data provided by this api endpoint, so the frontend can send a request to the url's, which results
+ * in the frontend being able to take the blob values out of the response and create a way to being able to download the file (no download URL provided like in vercel storage)
  */
-router.get("/invoices", authenticateToken, async (_, res) => {
+router.get("/invoices", authenticateToken, async (req, res) => {
   try {
-    const response = await list({
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      prefix: "Bills/",
+    const user_id = req.user.userId;
+    const company_id = req.user.companyId;
+
+    const listCommand = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: `Bills/${company_id}/${user_id}/`,
     });
 
-    const actualFiles = response.blobs.filter((blob) => blob.size > 0);
+    const response = await s3Client.send(listCommand);
+
+    // Only actual files (no markers)
+    const actualFiles = (response.Contents || []).filter(
+      (item) => item.Size > 0
+    );
+
+    // generate Presigned URLs (7 days for RKSV Compliance)
+    const filesWithUrls = await Promise.all(
+      actualFiles.map(async (file) => {
+        const url = await getSignedUrl(
+          s3Client,
+          new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: file.Key,
+          }),
+          { expiresIn: 7 * 24 * 60 * 60 } // 7 Days
+        );
+
+        /**
+         * @todo in the future, check if the driver/user is company owner or not (check role), so company owner sees
+         * every invoice of company, employee only it's own
+         */
+        const driverDataResult = await pool.query(
+          `SELECT first_name, last_name, email, phone_number from users where user_id = $1`,
+          [user_id]
+        );
+
+        const driverData = driverDataResult.rows[0];
+
+        const billing_id = file.Key.match(/_([^_]+)\.pdf$/)?.[1];
+        const billingDataResult = await pool.query(
+          `SELECT amount_net, tax_rate, amount_tax, amount_gross, tip_amount, payment_method FROM billing WHERE billing_id = $1`,
+          [billing_id]
+        );
+        const billingData = billingDataResult.rows[0];
+
+        return {
+          driverData: {
+            name: `${driverData.first_name} ${driverData.last_name}`,
+            email: driverData.email,
+            phonenumber: driverData.phone_number,
+          },
+          billingData: {
+            billing_id: billing_id,
+            amount_net: billingData.amount_net,
+            tax_rate: billingData.tax_rate,
+            amount_tax: billingData.amount_tax,
+            amount_gross: billingData.amount_gross,
+            tip_amount: billingData.tip_amount,
+            payment_method: billingData.payment_method,
+          },
+          key: file.Key,
+          size: file.Size,
+          lastModified: file.LastModified,
+          url: url,
+        };
+      })
+    );
+
+    // Sort by lastModified date, newest first
+    const sortedFiles = filesWithUrls.sort((a, b) => {
+      return new Date(b.lastModified) - new Date(a.lastModified);
+    });
 
     res.status(200).send({
-      response: response,
-      actualFiles: actualFiles,
+      files: sortedFiles,
+      count: sortedFiles.length,
+      message: "Fetched Invoices Successfully",
     });
   } catch (error) {
-    console.error("Error fetching Blob for Invoices: ", error);
+    console.error("Error fetching invoices from S3:", error);
     res.status(500).send({ error: "Internal Server Error", path: "invoices" });
   }
 });
 
 /**
- * @todo implement different pfp for each user
+ * @warning DO NOT USE! OLD FUNCTION!
  */
+router.post(
+  "/invoices",
+  authenticateToken,
+  upload.single("newInvoice"),
+  async (req, res) => {
+    try {
+      const user_id = req.user.userId;
+      const company_id = req.user.companyId;
+      const billing_id = req.body.billingId;
+      const newInvoice = await invoicePDFService.generateInvoicePdf(billing_id);
+
+      if (!newInvoice) {
+        return res.status(400).send({
+          error: "No File for the invoice provided",
+          path: "invoices",
+        });
+      }
+
+      // Timestamp for unique file names
+      const timestamp = Date.now();
+      const filename = `Bills/${company_id}/${user_id}/${timestamp}_${billing_id}.pdf`;
+
+      const putCommand = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: filename,
+        Body: newInvoice,
+        ContentType: newInvoice.mimetype,
+      });
+
+      await s3Client.send(putCommand);
+
+      // Presigned URL for Response
+      const url = await getSignedUrl(
+        s3Client,
+        new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: filename,
+        }),
+        { expiresIn: 7 * 24 * 60 * 60 }
+      );
+
+      const driverDataResult = await pool.query(
+        `SELECT first_name, last_name, email, phone_number from users where user_id = $1`,
+        [user_id]
+      );
+      const driverData = driverDataResult.rows[0];
+
+      const billingDataResult = await pool.query(
+        `SELECT amount_net, tax_rate, amount_tax, amount_gross, tip_amount, payment_method FROM billing WHERE billing_id = $1`,
+        [billing_id]
+      );
+      const billingData = billingDataResult.rows[0];
+
+      return res.status(200).send({
+        driverData: {
+          name: `${driverData.first_name} ${driverData.last_name}`,
+          email: driverData.email,
+          phonenumber: driverData.phone_number,
+        },
+        billingData: {
+          billing_id: billing_id,
+          amount_net: billingData.amount_net,
+          tax_rate: billingData.tax_rate,
+          amount_tax: billingData.amount_tax,
+          amount_gross: billingData.amount_gross,
+          tip_amount: billingData.tip_amount,
+          payment_method: billingData.payment_method,
+        },
+        message: "Invoice uploaded successfully",
+        key: filename,
+        url: url,
+        size: newInvoice.size,
+        lastModified: new Date(timestamp),
+      });
+    } catch (error) {
+      console.error("Error uploading invoice to S3:", error);
+      res
+        .status(500)
+        .send({ error: "Internal Server Error", path: "invoices" });
+    }
+  }
+);
+
 router.get("/avatar", authenticateToken, async (req, res) => {
   try {
-    //const userId = req.user.userId;
+    const user_id = req.user.userId;
 
-    const response = await list({
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      prefix: "Profile_Picture/",
+    const listCommand = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: `Profile_Picture/${user_id}/`,
     });
 
-    const actualFiles = response.blobs.filter((blob) => blob.size > 0);
-    //&& blob.pathname.split("/")[1].split(".")[0] === userId
-    return res.status(200).send({
-      response: response,
-      actualFiles: actualFiles,
-    });
+    const response = await s3Client.send(listCommand);
+    const actualFiles = (response.Contents || []).filter(
+      (item) => item.Size > 0
+    );
+
+    // generate Presigned URLs (1 Hour for Avatars)
+    const filesWithUrls = await Promise.all(
+      actualFiles.map(async (file) => {
+        const url = await getSignedUrl(
+          s3Client,
+          new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: file.Key,
+          }),
+          { expiresIn: 3600 } // 1 Hour
+        );
+
+        return {
+          key: file.Key,
+          url: url,
+        };
+      })
+    );
+
+    return res
+      .status(200)
+      .setHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send({
+        files: filesWithUrls,
+      });
   } catch (error) {
-    console.error("Error fetching blob for Avatar: ", error);
-    return res.status(500).send({ error: error });
+    console.error("Error fetching avatar from S3:", error);
+    return res.status(500).send({ error: error.message });
   }
 });
 
-/**
- * @todo implement different pfp for each user
- */
 router.put(
   "/avatar",
   authenticateToken,
   upload.single("newAvatar"),
   async (req, res) => {
     try {
-      //const userId = req.user.userId;
+      const user_id = req.user.userId;
       const newAvatar = req.file;
 
       if (!newAvatar) {
@@ -74,27 +266,64 @@ router.put(
           .send({ error: "Keine Datei im Request gefunden." });
       }
 
-      // Get file extension from the uploaded file
-      const fileExtension = newAvatar.originalname.split('.').pop().toLowerCase();
-      const filename = `Profile_Picture/john_doe.${fileExtension}`;
+      // fetching old avatars
+      const listCommand = new ListObjectsV2Command({
+        Bucket: BUCKET_NAME,
+        Prefix: `Profile_Picture/${user_id}/`,
+      });
 
-      const response = await put(
-        filename,
-        newAvatar.buffer,
-        {
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-          access: "public",
-          addRandomSuffix: false,
-        }
+      const existingBlobs = await s3Client.send(listCommand);
+
+      // deleting old avatars
+      if (existingBlobs.Contents && existingBlobs.Contents.length > 0) {
+        await Promise.all(
+          existingBlobs.Contents.map(async (file) => {
+            const deleteCommand = new DeleteObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: file.Key,
+            });
+            await s3Client.send(deleteCommand);
+          })
+        );
+      }
+
+      const timeStamp = Date.now();
+      const fileExtension = newAvatar.originalname
+        .split(".")
+        .pop()
+        .toLowerCase();
+      const filename = `Profile_Picture/${user_id}/avatar_${timeStamp}.${fileExtension}`;
+
+      // Upload new Avatar
+      const putCommand = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: filename,
+        Body: newAvatar.buffer,
+        ContentType: newAvatar.mimetype,
+      });
+
+      await s3Client.send(putCommand);
+
+      // generate Presigned URL
+      const url = await getSignedUrl(
+        s3Client,
+        new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: filename,
+        }),
+        { expiresIn: 3600 }
       );
 
       return res.status(200).send({
-        response: response,
-        url: response.url,
+        message: "Avatar uploaded successfully",
+        url: url,
+        key: filename,
       });
     } catch (error) {
-      console.error("Error uploading avatar to blob:", error);
-      return res.status(500).send({ error: "Internal Server Error", details: error.message });
+      console.error("Error uploading avatar to S3:", error);
+      return res
+        .status(500)
+        .send({ error: "Internal Server Error", details: error.message });
     }
   }
 );

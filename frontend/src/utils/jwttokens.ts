@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
+import { getOrCreateDeviceId } from "./deviceId";
 
 /**
  * Method to check if access token is valid or not
@@ -25,8 +26,8 @@ export async function verifyAccessToken() {
     }
 
     return response.data;
-  } catch (error) {
-    console.error("Verify access token error:", error);
+  } catch {
+    
 
     // For ANY other error (network, timeout, 401, 403, 500, etc.),
     // always try to refresh the access token
@@ -65,7 +66,7 @@ export async function refreshAccessToken() {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/refresh`,
-      {},
+      { device_id: await getOrCreateDeviceId() },
       { withCredentials: true }
     );
 

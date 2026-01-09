@@ -1,8 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "./secureStorage";
 import type { AppDispatch } from "../../redux/store";
+import { getOrCreateDeviceId } from "./deviceId";
 import { signInUser, signOutUser } from "../../redux/slices/userSlice";
 import { refreshAccessToken } from "./jwttokens";
+import { clearBillState } from "../../redux/slices/invoices";
 
 export async function register(
   firstName: string,
@@ -25,6 +27,9 @@ export async function register(
         password: password,
         fn: fn,
         atu: atu,
+        device_id: await getOrCreateDeviceId(),
+        user_agent: navigator.userAgent,
+        device_name: navigator.platform + " " + navigator.appName,
       },
       { withCredentials: true } // to set the refresh token in the Cookie
     );
@@ -125,6 +130,9 @@ export async function login(
       {
         email: email,
         password: password,
+        device_id: await getOrCreateDeviceId(),
+        user_agent: navigator.userAgent,
+        device_name: navigator.platform + " " + navigator.appName,
       },
       {
         withCredentials: true,
@@ -209,7 +217,9 @@ export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
 
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/logout`,
-      {},
+      {
+        device_id: await getOrCreateDeviceId(),
+      },
       {
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
@@ -222,6 +232,7 @@ export async function logOut(dispatch: AppDispatch, retry: boolean = true) {
 
     await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
+    dispatch(clearBillState());
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {
@@ -306,6 +317,7 @@ export async function deleteAccount(
 
     await AuthStorage.clearAccessToken();
     dispatch(signOutUser());
+    dispatch(clearBillState());
   } catch (error) {
     console.error(error);
     if (error instanceof AxiosError) {

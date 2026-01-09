@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
@@ -9,8 +9,11 @@ import { StatusBar } from "@capacitor/status-bar";
 import Ride from "./pages/rides/Ride";
 import AllRides from "./pages/rides/AllRides";
 import { isMobile } from "./hooks/use-mobile";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import Invoices from "./pages/invoices/Invoices";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Payment from "./pages/invoices/Payment";
+import Documentation from "./pages/Documentation";
+import Help from "./pages/Help";
 
 /**
  * The Routes are all declared here
@@ -40,12 +43,17 @@ function App() {
           }
         >
           <Route path="/" element={<Home />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/ride" element={<Ride />} />
           <Route path="/all-rides" element={<AllRides />}>
             <Route path=":id" element={<AllRides />} />
           </Route>
           <Route path="/invoices" element={<Invoices />} />
+          <Route path="/payment" element={<Payment />}>
+            <Route path=":id" element={<Payment />} />
+          </Route>
         </Route>
 
         <Route path="/register" element={<Register />} />

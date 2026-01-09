@@ -157,3 +157,6 @@ vite.config.ts.timestamp-*
 
 # Frontend Documentation folder
 frontend/docs
+
+# Local files
+*.pdf

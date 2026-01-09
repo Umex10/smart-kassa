@@ -1,5 +1,10 @@
+/// <reference types="node" />
 import type { CapacitorConfig } from "@capacitor/cli";
+import { config as dotenvConfig } from "dotenv";
 import { KeyboardResize } from "@capacitor/keyboard";
+
+// Load .env.local file
+dotenvConfig({ path: ".env.local" });
 
 const config: CapacitorConfig = {
   appId: "org.Zynqly",
@@ -16,9 +21,9 @@ const config: CapacitorConfig = {
     CapacitorCookies: { enabled: true },
   },
   server:
-    process.env.NODE_ENV === "development"
+    process.env.MOBILE_REFRESH === "true"
       ? {
-          url: "http://91.113.50.78:5173",
+          url: process.env.LOCAL_URL || "http://192.168.0.167:5173",
           cleartext: true,
         }
       : undefined,

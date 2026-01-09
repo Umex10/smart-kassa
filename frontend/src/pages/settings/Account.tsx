@@ -14,6 +14,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -23,7 +24,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type JSX } from "react";
 import {
   handleLogoutError,
   handleDeleteAccountError,
@@ -31,72 +32,44 @@ import {
 import { toastMessages } from "@/content/auth/toastMessages";
 import axios, { AxiosError } from "axios";
 import { AuthStorage } from "@/utils/secureStorage";
-import { updateUser } from "../../../redux/slices/userSlice";
 import { refreshAccessToken } from "@/utils/jwttokens";
 import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
+import { updateProfile } from "@/utils/updateProfile";
+import { handleUpdateProfileError } from "@/utils/errorHandling/updateProfileErrorHandler";
+import { useInvalidEmail, useInvalidUsername } from "@/hooks/useValidator";
+import { fetchAvatar } from "@/utils/getAvatar";
+import { setAvatarState } from "../../../redux/slices/avatarSlice";
+import { setLink } from "../../../redux/slices/footerLinksSlice";
 
-const Account = () => {
+/**
+ * Account settings page component.
+ *
+ * Provides a comprehensive interface for managing user account information including
+ * profile details (first name, last name, email), avatar, and account actions.
+ * Users can update their profile information with real-time validation, revert unsaved changes,
+ * log out of their account, or permanently delete their account with password confirmation.
+ * The component includes form validation, optimistic updates to Redux state, and proper
+ * error handling with toast notifications.
+ *
+ * @returns {JSX.Element} A settings page with profile management and account action controls.
+ */
+const Account = (): JSX.Element => {
   const dispatch: AppDispatch = useDispatch();
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+  const avatarState = useSelector((state: RootState) => state.avatarState.url);
 
   useEffect(() => {
-    async function fetchAvatar(retryFetch: boolean = true) {
-      try {
-        let accessToken: string | null;
-        if (retryFetch) {
-          accessToken = await AuthStorage.getAccessToken();
-        } else {
-          accessToken = await refreshAccessToken();
-        }
-
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/list-blobs/avatar`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        retryFetch = true;
-        const incomingPreview = await response.data.actualFiles[0].url;
-        setPreview(incomingPreview);
-        setLoading(true);
-        return;
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          const isAuthError =
-            error.status === 403 ||
-            error.status === 401 ||
-            error.response?.data?.path === "auth middleware";
-
-          if (isAuthError && retryFetch) {
-            // First retry with refreshed token
-            retryFetch = false;
-            return await fetchAvatar(false);
-          } else if (isAuthError && !retryFetch) {
-            // Second attempt failed - session expired
-            setLoading(true);
-            toast.error("Session expired. Please log in again.");
-            return;
-          } else {
-            setLoading(true);
-            toast.error(
-              "Could not load Ressources, check your Internet Connection"
-            );
-            return;
-          }
-        } else {
-          setLoading(true);
-          toast.error("An unexpected error occurred.");
-          return;
-        }
-      }
+    if (avatarState) {
+      setPreview(avatarState);
+      return;
     }
 
-    fetchAvatar();
+    fetchAvatar(true, setLoading, setPreview, setPreviewError, dispatch);
+    dispatch(setLink(2));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function changeAvatar(avatarFile: File, retryFetch: boolean = true) {
@@ -123,8 +96,10 @@ const Account = () => {
 
       retryFetch = true;
       setPreview(response.data.url);
+      dispatch(setAvatarState(response.data.url));
       return;
     } catch (error) {
+      console.error(error);
       if (error instanceof AxiosError) {
         const isAuthError =
           error.status === 403 ||
@@ -137,89 +112,40 @@ const Account = () => {
           return await changeAvatar(avatarFile, false);
         } else if (isAuthError && !retryFetch) {
           // Second attempt failed - session expired
-          toast.error("Session expired. Please log in again.");
-          return;
-        } else {
-          toast.error(
-            "Could not load Ressources, check your Internet Connection"
+          throw new Error(
+            "Sitzung abgelaufen. Bitte melden Sie sich erneut an."
           );
-          return;
+        } else {
+          throw new Error(
+            "Ressourcen konnten nicht geladen werden, überprüfen Sie Ihre Internetverbindung"
+          );
         }
       } else {
-        toast.error("An unexpected error occurred.");
-        return;
+        throw new Error("Ein unerwarteter Fehler ist aufgetreten.");
       }
     }
   }
 
   const onSelectFile = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
-      toast.info("Select a File");
+      toast.info("Datei auswählen", { className: "mt-5 md:mt-0" });
       return;
     }
 
     const selectedFile = e.target.files[0];
-    await changeAvatar(selectedFile);
-  };
 
-  async function updateProfile(retry: boolean = true) {
-    let accessToken: string | null;
-    if (retry) {
-      accessToken = await AuthStorage.getAccessToken();
-    } else {
-      accessToken = await refreshAccessToken();
-    }
-
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/account/me`,
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      dispatch(
-        updateUser({
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-        })
-      );
-
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        const isAuthError =
-          error.status === 403 ||
-          error.status === 401 ||
-          error.response?.data?.path === "auth middleware";
-
-        if (isAuthError && retry) {
-          await updateProfile(false);
-        } else if (isAuthError && !retry) {
-          // Second attempt failed - session expired
-          toast.error("Session expired. Please log in again.");
-        } else if (error.status === 409) {
-          toast.error(
-            "This email is already in use. Please use a different email."
-          );
-        } else if (error.status === 400) {
-          toast.error("Invalid input. Please check your information.");
-        } else {
-          toast.error("Failed to update profile. Please try again.");
-        }
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
+    toast.promise(
+      async () => {
+        await changeAvatar(selectedFile);
+      },
+      {
+        success: "Profilbild aktualisiert!",
+        error: "Ein unerwarteter Fehler ist aufgetreten.",
+        loading: "Profilbild wird aktualisiert",
+        className: "mt-5 md:mt-0",
       }
-    }
-  }
+    );
+  };
 
   const user = useSelector((state: RootState) => state.user);
 
@@ -236,39 +162,51 @@ const Account = () => {
 
   // Check if any field has changed from the original user values
   const toRevert =
-    user.email !== email.trim() ||
-    user.firstName !== firstName.trim() ||
-    user.lastName !== lastName.trim();
+    user.email.trim() !== email.trim() ||
+    user.firstName.trim() !== firstName.trim() ||
+    user.lastName.trim() !== lastName.trim();
+
+  const invalidFirstname = useInvalidUsername(firstName.trim());
+  const invalidLastname = useInvalidUsername(lastName.trim());
+  const invalidEmail = useInvalidEmail(email);
+
+  const formInvalid = invalidFirstname || invalidLastname || invalidEmail;
 
   const revertChanges = () => {
     if (toRevert) {
       form.setValue("email", user.email);
       form.setValue("firstName", user.firstName);
       form.setValue("lastName", user.lastName);
-      toast.success("Changes discarded.", {
+      toast.success("Änderungen verworfen.", {
         duration: 3000, // 3 Sekunden sind ideal
         icon: "🗑️",
-        className: "text-black dark:text-white",
+        className: "text-black dark:text-white mt-5 md:mt-0",
       });
-    }
-  };
-
-  const onSubmit = async () => {
-    if (toRevert) {
-      await updateProfile();
+    } else {
+      toast.info("Keine Änderungen zum verwerfen!", {
+        className: "mt-5 md:mt-0",
+      });
     }
   };
 
   const navigator = useNavigate();
   const [deletePassword, setDeletePassword] = useState("");
 
+  // to show the user how to input valid data and in which input field
+  const [showHint, setShowHint] = useState({
+    FirstNameFocused: false,
+    LastNameFocused: false,
+    EmailFocused: false,
+  });
+
   return (
     <div className="settings-page-container">
       {/* Page Header */}
       <div className="page-header-container">
-        <h2 className="page-title">Account Settings</h2>
+        <h2 className="page-title">Kontoeinstellungen</h2>
         <p className="subheader">
-          Manage your account information, avatar, and email settings.
+          Verwalten Sie Ihre Kontoinformationen, Avatar und
+          E-Mail-Einstellungen.
         </p>
       </div>
 
@@ -276,9 +214,9 @@ const Account = () => {
       <div className="section-container">
         {/* Left Label Column */}
         <div className="w-full md:w-64">
-          <h3 className="section-header">Information</h3>
+          <h3 className="section-header">Informationen</h3>
           <p className="section-description">
-            Use an address where you can receive mail.
+            Verwenden Sie eine Adresse, unter der Sie E-Mails empfangen können.
           </p>
         </div>
 
@@ -289,10 +227,11 @@ const Account = () => {
             <Avatar>
               <AvatarImage
                 src={
-                  preview ||
-                  "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
+                  preview && !previewError
+                    ? preview
+                    : "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
                 }
-                alt="Profilce Picture"
+                alt="Profilbild"
                 className="rounded-full w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 object-cover"
               />
               <AvatarFallback>
@@ -305,7 +244,7 @@ const Account = () => {
                 htmlFor="AvatarChanger"
                 className="underline cursor-pointer"
               >
-                Choose a new Profile Picture
+                Neues Profilbild auswählen
               </Label>
               <input
                 type="file"
@@ -320,14 +259,39 @@ const Account = () => {
                 onChange={onSelectFile}
               />
 
-              <p className="text-xs font-light">JPG, GIF or PNG. 1MB max.</p>
+              <p className="text-xs font-light">JPG, GIF oder PNG. Max. 1MB.</p>
             </div>
           </div>
 
           {/* Form */}
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(async () => {
+                if (formInvalid) {
+                  toast.error("Bitte füllen Sie alle Felder korrekt aus", {
+                    className: "mt-5 md:mt-0",
+                  });
+                  return;
+                }
+                if (!toRevert) {
+                  toast.info("Keine Änderungen zum Speichern", {
+                    className: "mt-5 md:mt-0",
+                  });
+                  return;
+                }
+                if (toRevert) {
+                  toast.promise(
+                    async () =>
+                      updateProfile(true, firstName, lastName, email, dispatch),
+                    {
+                      loading: "Änderungen speichern...",
+                      success: "Änderung erfolgreich gespeichert!",
+                      error: (err) => handleUpdateProfileError(err),
+                      className: "mt-5 md:mt-0",
+                    }
+                  );
+                }
+              })}
               className="space-y-6 w-full max-w-xl"
             >
               {/* 2 column grid on desktop */}
@@ -338,12 +302,28 @@ const Account = () => {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>Vorname</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="John"
-                          className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          placeholder="Max"
+                          onBlur={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              FirstNameFocused: true,
+                            }))
+                          }
+                          onFocus={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              FirstNameFocused: false,
+                            }))
+                          }
+                          className={
+                            invalidFirstname && showHint.FirstNameFocused
+                              ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                              : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -357,12 +337,28 @@ const Account = () => {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel>Nachname</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Doe"
-                          className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          placeholder="Mustermann"
+                          onBlur={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              LastNameFocused: true,
+                            }))
+                          }
+                          onFocus={() =>
+                            setShowHint((prev) => ({
+                              ...prev,
+                              LastNameFocused: false,
+                            }))
+                          }
+                          className={
+                            invalidLastname && showHint.LastNameFocused
+                              ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                              : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -377,12 +373,28 @@ const Account = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>E-Mail</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="example@mail.com"
-                            className="h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                            placeholder="beispiel@mail.com"
+                            onBlur={() =>
+                              setShowHint((prev) => ({
+                                ...prev,
+                                EmailFocused: true,
+                              }))
+                            }
+                            onFocus={() =>
+                              setShowHint((prev) => ({
+                                ...prev,
+                                EmailFocused: false,
+                              }))
+                            }
+                            className={
+                              invalidEmail && showHint.EmailFocused
+                                ? "h-11 bg-gray-100 dark:bg-gray-700 border-2 border-red-500 focus:ring-2 focus:ring-violet-400"
+                                : "h-11 bg-gray-100 dark:bg-gray-700 border border-violet-400 focus:ring-2 focus:ring-violet-400"
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -394,7 +406,6 @@ const Account = () => {
 
               <Button
                 type="submit"
-
                 className={
                   toRevert
                     ? "btn-main ml-2"
@@ -408,14 +419,14 @@ const Account = () => {
                 `
                 }
               >
-                Save
+                Speichern
               </Button>
               <Button
                 onClick={revertChanges}
                 type="button"
                 className={
                   toRevert
-                    ? "btn-primary ml-2"
+                    ? "btn-main ml-2"
                     : `
                   ml-2 bg-white dark:bg-black border-violet-400 border-2 dark:border-0 black:text-white font-extrabold px-8 py-3
                   transition-all duration-200
@@ -426,25 +437,7 @@ const Account = () => {
                 `
                 }
               >
-                Save
-              </Button>
-              <Button
-                onClick={revertChanges}
-                type="button"
-                className={
-                  toRevert
-                    ? "btn-primary ml-2"
-                    : `
-                  ml-2 bg-white dark:bg-black border-violet-400 border-2 dark:border-0 black:text-white font-extrabold px-8 py-3
-                  transition-all duration-200
-                  hover:bg-violet-400 hover:text-white
-                  hover:shadow-md
-                  hover:scale-[1.02]
-                  active:scale-[0.98]
-                `
-                }
-              >
-                Revert Changes
+                Änderungen verwerfen
               </Button>
             </form>
           </Form>
@@ -456,45 +449,47 @@ const Account = () => {
         {/* Log Out Section */}
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="section-header">Log out</h3>
+            <h3 className="section-header">Abmelden</h3>
             <p className="section-description">
-              Log out of your account. You can log back in anytime.
+              Melden Sie sich von Ihrem Konto ab. Sie können sich jederzeit
+              wieder anmelden.
             </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="btn-main-action">Log out</Button>
+              <Button className="btn-main-action">Abmelden</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Log out of your account?</DialogTitle>
+                <DialogTitle>Von Ihrem Konto abmelden?</DialogTitle>
                 <DialogDescription>
-                  You will be logged out of your account. You can log back in
-                  anytime with your credentials.
-                  <br />
-                  <Button
-                    onClick={async () => {
-                      toast.promise(
-                        async () => {
-                          await logOut(dispatch);
-                        },
-                        {
-                          loading: "Abmelden...",
-                          success: async () => {
-                            await navigator("/register");
-                            return toastMessages.logout.success.title;
-                          },
-                          error: (err) => handleLogoutError(err),
-                          className: "mt-5 md:mt-0",
-                        }
-                      );
-                    }}
-                    className="btn-main-action"
-                  >
-                    Log out
-                  </Button>
+                  Sie werden von Ihrem Konto abgemeldet. Sie können sich
+                  jederzeit mit Ihren Anmeldedaten wieder anmelden.
                 </DialogDescription>
               </DialogHeader>
+              <DialogFooter>
+                <Button
+                  onClick={async () => {
+                    toast.promise(
+                      async () => {
+                        await logOut(dispatch);
+                      },
+                      {
+                        loading: "Abmelden...",
+                        success: () => {
+                          navigator("/register");
+                          return toastMessages.logout.success.title;
+                        },
+                        error: (err) => handleLogoutError(err),
+                        className: "mt-5 md:mt-0",
+                      }
+                    );
+                  }}
+                  className="btn-main-action"
+                >
+                  Abmelden
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -502,88 +497,95 @@ const Account = () => {
         {/* Delete Account Section */}
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="section-header-danger">Delete account</h3>
+            <h3 className="section-header-danger">Konto löschen</h3>
             <p className="section-description">
-              No longer want to use our service? This action is permanent and
-              cannot be undone.
+              Sie möchten unseren Service nicht mehr nutzen? Diese Aktion ist
+              dauerhaft und kann nicht rückgängig gemacht werden.
             </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="btn-danger">Delete my account</Button>
+              <Button className="btn-danger">Mein Konto löschen</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-red-600">
-                  Are you absolutely sure?
-                </DialogTitle>
-                <DialogDescription className="flex flex-col gap-4">
-                  <p>
-                    This action cannot be undone. This will permanently delete
-                    your account and remove your data from our servers.
-                  </p>
-
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="delete-password"
-                      className="text-sm font-semibold text-gray-900 dark:text-gray-100"
-                    >
-                      Enter your password to confirm:
-                    </label>
-                    <Input
-                      id="delete-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={deletePassword}
-                      onChange={(e) => setDeletePassword(e.target.value)}
-                      className="h-11 bg-gray-100 dark:bg-gray-700 border border-red-400 focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={async () => {
-                      if (!deletePassword) {
-                        toast.error(
-                          "Bitte geben Sie Ihr Passwort ein, um zu bestätigen",
-                          {
-                            className: "mt-5 md:mt-0",
-                          }
-                        );
-                        return;
+              <form
+                name="Delete Form"
+                title="Delete Account Form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!deletePassword) {
+                    toast.error(
+                      "Bitte geben Sie Ihr Passwort ein, um zu bestätigen",
+                      {
+                        className: "mt-5 md:mt-0",
                       }
-                      toast.promise(
-                        async () => {
-                          await deleteAccount(deletePassword, dispatch);
-                        },
-                        {
-                          loading: "Konto wird gelöscht...",
-                          success: async () => {
-                            setDeletePassword("");
-                            await navigator("/register");
-                            return toastMessages.deleteAccount.success.title;
-                          },
-                          error: (err) => handleDeleteAccountError(err),
-                          className: "mt-5 md:mt-0",
-                        }
-                      );
-                    }}
-                    disabled={!deletePassword}
-                    className=" my-2
-              bg-red-500 text-white font-extrabold w-full md:w-56 py-3
-              transition-all duration-200
-              hover:bg-red-600
-              hover:shadow-md
-              hover:scale-[1.02]
-              active:scale-[0.98]
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              disabled:hover:scale-100
-            "
-                  >
-                    Delete my account
-                  </Button>
-                </DialogDescription>
-              </DialogHeader>
+                    );
+                    return;
+                  }
+                  toast.promise(
+                    async () => {
+                      await deleteAccount(deletePassword, dispatch);
+                    },
+                    {
+                      loading: "Konto wird gelöscht...",
+                      success: async () => {
+                        setDeletePassword("");
+                        await navigator("/register");
+                        return toastMessages.deleteAccount.success.title;
+                      },
+                      error: (err) => handleDeleteAccountError(err),
+                      className: "mt-5 md:mt-0",
+                    }
+                  );
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-red-600">
+                    Sind Sie absolut sicher?
+                  </DialogTitle>
+                  <DialogDescription className="flex flex-col gap-4">
+                    <p>
+                      Diese Aktion kann nicht rückgängig gemacht werden. Ihr
+                      Konto wird dauerhaft gelöscht und Ihre Daten werden von
+                      unseren Servern entfernt.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <label
+                        htmlFor="delete-password"
+                        className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                      >
+                        Geben Sie Ihr Passwort ein, um zu bestätigen:
+                      </label>
+                      <Input
+                        required
+                        id="delete-password"
+                        type="password"
+                        placeholder="Geben Sie Ihr Passwort ein"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="h-11 bg-gray-100 dark:bg-gray-700 border border-red-400 focus:ring-2 focus:ring-red-500"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={!deletePassword}
+                      className=" my-2
+                bg-red-500 text-white font-extrabold w-full md:w-56 py-3
+                transition-all duration-200
+                hover:bg-red-600
+                hover:shadow-md
+                hover:scale-[1.02]
+                active:scale-[0.98]
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+                disabled:hover:scale-100
+                            "
+                    >
+                      Mein Konto löschen
+                    </Button>
+                  </DialogDescription>
+                </DialogHeader>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -593,56 +595,3 @@ const Account = () => {
 };
 
 export default Account;
-
-// to Test Refresh Token on Mobile
-//
-// import { AuthStorage } from "@/utils/secureStorage"; //above
-//
-// <div className="flex flex-col gap-4"> //somewhere in the page
-//   <div>
-//     <h3 className="font-extrabold text-lg">Delete Access Token</h3>
-//     <p className="text-sm font-light mt-1">Delete AccessToken</p>
-//   </div>
-//   <Dialog>
-//     <DialogTrigger asChild>
-//       <Button
-//         className="
-//       bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
-//       transition-all duration-200
-//       hover:bg-red-500
-//       hover:shadow-md
-//       hover:scale-[1.02]
-//       active:scale-[0.98]
-//     "
-//       >
-//         Delete access Token
-//       </Button>
-//     </DialogTrigger>
-//     <DialogContent>
-//       <DialogHeader>
-//         <DialogTitle>Delete Access token?</DialogTitle>
-//         <DialogDescription>
-//           Delete Access Token
-//           <br />
-//           <Button
-//             onClick={async () => {
-//               await AuthStorage.clearAccessToken();
-//             }}
-//             className=" my-4
-//       bg-violet-400 text-white font-extrabold w-full md:w-56 py-3
-//       transition-all duration-200
-//       hover:bg-red-500
-//       hover:shadow-md
-//       hover:scale-[1.02]
-//       active:scale-[0.98]
-//     "
-//           >
-//             Delete Access Token
-//           </Button>
-//         </DialogDescription>
-//       </DialogHeader>
-//     </DialogContent>
-//   </Dialog>
-// </div>
-
-// <button onClick={() => window.location.reload()}>Reload</button>

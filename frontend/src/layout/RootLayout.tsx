@@ -1,15 +1,18 @@
-import { Link, Outlet } from "react-router-dom";
-import { CircleUser } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
+import { useEffect, useState, type JSX } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
-import { Bell } from "lucide-react";
 import SearchInput from "@/components/SearchInput";
 import { isMobile } from "@/hooks/use-mobile";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setLink } from "../../redux/slices/footerLinksSlice";
+import { NotificationsMessages } from "../pages/notifications/inlineSlider/NotificationsMessages";
+import { fetchAvatar } from "@/utils/getAvatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { setAvatarState } from "../../redux/slices/avatarSlice";
 
 interface IfooterLinks {
   name: string;
@@ -35,13 +38,25 @@ interface IfooterLinks {
  *
  * @returns {JSX.Element} The root layout with sidebar, header, footer, and content area.
  */
-export default function RootLayout() {
+export default function RootLayout(): JSX.Element {
   // to know which path is active for the underline in the footer
   const [active, setActive] = useState(true);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [loadingAvatar, setLoadingAvatar] = useState(false);
+  const [errorAvatar, setErrorAvatar] = useState(false);
+  const navigator = useNavigate();
   const dispatch: AppDispatch = useDispatch();
   const footerLinksIndex = useSelector(
     (state: RootState) => state.setFooterLink.linkIndex
   );
+  const avatarState = useSelector((state: RootState) => state.avatarState.url);
+  const getAvatar = (): string | null => {
+    if ((!avatarState && !avatar) || errorAvatar) {
+      return null;
+    }
+
+    return !avatarState || avatarState === "" ? avatar : avatarState;
+  };
   const footerLinks: IfooterLinks[] = [
     {
       name: "Start Ride",
@@ -53,9 +68,11 @@ export default function RootLayout() {
   ];
 
   useEffect(() => {
-    dispatch(setLink(isMobile ? 0 : 1));
+    fetchAvatar(true, setLoadingAvatar, setAvatar, setErrorAvatar, dispatch);
+    dispatch(setLink(1));
+    dispatch(setAvatarState(avatar));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [avatarState]);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -90,7 +107,7 @@ export default function RootLayout() {
         h-16 backdrop-blur-md
         border-b border-zinc-300 dark:border-zinc-800 md:border-none
         flex items-center justify-between
-        px-4 z-40"
+        px-4 z-40 space-x-3"
           >
             <SidebarTrigger className="lg:hidden" />
 
@@ -99,8 +116,26 @@ export default function RootLayout() {
             {/* Account icon and Bell on the right side */}
 
             <div className="flex flex-row gap-4 items-center text-lg flex-shrink">
-              <Bell className="hidden md:block md:w-6 md:h-6"></Bell>
-              <CircleUser className="w-6 h-6 md:w-10 md:h-10"></CircleUser>
+              <NotificationsMessages></NotificationsMessages>
+              <Avatar
+                onClick={() => {
+                  navigator("/settings");
+                  dispatch(setLink(2));
+                }}
+                className="cursor-pointer"
+              >
+                <AvatarImage
+                  src={
+                    getAvatar() ||
+                    "https://media.istockphoto.com/id/2151669184/vector/vector-flat-illustration-in-grayscale-avatar-user-profile-person-icon-gender-neutral.jpg?s=612x612&w=0&k=20&c=UEa7oHoOL30ynvmJzSCIPrwwopJdfqzBs0q69ezQoM8="
+                  }
+                  alt="Profilbild"
+                  className="rounded-full object-fill"
+                />
+                <AvatarFallback>
+                  <User className={loadingAvatar ? "" : "animate-pulse"} />
+                </AvatarFallback>
+              </Avatar>
             </div>
           </header>
 

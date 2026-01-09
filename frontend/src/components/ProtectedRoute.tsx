@@ -3,17 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../redux/store";
 import { signInUser } from "../../redux/slices/userSlice";
 import type { USER_DTO } from "../../constants/User";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
   setAuthenticated,
   setUnauthenticated,
 } from "../../redux/slices/authSlice";
-import { toast } from "sonner";
-import { isMobile } from "@/hooks/use-mobile";
 import { handleTokenError } from "../utils/errorHandling";
-import { setLink } from "../../redux/slices/footerLinksSlice";
 import StatusOverlay from "./StatusOverlay";
+import { setLink } from "../../redux/slices/footerLinksSlice";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -29,7 +27,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Kann man später mit einem Auth-Context oder localStorage machen
   const dispatch: AppDispatch = useDispatch();
   const navigator = useNavigate();
-  const toastShownRef = useRef(false);
 
   // Check if the user is getting loaded currently
   const { isLoading, isAuthenticated } = useSelector(
@@ -42,20 +39,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
    */
   const getJWTTokens = useCallback(async () => {
     try {
-      if (isMobile && !toastShownRef.current && isAuthenticated) {
-        dispatch(setLink(0));
-        await navigator("/ride");
-      }
-
       if (!isAuthenticated) {
         const userData: USER_DTO = await verifyAccessToken();
         if (!userData) {
           throw new Error("User Data invalid");
         }
-        if (isMobile && !toastShownRef.current) {
-          dispatch(setLink(0));
-          await navigator("/ride");
-        }
+
         dispatch(
           signInUser({
             id: userData.id,
@@ -66,16 +55,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           })
         );
         dispatch(setAuthenticated());
-
-        // Only show toast once per session
-        if (!toastShownRef.current) {
-          toast.success(`Welcome back ${userData.firstName || "User"}!`, {
-            className: "mt-5 md:mt-0",
-            position: "top-center",
-            closeButton: true,
-          });
-          toastShownRef.current = true;
-        }
+        dispatch(setLink(1));
       }
     } catch (error) {
       handleTokenError(error);
@@ -90,13 +70,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // had to also use the authenticate value so it doesn't show home page for split second to non-loged in Users
   if (!isAuthenticated || isLoading) {
     return (
-    
-    <StatusOverlay text="Loading Service" isLoading={true} errorFallback={
-      ["Unser Service ist leider fehlgeschlagen, bitte versuchen sie es nacher erneut!"]
-    } />
-  
+      <StatusOverlay
+        text="Loading Service"
+        isLoading={true}
+        errorFallback={[
+          "Unser Service ist leider fehlgeschlagen, bitte versuchen sie es nacher erneut!",
+        ]}
+      />
     );
-  } 
+  }
 
   return <>{children}</>;
 };
